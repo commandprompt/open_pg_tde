@@ -32,6 +32,12 @@ typedef enum JsonKeyringField
 	/* Settings specific for the individual key provider types. */
 	JK_FILE_PATH,
 
+	JK_OPENBAO_TOKEN_PATH,
+	JK_OPENBAO_URL,
+	JK_OPENBAO_MOUNT_PATH,
+	JK_OPENBAO_CA_PATH,
+	JK_OPENBAO_NAMESPACE,
+
 	JK_KMIP_HOST,
 	JK_KMIP_PORT,
 	JK_KMIP_CA_PATH,
@@ -46,10 +52,17 @@ static const char *JK_FIELD_NAMES[JK_FIELDS_TOTAL] = {
 	[JK_FIELD_UNKNOWN] = "unknownField",
 
 	/*
-	 * These values should match pg_tde_add_database_key_provider_file and
+	 * These values should match pg_tde_add_database_key_provider_file,
+	 * pg_tde_add_database_key_provider_openbao and
 	 * pg_tde_add_database_key_provider_kmip SQL interfaces
 	 */
 	[JK_FILE_PATH] = "path",
+
+	[JK_OPENBAO_TOKEN_PATH] = "tokenPath",
+	[JK_OPENBAO_URL] = "url",
+	[JK_OPENBAO_MOUNT_PATH] = "mountPath",
+	[JK_OPENBAO_CA_PATH] = "caPath",
+	[JK_OPENBAO_NAMESPACE] = "namespace",
 
 	[JK_KMIP_HOST] = "host",
 	[JK_KMIP_PORT] = "port",
@@ -215,6 +228,26 @@ json_kring_object_field_start(void *state, char *fname, bool isnull)
 					}
 					break;
 
+				case OPENBAO_KEY_PROVIDER:
+					if (strcmp(fname, JK_FIELD_NAMES[JK_OPENBAO_TOKEN_PATH]) == 0)
+						parse->current_field = JK_OPENBAO_TOKEN_PATH;
+					else if (strcmp(fname, JK_FIELD_NAMES[JK_OPENBAO_URL]) == 0)
+						parse->current_field = JK_OPENBAO_URL;
+					else if (strcmp(fname, JK_FIELD_NAMES[JK_OPENBAO_MOUNT_PATH]) == 0)
+						parse->current_field = JK_OPENBAO_MOUNT_PATH;
+					else if (strcmp(fname, JK_FIELD_NAMES[JK_OPENBAO_CA_PATH]) == 0)
+						parse->current_field = JK_OPENBAO_CA_PATH;
+					else if (strcmp(fname, JK_FIELD_NAMES[JK_OPENBAO_NAMESPACE]) == 0)
+						parse->current_field = JK_OPENBAO_NAMESPACE;
+					else
+					{
+						parse->current_field = JK_FIELD_UNKNOWN;
+						ereport(ERROR,
+								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+								errmsg("unexpected field \"%s\" for openbao provider", fname));
+					}
+					break;
+
 				case KMIP_KEY_PROVIDER:
 					if (strcmp(fname, JK_FIELD_NAMES[JK_KMIP_HOST]) == 0)
 						parse->current_field = JK_KMIP_HOST;
@@ -296,11 +329,28 @@ json_kring_assign_scalar(JsonKeyringState *parse, JsonKeyringField field, char *
 {
 	FileKeyring *file = (FileKeyring *) parse->provider_opts;
 	KmipKeyring *kmip = (KmipKeyring *) parse->provider_opts;
+	OpenBaoKeyring *openbao = (OpenBaoKeyring *) parse->provider_opts;
 
 	switch (field)
 	{
 		case JK_FILE_PATH:
 			file->file_name = value;
+			break;
+
+		case JK_OPENBAO_TOKEN_PATH:
+			openbao->openbao_token_path = value;
+			break;
+		case JK_OPENBAO_URL:
+			openbao->openbao_url = value;
+			break;
+		case JK_OPENBAO_MOUNT_PATH:
+			openbao->openbao_mount_path = value;
+			break;
+		case JK_OPENBAO_CA_PATH:
+			openbao->openbao_ca_path = value;
+			break;
+		case JK_OPENBAO_NAMESPACE:
+			openbao->openbao_namespace = value;
 			break;
 
 		case JK_KMIP_HOST:

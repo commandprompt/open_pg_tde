@@ -16,6 +16,21 @@ BEGIN ATOMIC
                 json_object('path' VALUE file_path));
 END;
 
+CREATE FUNCTION pg_tde_add_database_key_provider_openbao(provider_name TEXT,
+                                                openbao_url TEXT,
+                                                openbao_mount_path TEXT,
+                                                openbao_token_path TEXT,
+                                                openbao_ca_path TEXT)
+RETURNS VOID
+LANGUAGE SQL
+BEGIN ATOMIC
+    SELECT pg_tde_add_database_key_provider('openbao', provider_name,
+                            json_object('url' VALUE openbao_url,
+                            'mountPath' VALUE openbao_mount_path,
+                            'tokenPath' VALUE openbao_token_path,
+                            'caPath' VALUE openbao_ca_path));
+END;
+
 CREATE FUNCTION pg_tde_add_database_key_provider_kmip(provider_name TEXT,
                                              kmip_host TEXT,
                                              kmip_port INT,
@@ -68,6 +83,21 @@ BEGIN ATOMIC
                 json_object('path' VALUE file_path));
 END;
 
+CREATE FUNCTION pg_tde_add_global_key_provider_openbao(provider_name TEXT,
+                                                        openbao_url TEXT,
+                                                        openbao_mount_path TEXT,
+                                                        openbao_token_path TEXT,
+                                                        openbao_ca_path TEXT)
+RETURNS VOID
+LANGUAGE SQL
+BEGIN ATOMIC
+    SELECT pg_tde_add_global_key_provider('openbao', provider_name,
+                            json_object('url' VALUE openbao_url,
+                            'mountPath' VALUE openbao_mount_path,
+                            'tokenPath' VALUE openbao_token_path,
+                            'caPath' VALUE openbao_ca_path));
+END;
+
 CREATE FUNCTION pg_tde_add_global_key_provider_kmip(provider_name TEXT,
                                                     kmip_host TEXT,
                                                     kmip_port INT,
@@ -100,6 +130,21 @@ BEGIN ATOMIC
                 json_object('path' VALUE file_path));
 END;
 
+CREATE FUNCTION pg_tde_change_database_key_provider_openbao(provider_name TEXT,
+                                                    openbao_url TEXT,
+                                                    openbao_mount_path TEXT,
+                                                    openbao_token_path TEXT,
+                                                    openbao_ca_path TEXT)
+RETURNS VOID
+LANGUAGE SQL
+BEGIN ATOMIC
+    SELECT pg_tde_change_database_key_provider('openbao', provider_name,
+                            json_object('url' VALUE openbao_url,
+                            'mountPath' VALUE openbao_mount_path,
+                            'tokenPath' VALUE openbao_token_path,
+                            'caPath' VALUE openbao_ca_path));
+END;
+
 CREATE FUNCTION pg_tde_change_database_key_provider_kmip(provider_name TEXT,
                                                 kmip_host TEXT,
                                                 kmip_port INT,
@@ -130,6 +175,21 @@ LANGUAGE SQL
 BEGIN ATOMIC
     SELECT pg_tde_change_global_key_provider('file', provider_name,
                 json_object('path' VALUE file_path));
+END;
+
+CREATE FUNCTION pg_tde_change_global_key_provider_openbao(provider_name TEXT,
+                                                           openbao_url TEXT,
+                                                           openbao_mount_path TEXT,
+                                                           openbao_token_path TEXT,
+                                                           openbao_ca_path TEXT)
+RETURNS VOID
+LANGUAGE SQL
+BEGIN ATOMIC
+    SELECT pg_tde_change_global_key_provider('openbao', provider_name,
+                            json_object('url' VALUE openbao_url,
+                            'mountPath' VALUE openbao_mount_path,
+                            'tokenPath' VALUE openbao_token_path,
+                            'caPath' VALUE openbao_ca_path));
 END;
 
 CREATE FUNCTION pg_tde_change_global_key_provider_kmip(provider_name TEXT,

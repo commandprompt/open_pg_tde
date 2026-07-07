@@ -12,6 +12,7 @@ typedef enum ProviderType
 	UNKNOWN_KEY_PROVIDER,
 	FILE_KEY_PROVIDER,
 	KMIP_KEY_PROVIDER,
+	OPENBAO_KEY_PROVIDER,
 } ProviderType;
 
 typedef struct KeyData
@@ -68,6 +69,17 @@ typedef struct KmipKeyring
 	char	   *kmip_cert_path;
 	char	   *kmip_key_path;
 } KmipKeyring;
+
+typedef struct OpenBaoKeyring
+{
+	GenericKeyring keyring;		/* Must be the first field */
+	char	   *openbao_token;
+	char	   *openbao_token_path;
+	char	   *openbao_url;
+	char	   *openbao_ca_path;
+	char	   *openbao_mount_path;
+	char	   *openbao_namespace;
+} OpenBaoKeyring;
 
 extern void RegisterKeyProviderType(const TDEKeyringRoutine *routine, ProviderType type);
 

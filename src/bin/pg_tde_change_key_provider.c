@@ -17,9 +17,10 @@ usage(void)
 	printf(_("%s changes the configuration of a pg_tde key provider\n\n"), progname);
 	printf(_("Usage:\n"));
 	printf(_("  %s [-D <datadir>] <dbOid> <provider_name> <new_provider_type> <provider_parameters...>\n\n"), progname);
-	printf(_("  Where <new_provider_type> can be file or kmip\n\n"));
+	printf(_("  Where <new_provider_type> can be file, openbao or kmip\n\n"));
 	printf(_("Depending on the provider type, the complete parameter list is:\n\n"));
 	printf(_("pg_tde_change_key_provider [-D <datadir>] <dbOid> <provider_name> file <filename>\n"));
+	printf(_("pg_tde_change_key_provider [-D <datadir>] <dbOid> <provider_name> openbao <url> <mount_path> <token_path> [<ca_path>]\n"));
 	printf(_("pg_tde_change_key_provider [-D <datadir>] <dbOid> <provider_name> kmip <host> <port> <cert_path> <key_path> [<ca_path>]\n"));
 	printf(_("\nUse dbOid %d for global key providers.\n\n"), GLOBAL_DATA_TDE_OID);
 	printf(_("WARNING:\n"));
@@ -176,6 +177,24 @@ main(int argc, char *argv[])
 		}
 
 		if (!build_json(json, 1, "path", argv[optind]))
+		{
+			exit(1);
+		}
+	}
+	else if (strcmp("openbao", new_provider_type) == 0)
+	{
+		if (argc - optind != 3 && argc - optind != 4)
+		{
+			pg_log_error("wrong number of arguments for \"%s\"", new_provider_type);
+			pg_log_error_hint("Try \"%s --help\" for more information.", progname);
+			exit(1);
+		}
+
+		if (!build_json(json, 4,
+						"url", argv[optind],
+						"mountPath", argv[optind + 1],
+						"tokenPath", argv[optind + 2],
+						"caPath", (argc - optind > 3 ? argv[optind + 3] : "")))
 		{
 			exit(1);
 		}

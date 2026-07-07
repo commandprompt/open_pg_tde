@@ -30,6 +30,9 @@ my $db_oid = $node->safe_psql('postgres',
 	q{SELECT oid FROM pg_catalog.pg_database WHERE datname = 'postgres'});
 my $options;
 
+my $token_file = "${PostgreSQL::Test::Utils::tmp_check}/openbao_token";
+append_to_file($token_file, 'DUMMY');
+
 $node->stop;
 
 command_like(
@@ -61,6 +64,46 @@ $options = decode_json(
 is( $options->{path},
 	'/tmp/pg_tde_change_key_provider-database-2',
 	'path is set correctly for file provider');
+
+$node->stop;
+
+command_like(
+	[
+		'pg_tde_change_key_provider',
+		'-D' => $node->data_dir,
+		$db_oid,
+		'database-provider',
+		'openbao',
+		'https://openbao-server.example:8200/',
+		'mount-path',
+		$token_file,
+		'/tmp/ca_path',
+	],
+	qr/Key provider updated successfully!/,
+	'updates key provider to openbao type');
+
+$node->start;
+
+is( $node->safe_psql(
+		'postgres',
+		q{SELECT type FROM pg_tde_list_all_database_key_providers() WHERE name = 'database-provider'}
+	),
+	'openbao',
+	'provider type is set to openbao');
+
+$options = decode_json(
+	$node->safe_psql(
+		'postgres',
+		q{SELECT options FROM pg_tde_list_all_database_key_providers() WHERE name = 'database-provider'}
+	));
+is($options->{url}, 'https://openbao-server.example:8200/',
+	'url is set correctly for openbao provider');
+is($options->{mountPath}, 'mount-path',
+	'mount path is set correctly for openbao provider');
+is($options->{tokenPath}, $token_file,
+	'tokenPath is set correctly for openbao provider');
+is($options->{caPath}, '/tmp/ca_path',
+	'CA path is set correctly for openbao provider');
 
 $node->stop;
 
@@ -188,5 +231,16 @@ command_fails_like(
 	],
 	qr/error: wrong number of arguments for "kmip"/,
 	'gives error on missing arguments for kmip provider');
+
+command_fails_like(
+	[
+		'pg_tde_change_key_provider',
+		'-D' => $node->data_dir,
+		'1664',
+		'global-provider',
+		'openbao',
+	],
+	qr/error: wrong number of arguments for "openbao"/,
+	'gives error on missing arguments for openbao provider');
 
 done_testing();

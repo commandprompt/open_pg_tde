@@ -28,6 +28,7 @@
 #include "keyring/keyring_api.h"
 #include "keyring/keyring_file.h"
 #include "keyring/keyring_kmip.h"
+#include "keyring/keyring_openbao.h"
 #include "pg_tde.h"
 #include "pg_tde_event_capture.h"
 #include "pg_tde_guc.h"
@@ -118,6 +119,7 @@ _PG_init(void)
 	TdeEventCaptureInit();
 	InstallFileKeyring();
 	InstallKmipKeyring();
+	InstallOpenBaoKeyring();
 	RegisterTdeRmgr();
 	RegisterStorageMgr();
 

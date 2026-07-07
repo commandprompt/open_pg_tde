@@ -51,6 +51,7 @@ typedef enum ProviderScanType
 
 #define FILE_KEYRING_TYPE "file"
 #define KMIP_KEYRING_TYPE "kmip"
+#define OPENBAO_KEYRING_TYPE "openbao"
 
 static void debug_print_kerying(GenericKeyring *keyring);
 static bool fetch_next_key_provider(int fd, off_t *curr_pos, KeyringProviderRecord *provider);
@@ -58,7 +59,9 @@ static inline void get_keyring_infofile_path(char *resPath, Oid dbOid);
 static FileKeyring *load_file_keyring_provider_options(char *keyring_options);
 static GenericKeyring *load_keyring_provider_from_record(KeyringProviderRecord *provider);
 static KmipKeyring *load_kmip_keyring_provider_options(char *keyring_options);
+static OpenBaoKeyring *load_openbao_keyring_provider_options(char *keyring_options);
 static int	open_keyring_infofile(Oid dbOid, int flags);
+static char *get_file_value(const char *path, const char *field_name);
 
 #ifdef FRONTEND
 
@@ -145,6 +148,8 @@ get_keyring_provider_typename(ProviderType p_type)
 			return FILE_KEYRING_TYPE;
 		case KMIP_KEY_PROVIDER:
 			return KMIP_KEYRING_TYPE;
+		case OPENBAO_KEY_PROVIDER:
+			return OPENBAO_KEYRING_TYPE;
 		default:
 			return NULL;
 	}
@@ -581,12 +586,27 @@ free_keyring(GenericKeyring *keyring)
 {
 	FileKeyring *file = (FileKeyring *) keyring;
 	KmipKeyring *kmip = (KmipKeyring *) keyring;
+	OpenBaoKeyring *openbao = (OpenBaoKeyring *) keyring;
 
 	switch (keyring->type)
 	{
 		case FILE_KEY_PROVIDER:
 			if (file->file_name)
 				pfree(file->file_name);
+			break;
+		case OPENBAO_KEY_PROVIDER:
+			if (openbao->openbao_ca_path)
+				pfree(openbao->openbao_ca_path);
+			if (openbao->openbao_namespace)
+				pfree(openbao->openbao_namespace);
+			if (openbao->openbao_mount_path)
+				pfree(openbao->openbao_mount_path);
+			if (openbao->openbao_token)
+				pfree(openbao->openbao_token);
+			if (openbao->openbao_token_path)
+				pfree(openbao->openbao_token_path);
+			if (openbao->openbao_url)
+				pfree(openbao->openbao_url);
 			break;
 		case KMIP_KEY_PROVIDER:
 			if (kmip->kmip_ca_path)
@@ -820,6 +840,9 @@ load_keyring_provider_from_record(KeyringProviderRecord *provider)
 		case FILE_KEY_PROVIDER:
 			keyring = (GenericKeyring *) load_file_keyring_provider_options(provider->options);
 			break;
+		case OPENBAO_KEY_PROVIDER:
+			keyring = (GenericKeyring *) load_openbao_keyring_provider_options(provider->options);
+			break;
 		case KMIP_KEY_PROVIDER:
 			keyring = (GenericKeyring *) load_kmip_keyring_provider_options(provider->options);
 			break;
@@ -887,6 +910,65 @@ load_kmip_keyring_provider_options(char *keyring_options)
 	return kmip_keyring;
 }
 
+static OpenBaoKeyring *
+load_openbao_keyring_provider_options(char *keyring_options)
+{
+	OpenBaoKeyring *openbao_keyring = palloc0_object(OpenBaoKeyring);
+
+	openbao_keyring->keyring.type = OPENBAO_KEY_PROVIDER;
+
+	ParseKeyringJSONOptions(OPENBAO_KEY_PROVIDER,
+							(GenericKeyring *) openbao_keyring,
+							keyring_options, strlen(keyring_options));
+
+	if (openbao_keyring->openbao_token_path == NULL || openbao_keyring->openbao_token_path[0] == '\0' ||
+		openbao_keyring->openbao_url == NULL || openbao_keyring->openbao_url[0] == '\0' ||
+		openbao_keyring->openbao_mount_path == NULL || openbao_keyring->openbao_mount_path[0] == '\0')
+	{
+		ereport(ERROR,
+				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+				errmsg("missing in the keyring options:%s%s%s",
+					   (openbao_keyring->openbao_token_path != NULL && openbao_keyring->openbao_token_path[0] != '\0') ? "" : " tokenPath",
+					   (openbao_keyring->openbao_url != NULL && openbao_keyring->openbao_url[0] != '\0') ? "" : " url",
+					   (openbao_keyring->openbao_mount_path != NULL && openbao_keyring->openbao_mount_path[0] != '\0') ? "" : " mountPath"));
+	}
+
+	/* TODO: the openbao_token mem should be protected from paging to the swap */
+	openbao_keyring->openbao_token = get_file_value(openbao_keyring->openbao_token_path, "openbao_token");
+
+	return openbao_keyring;
+}
+
+#define MAX_FILE_DATA_LENGTH 1024
+
+static char *
+get_file_value(const char *path, const char *field_name)
+{
+	FILE	   *fd;
+	char	   *val;
+
+	fd = AllocateFile(path, "r");
+	if (fd == NULL)
+	{
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not open file \"%s\" for \"%s\": %m", path, field_name)));
+	}
+
+	val = palloc(MAX_FILE_DATA_LENGTH);
+	if (fgets(val, MAX_FILE_DATA_LENGTH, fd) == NULL && ferror(fd))
+	{
+		ereport(ERROR,
+				(errcode_for_file_access(),
+				 errmsg("could not read file \"%s\" for \"%s\": %m", path, field_name)));
+	}
+	/* remove trailing whitespace */
+	val[strcspn(val, " \t\n\r")] = '\0';
+
+	FreeFile(fd);
+	return val;
+}
+
 static void
 debug_print_kerying(GenericKeyring *keyring)
 {
@@ -898,6 +980,16 @@ debug_print_kerying(GenericKeyring *keyring)
 	{
 		case FILE_KEY_PROVIDER:
 			elog(DEBUG2, "File Keyring Path: %s", ((FileKeyring *) keyring)->file_name);
+			break;
+		case OPENBAO_KEY_PROVIDER:
+			elog(DEBUG2, "OpenBao Keyring Token Path: %s", ((OpenBaoKeyring *) keyring)->openbao_token_path);
+			elog(DEBUG2, "OpenBao Keyring URL: %s", ((OpenBaoKeyring *) keyring)->openbao_url);
+			elog(DEBUG2, "OpenBao Keyring Mount Path: %s", ((OpenBaoKeyring *) keyring)->openbao_mount_path);
+			elog(DEBUG2, "OpenBao Keyring CA Path: %s", ((OpenBaoKeyring *) keyring)->openbao_ca_path);
+			if (((OpenBaoKeyring *) keyring)->openbao_namespace != NULL)
+			{
+				elog(DEBUG2, "OpenBao Keyring Namespace: %s", ((OpenBaoKeyring *) keyring)->openbao_namespace);
+			}
 			break;
 		case KMIP_KEY_PROVIDER:
 			elog(DEBUG2, "KMIP Keyring Host: %s", ((KmipKeyring *) keyring)->kmip_host);
@@ -973,6 +1065,8 @@ get_keyring_provider_from_typename(char *provider_type)
 		return FILE_KEY_PROVIDER;
 	else if (strcmp(KMIP_KEYRING_TYPE, provider_type) == 0)
 		return KMIP_KEY_PROVIDER;
+	else if (strcmp(OPENBAO_KEYRING_TYPE, provider_type) == 0)
+		return OPENBAO_KEY_PROVIDER;
 	else
 		return UNKNOWN_KEY_PROVIDER;
 }

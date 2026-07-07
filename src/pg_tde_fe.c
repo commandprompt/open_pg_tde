@@ -5,6 +5,7 @@
 #include "encryption/enc_aes.h"
 #include "keyring/keyring_file.h"
 #include "keyring/keyring_kmip.h"
+#include "keyring/keyring_openbao.h"
 
 /* Frontend has to call this to access keys */
 void
@@ -13,6 +14,7 @@ pg_tde_fe_init(const char *kring_dir)
 	AesInit();
 	InstallFileKeyring();
 	InstallKmipKeyring();
+	InstallOpenBaoKeyring();
 	pg_tde_set_data_dir(kring_dir);
 }
 
