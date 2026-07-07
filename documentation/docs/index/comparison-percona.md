@@ -53,7 +53,7 @@ Beyond running on upstream PostgreSQL, this fork has added:
   [`open_pg_tde.data_cipher`](../variables.md#open_pg_tdedata_cipher).
 - **FIPS enforcement.** All cryptography runs through OpenSSL and uses
   FIPS-approved modes, and the server can be required to start only when OpenSSL
-  is in FIPS mode.
+  is in FIPS mode. See [FIPS compliance](fips.md).
 - **A documented threat model** stating what encryption at rest does and does not
   protect. See the [threat model](threat-model.md).
 
