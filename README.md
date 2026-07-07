@@ -22,7 +22,7 @@ Transparent Data Encryption offers encryption at the file level and solves the p
 
 This access method:
 
-- Works with upstream PostgreSQL 14 and later, patched with the `open_pg_tde` core patch (see [Installation](#installation))
+- Works with upstream PostgreSQL 16 and later, patched with the `open_pg_tde` core patch (see [Installation](#installation))
 - Uses extended Storage Manager and WAL APIs
 - Encrypts tuples, WAL and indexes
 - It **does not** encrypt temporary files and statistics **yet**
@@ -33,7 +33,7 @@ The documentation source is in [`documentation/`](documentation/). Start with th
 
 ## Installation
 
-`open_pg_tde` runs on upstream PostgreSQL 14 and later. You apply the `open_pg_tde` core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See [Install from source](documentation/docs/install-from-source.md) for the step-by-step guide, and [`patches/postgresql/README.md`](patches/postgresql/README.md) for the patch series and per-version status.
+`open_pg_tde` runs on upstream PostgreSQL 16 and later. You apply the `open_pg_tde` core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See [Install from source](documentation/docs/install-from-source.md) for the step-by-step guide, and [`patches/postgresql/README.md`](patches/postgresql/README.md) for the patch series and per-version status.
 
 ## Set up open_pg_tde
 

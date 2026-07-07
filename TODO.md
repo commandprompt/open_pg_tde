@@ -21,7 +21,7 @@ The patches live under `patches/postgresql/<major>/` and are applied with
 - [ ] **Encryption-aware frontend tools** (b): WAL/SMGR frontend integration for
       `open_pg_tde_rewind` / `open_pg_tde_basebackup`. Clears the `pg_rewind_*`,
       `pg_basebackup`, and upgrade tests.
-- [ ] Re-derive the series for PostgreSQL 14, 15, 16, 17.
+- [ ] Series done for 16, 17, 18 (extension floor is 16; 14/15 unsupported).
 
 ## Tests (required for each of the above)
 
@@ -36,7 +36,7 @@ The patches live under `patches/postgresql/<major>/` and are applied with
 
 - [ ] `patches/postgresql/README.md` kept current (apply, gate, maintenance).
 - [ ] User docs: replace the "Percona Server for PostgreSQL" install pages with
-      "apply the patch to PostgreSQL 14+ and build with `--enable-tde-hooks`".
+      "apply the patch to PostgreSQL 16+ and build with `--enable-tde-hooks`".
 - [ ] Architecture doc: the SMGR/WAL hook design and the gate.
 
 ## Core patch maintenance (ongoing)

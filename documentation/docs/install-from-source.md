@@ -1,6 +1,6 @@
 # Install open_pg_tde on native PostgreSQL
 
-`open_pg_tde` runs on upstream PostgreSQL 14 and later. It does not require a
+`open_pg_tde` runs on upstream PostgreSQL 16 and later. It does not require a
 vendor fork of the server. Encryption is implemented through two extensibility
 points that upstream PostgreSQL does not yet expose: a pluggable storage
 manager for data files and a WAL storage manager for the write-ahead log.
@@ -19,7 +19,7 @@ PostgreSQL unless you enable the hooks.
 
 ## Prerequisites
 
-- A stock PostgreSQL 14+ source tree (a release tarball or a `REL_<major>_STABLE`
+- A stock PostgreSQL 16+ source tree (a release tarball or a `REL_<major>_STABLE`
   checkout).
 - A C toolchain, plus the usual PostgreSQL build dependencies.
 - OpenSSL development headers (`libssl-dev` / `openssl-devel`).
