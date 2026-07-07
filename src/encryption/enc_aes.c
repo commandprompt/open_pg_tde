@@ -42,8 +42,9 @@ static const EVP_CIPHER *cipher_ctr_ecb_256 = NULL;
 static EVP_CIPHER_CTX *ctx_cbc_128 = NULL;
 static EVP_CIPHER_CTX *ctx_cbc_256 = NULL;
 
-/* AES-128-XTS uses a 32-byte key (two 128-bit keys) and a 16-byte tweak. */
-static EVP_CIPHER_CTX *ctx_xts_128 = NULL;
+/* AES-XTS uses a double-length key (two AES subkeys) and a 16-byte tweak. */
+static EVP_CIPHER_CTX *ctx_xts_128 = NULL;	/* AES-128-XTS, 32-byte key */
+static EVP_CIPHER_CTX *ctx_xts_256 = NULL;	/* AES-256-XTS, 64-byte key */
 
 static EVP_CIPHER_CTX *
 AesCbcInitCtx(const EVP_CIPHER *cipher, const char *name)
@@ -78,6 +79,7 @@ AesInit(void)
 
 	/* AesCbcInitCtx just wraps EVP_CipherInit_ex; it works for XTS too. */
 	ctx_xts_128 = AesCbcInitCtx(EVP_aes_128_xts(), "AES-128-XTS");
+	ctx_xts_256 = AesCbcInitCtx(EVP_aes_256_xts(), "AES-256-XTS");
 
 	/* Register the built-in cipher suites that wrap the primitives above. */
 	TdeCipherRegistryInit();
@@ -157,16 +159,17 @@ AesRunCbc(int enc, const unsigned char *key, int key_len, const unsigned char *i
  * AES-XTS variant of AesRunCbc, used to encrypt/decrypt a data page. XTS is a
  * tweakable block cipher intended for storage: the IV is used as the tweak
  * (the block's logical position) and, unlike CBC, no chaining crosses page
- * boundaries. The 32-byte key holds the two AES-128 subkeys XTS requires.
+ * boundaries. The key holds the two AES subkeys XTS requires (32 bytes for
+ * AES-128-XTS, 64 bytes for AES-256-XTS).
  */
 static void
 AesRunXts(int enc, const unsigned char *key, int key_len, const unsigned char *iv, const unsigned char *in, int in_len, unsigned char *out)
 {
 	int			out_len;
 	int			out_len_final;
-	EVP_CIPHER_CTX *ctx = ctx_xts_128;
+	EVP_CIPHER_CTX *ctx = (key_len == 64) ? ctx_xts_256 : ctx_xts_128;
 
-	Assert(key_len == 32);
+	Assert(key_len == 32 || key_len == 64);
 	Assert(ctx != NULL);
 
 	if (EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, enc) == 0)

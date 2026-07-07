@@ -48,7 +48,12 @@ typedef struct WalKeyFileEntry
 	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
 
 	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
-	uint8		encrypted_key_data[INTERNAL_KEY_MAX_LEN];
+
+	/*
+	 * WAL keys are AES-CTR (16 or 32 bytes), never AES-256-XTS, so this stays
+	 * at the pre-AES-256-XTS size to keep the WAL key file format unchanged.
+	 */
+	uint8		encrypted_key_data[32];
 } WalKeyFileEntry;
 
 static WALKeyCacheRec *tde_wal_key_cache = NULL;
@@ -664,6 +669,15 @@ open_pg_tde_initialize_wal_key_file_entry(WalKeyFileEntry *entry,
 	memset(entry, 0, sizeof(WalKeyFileEntry));
 
 	Assert(range->key.key_len == 16 || range->key.key_len == 32);
+
+	/*
+	 * Always-on backstop: the on-disk WAL key entry is fixed at 32 bytes (WAL
+	 * uses AES-CTR, never AES-256-XTS). Fail loudly rather than overflow the
+	 * buffer if a longer key ever reaches this path.
+	 */
+	if (range->key.key_len > sizeof(entry->encrypted_key_data))
+		elog(ERROR, "WAL key length %d exceeds the WAL key entry size %zu",
+			 range->key.key_len, sizeof(entry->encrypted_key_data));
 	entry->cipher = range->key.cipher;
 
 	entry->range_type = range->type;

@@ -449,7 +449,8 @@ open_pg_tde_initialize_map_entry(TDEMapEntry *map_entry, const TDEPrincipalKey *
 	map_entry->type = MAP_ENTRY_TYPE_KEY;
 	memcpy(map_entry->key_base_iv, rel_key_data->base_iv, INTERNAL_KEY_IV_LEN);
 
-	Assert(rel_key_data->key_len == 16 || rel_key_data->key_len == 32);
+	Assert(rel_key_data->key_len == 16 || rel_key_data->key_len == 32 ||
+		   rel_key_data->key_len == 64);
 	map_entry->cipher = rel_key_data->cipher;	/* recorded so reads dispatch
 												 * on the cipher chosen at
 												 * creation */
@@ -882,7 +883,8 @@ open_pg_tde_get_smgr_key(RelFileLocator rel)
 
 	LWLockRelease(lock_pk);
 
-	if (principal_key->keyLength != rel_key->key_len)
+	if (rel_key->key_len <= MAX_KEY_DATA_SIZE &&
+		principal_key->keyLength != rel_key->key_len)
 	{
 		ereport(LOG,
 				errmsg("length \"%u\" of principal key \"%s\" does not match the length \"%d\" of the internal key", principal_key->keyLength, principal_key->keyInfo.name, rel_key->key_len),
@@ -995,6 +997,82 @@ map_from_disk_entry_v3(int fd, off_t *entry_offset, const TDEPrincipalKey *princ
 	return true;
 }
 
+/*
+ * Version 4 key map entry: identical layout to the current entry except the
+ * key buffer, which was 32 bytes before AES-256-XTS added a 64-byte key.
+ * Retained to migrate version-4 files to the current format.
+ */
+typedef struct TDEMapEntryV4
+{
+	uint32		cipher;
+	Oid			spcOid;
+	RelFileNumber relNumber;
+	uint32		type;
+	unsigned char entry_iv[MAP_ENTRY_IV_SIZE];
+	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
+	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
+	uint8		encrypted_key_data[32];
+}			TDEMapEntryV4;
+
+static bool
+read_one_map_entry_v4(int fd, TDEMapEntryV4 * entry, off_t *offset)
+{
+	int			bytes_read = pg_pread(fd, entry, sizeof(TDEMapEntryV4), *offset);
+
+	if (bytes_read == 0)
+		return false;
+	if (bytes_read != sizeof(TDEMapEntryV4))
+		ereport(ERROR,
+				errmsg("keys migration: could not read map entry"));
+	*offset += bytes_read;
+	return true;
+}
+
+static void
+ikey_from_map_entry_v4(TDEMapEntryV4 * entry, const TDEPrincipalKey *principal_key, InternalKey *out)
+{
+	out->key_len = open_pg_tde_cipher_key_length(entry->cipher);
+	out->cipher = entry->cipher;
+
+	memcpy(out->base_iv, entry->key_base_iv, sizeof(entry->key_base_iv));
+	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,
+					   entry->entry_iv, sizeof(entry->entry_iv),
+					   (unsigned char *) entry, offsetof(TDEMapEntryV4, entry_iv),
+					   entry->encrypted_key_data, out->key_len,
+					   out->key,
+					   entry->aead_tag, sizeof(entry->aead_tag)))
+		ereport(ERROR,
+				errmsg("failed to decrypt key, incorrect principal key or corrupted key file"));
+}
+
+static bool
+map_from_disk_entry_v4(int fd, off_t *entry_offset, const TDEPrincipalKey *principal_key, TDEMapEntry *out)
+{
+	TDEMapEntryV4 disk_entry;
+	InternalKey key;
+	RelFileLocator rloc;
+
+	if (!read_one_map_entry_v4(fd, &disk_entry, entry_offset))
+		return false;
+
+	/* Decrypting empty entries would fail, so just return an empty entry. */
+	if (disk_entry.type == MAP_ENTRY_TYPE_EMPTY)
+	{
+		memset(out, 0, sizeof(TDEMapEntry));
+		return true;
+	}
+
+	ikey_from_map_entry_v4(&disk_entry, principal_key, &key);
+
+	rloc.spcOid = disk_entry.spcOid;
+	rloc.dbOid = principal_key->keyInfo.databaseId;
+	rloc.relNumber = disk_entry.relNumber;
+
+	open_pg_tde_initialize_map_entry(out, principal_key, &rloc, &key);
+
+	return true;
+}
+
 void
 open_pg_tde_migrate_smgr_keys_file(void)
 {
@@ -1055,6 +1133,8 @@ open_pg_tde_migrate_smgr_keys_file(void)
 		/* The type check later, when extracting the principal key */
 		if (FILEMAGIC_VERSION(fheader.file_version) == 3)
 			read_map_entry = map_from_disk_entry_v3;
+		else if (FILEMAGIC_VERSION(fheader.file_version) == 4)
+			read_map_entry = map_from_disk_entry_v4;
 		else
 			elog(ERROR, "keys migration: unsupported or corrupted version %d of file \"%s\"", FILEMAGIC_VERSION(fheader.file_version), db_map_path);
 

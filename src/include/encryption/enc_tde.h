@@ -18,11 +18,13 @@ typedef enum CipherType
 	CIPHER_AES_128,
 	CIPHER_AES_256,
 	CIPHER_AES_128_XTS,			/* AES-128-XTS, 32-byte key; data files only */
+	CIPHER_AES_256_XTS,			/* AES-256-XTS, 64-byte key; data files only */
 } CipherType;
 
 extern uint32 open_pg_tde_cipher_key_length(CipherType cipher);
 
-#define INTERNAL_KEY_MAX_LEN 32 /* Max size of an Internal Key */
+#define INTERNAL_KEY_MAX_LEN 64 /* Max size of an Internal Key (two 256-bit
+								 * subkeys for AES-256-XTS) */
 #define INTERNAL_KEY_IV_LEN 16
 
 typedef struct InternalKey

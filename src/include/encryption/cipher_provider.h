@@ -47,7 +47,7 @@ typedef struct TdeCipher
 								 * so ids must never be reused for a different
 								 * algorithm. Matches the CipherType enum. */
 	const char *name;			/* stable identifier, e.g. "aes-256" */
-	uint32_t	key_len;		/* key length in bytes (16 or 32) */
+	uint32_t	key_len;		/* key length in bytes (16, 32, or 64) */
 
 	/* Block mode for data pages (AES-CBC for the built-ins). */
 	TdeBlockCryptFn encrypt_block;

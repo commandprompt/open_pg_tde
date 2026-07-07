@@ -90,6 +90,7 @@ The setting applies only to objects created after the value is set, including pr
 Selects the cipher used to encrypt the data files of **new** encrypted tables (`tde_heap`). Supported values:
 
 * `aes_xts` - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.
+* `aes_256_xts` - AES-256-XTS. AES-256 key strength with the XTS storage mode. Intended for deployments that require AES-256 keys; for others, `aes_xts` remains the recommended default.
 * `aes_256` - AES-256-CBC.
 * `aes_128` - AES-128-CBC.
 * `inherit` - follow the [`open_pg_tde.cipher`](#open_pg_tdecipher) setting.

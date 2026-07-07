@@ -371,6 +371,8 @@ tap_tests = [
   't/rotate_key.pl',
   't/tde_heap_aes_256.pl',
   't/tde_heap_xts.pl',
+  't/aes_256_xts_migration.pl',
+  't/tde_heap_aes_256_xts.pl',
   't/tde_heap.pl',
   't/unlogged_tables.pl',
   't/wal_archiving.pl',
