@@ -4,7 +4,7 @@
 
 `open_pg_tde` is a PostgreSQL extension that provides Transparent Data Encryption (TDE) to protect data at rest.
 
-> `open_pg_tde` is an open fork of [Percona's `pg_tde`](https://github.com/percona/pg_tde), maintained by Command Prompt, Inc. It keeps the file and KMIP key providers, keeps OpenBao (the Apache-2.0 KV v2 provider) while dropping HashiCorp Vault, and adds pluggable ciphers (AES-XTS for data files, AES-CTR for WAL) selectable via the `open_pg_tde.data_cipher` GUC.
+> `open_pg_tde` is an open fork of [Percona's `pg_tde`](https://github.com/percona/pg_tde), maintained by Command Prompt, Inc. It runs on upstream PostgreSQL 16, 17, and 18 (no vendor server fork), keeps the file and KMIP key providers, keeps OpenBao (the Apache-2.0 KV v2 provider) while dropping HashiCorp Vault, and adds pluggable ciphers (AES-128/256-XTS for data files, AES-CTR for WAL) selectable via the `open_pg_tde.data_cipher` GUC, temporary file encryption, and FIPS enforcement. See the [comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md).
 
 ## Table of Contents
 
@@ -22,10 +22,20 @@ Transparent Data Encryption offers encryption at the file level and solves the p
 
 This access method:
 
-- Works with upstream PostgreSQL 16 and later, patched with the `open_pg_tde` core patch (see [Installation](#installation))
+- Works with upstream PostgreSQL 16, 17, and 18, patched with the `open_pg_tde` core patch (see [Installation](#installation))
 - Uses extended Storage Manager and WAL APIs
-- Encrypts tuples, WAL and indexes
-- It **does not** encrypt temporary files and statistics **yet**
+- Encrypts table data, indexes, TOAST, WAL, and temporary files
+- Does not encrypt system catalogs or statistics (see the [threat model](documentation/docs/index/threat-model.md))
+
+### Capabilities
+
+- Per-table encryption via `tde_heap`, with the cipher recorded per table
+- Data-file ciphers: AES-128-XTS (default), AES-256-XTS, AES-128-CBC, AES-256-CBC
+- WAL encryption (AES-CTR) for the whole cluster
+- Temporary file encryption ([`encrypt_temp_files`](documentation/docs/variables.md))
+- Key management through a keyring file, KMIP-compatible systems, or OpenBao
+- FIPS enforcement: all cryptography uses FIPS-approved modes, and the server can require OpenSSL FIPS mode ([FIPS compliance](documentation/docs/index/fips.md))
+- Runs on upstream PostgreSQL 16, 17, and 18 through a gated core patch
 
 ## Documentation
 
