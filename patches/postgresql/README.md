@@ -93,7 +93,13 @@ scratch. Two lessons already recorded:
 
 | PostgreSQL | Data files | WAL | Frontend tools | Compile-time gate |
 |------------|-----------|-----|----------------|-------------------|
-| 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance) | In progress | In progress | **Done** (verified OFF=clean PG / ON=encrypts; `verify-gate.sh`) |
+| 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance) | **Done** (encrypt, recovery, archiving, key TLI) | **Done** (rewind, basebackup, upgrade) | **Done** (verified OFF=clean PG / ON=encrypts; `verify-gate.sh`) |
+
+**PostgreSQL 18: 40/42 extension tests pass.** The 2 remaining are not native-port
+gaps: `keys_update` restores a frozen old-version fixture that references the old
+`pg_tde` library name (rename/upgrade-compat), and `regress` is a live-service
+integration test (OpenBao + KMIP). Run the suite with `LD_LIBRARY_PATH=<prefix>/lib`
+so the frontend tools find `libpq` at runtime.
 | 14-17 | Not started | — | — | — |
 
 See `../../TODO.md` for the tracked work.
