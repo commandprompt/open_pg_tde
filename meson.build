@@ -330,6 +330,7 @@ executable('pg_tde_waldump',
 tap_tests = [
   't/basic.pl',
   't/change_key_provider.pl',
+  't/cipher_selection.pl',
   't/crash_recovery.pl',
   't/default_principal_key.pl',
   't/key_rotate_tablespace.pl',

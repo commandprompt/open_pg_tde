@@ -16,8 +16,24 @@ bool		EnforceEncryption = false;
 int			Cipher = CIPHER_AES_128;
 int			KeyLength = KEY_DATA_SIZE_128;
 
+/*
+ * Cipher used to encrypt new data-file (relation) keys. -1 means "inherit",
+ * i.e. follow pg_tde.cipher; any other value is a CipherType id and overrides
+ * it. The chosen id is persisted per relation, so existing tables keep using
+ * the cipher recorded at their creation.
+ */
+#define DATA_CIPHER_INHERIT (-1)
+int			DataCipher = DATA_CIPHER_INHERIT;
+
 /* Custom GUC variable */
 static const struct config_enum_entry cipher_options[] = {
+	{"aes_128", CIPHER_AES_128, false},
+	{"aes_256", CIPHER_AES_256, false},
+	{NULL, 0, false}
+};
+
+static const struct config_enum_entry data_cipher_options[] = {
+	{"inherit", DATA_CIPHER_INHERIT, false},
 	{"aes_128", CIPHER_AES_128, false},
 	{"aes_256", CIPHER_AES_256, false},
 	{NULL, 0, false}
@@ -78,6 +94,20 @@ TdeGucInit(void)
 							 0, /* flags */
 							 NULL,	/* check_hook */
 							 assign_keys_size,	/* assign_hook */
+							 NULL	/* show_hook */
+		);
+
+	DefineCustomEnumVariable("pg_tde.data_cipher",	/* name */
+							 "Cipher used to encrypt new table data files.",	/* short_desc */
+							 "'inherit' follows pg_tde.cipher; otherwise this overrides it for data files. "
+							 "The chosen cipher is recorded per table at creation time.",	/* long_desc */
+							 &DataCipher,	/* value address */
+							 DATA_CIPHER_INHERIT,	/* boot value */
+							 data_cipher_options,	/* options */
+							 PGC_SUSET, /* context */
+							 0, /* flags */
+							 NULL,	/* check_hook */
+							 NULL,	/* assign_hook */
 							 NULL	/* show_hook */
 		);
 

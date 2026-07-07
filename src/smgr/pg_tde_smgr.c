@@ -98,12 +98,22 @@ tde_smgr_log_delete_leftover_key(const RelFileLocator *rlocator)
 	XLogInsert(RM_TDERMGR_ID, XLOG_TDE_DELETE_RELATION_KEY);
 }
 
+/*
+ * Cipher used for new data-file (relation) keys. pg_tde.data_cipher selects it
+ * explicitly; the default "inherit" (-1) follows pg_tde.cipher.
+ */
+static CipherType
+tde_smgr_data_cipher(void)
+{
+	return (CipherType) (DataCipher < 0 ? Cipher : DataCipher);
+}
+
 static InternalKey *
 tde_smgr_create_key(const RelFileLocatorBackend *smgr_rlocator)
 {
 	InternalKey *key = palloc_object(InternalKey);
 
-	pg_tde_generate_internal_key(key, KeyLength);
+	pg_tde_generate_internal_key(key, tde_smgr_data_cipher());
 
 	if (RelFileLocatorBackendIsTemp(*smgr_rlocator))
 		tde_smgr_save_temp_key(&smgr_rlocator->locator, key);
@@ -121,7 +131,7 @@ tde_smgr_create_key_redo(const RelFileLocator *rlocator)
 {
 	InternalKey key;
 
-	pg_tde_generate_internal_key(&key, KeyLength);
+	pg_tde_generate_internal_key(&key, tde_smgr_data_cipher());
 	pg_tde_save_smgr_key(*rlocator, &key, false);
 }
 

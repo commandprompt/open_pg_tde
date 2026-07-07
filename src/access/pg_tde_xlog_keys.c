@@ -17,6 +17,7 @@
 #include "common/pg_tde_utils.h"
 #include "encryption/enc_aes.h"
 #include "encryption/enc_tde.h"
+#include "encryption/cipher_provider.h"
 #include "pg_tde.h"
 #include "utils/palloc.h"
 
@@ -182,7 +183,12 @@ pg_tde_create_wal_range(WalEncryptionRange *range, WalEncryptionRangeType type, 
 	range->end.lsn = MaxXLogRecPtr;
 	range->end.tli = MaxTimeLineID;
 
-	pg_tde_generate_internal_key(&range->key, key_len);
+	/*
+	 * The WAL key length still selects the cipher for the WAL stream; resolve
+	 * it to the matching cipher id. (Per-stream cipher selection is a separate
+	 * follow-up; today the WAL stream uses the AES-CTR keystream.)
+	 */
+	pg_tde_generate_internal_key(&range->key, TdeCipherByKeyLen(key_len)->id);
 
 	pg_tde_write_wal_key_file_entry(range, principal_key);
 
@@ -607,6 +613,7 @@ pg_tde_wal_range_from_entry(const TDEPrincipalKey *principal_key, WalKeyFileEntr
 	range->end.tli = MaxTimeLineID;
 	range->end.lsn = MaxXLogRecPtr;
 	range->key.key_len = pg_tde_cipher_key_length(entry->cipher);
+	range->key.cipher = entry->cipher;
 
 	memcpy(range->key.base_iv, entry->key_base_iv, INTERNAL_KEY_IV_LEN);
 	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,
@@ -657,8 +664,7 @@ pg_tde_initialize_wal_key_file_entry(WalKeyFileEntry *entry,
 	memset(entry, 0, sizeof(WalKeyFileEntry));
 
 	Assert(range->key.key_len == 16 || range->key.key_len == 32);
-	entry->cipher = range->key.key_len == 32 ? CIPHER_AES_256 : CIPHER_AES_128; /* We support only those
-																				 * for now */
+	entry->cipher = range->key.cipher;
 
 	entry->range_type = range->type;
 	entry->range_start = range->start;

@@ -45,8 +45,10 @@ pg_tde_cipher_key_length(CipherType cipher)
 }
 
 void
-pg_tde_generate_internal_key(InternalKey *int_key, int key_len)
+pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher)
 {
+	int			key_len = pg_tde_cipher_key_length(cipher);
+
 	Assert(key_len == 16 || key_len == 32);
 
 	/*
@@ -67,6 +69,7 @@ pg_tde_generate_internal_key(InternalKey *int_key, int key_len)
 					   ERR_error_string(ERR_get_error(), NULL)));
 
 	int_key->key_len = key_len;
+	int_key->cipher = cipher;
 }
 
 /*
@@ -221,7 +224,7 @@ tde_decrypt_smgr_block(InternalKey *rel_key, ForkNumber forknum, BlockNumber blo
 
 	CalcBlockIv(forknum, blocknum, rel_key->base_iv, iv);
 
-	TdeCipherByKeyLen(rel_key->key_len)->decrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
+	TdeCipherById(rel_key->cipher)->decrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
 }
 
 void
@@ -231,5 +234,5 @@ tde_encrypt_smgr_block(InternalKey *rel_key, ForkNumber forknum, BlockNumber blo
 
 	CalcBlockIv(forknum, blocknum, rel_key->base_iv, iv);
 
-	TdeCipherByKeyLen(rel_key->key_len)->encrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
+	TdeCipherById(rel_key->cipher)->encrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
 }

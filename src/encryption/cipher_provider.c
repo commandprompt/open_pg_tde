@@ -10,6 +10,7 @@
 
 #include "encryption/cipher_provider.h"
 #include "encryption/enc_aes.h"
+#include "encryption/enc_tde.h"		/* CipherType ids */
 
 #ifdef FRONTEND
 #include "pg_tde_fe.h"
@@ -22,12 +23,13 @@ static int	tde_cipher_count = 0;
 static bool tde_cipher_registry_initialized = false;
 
 static void
-register_cipher(const char *name, uint32_t key_len,
+register_cipher(uint32_t id, const char *name, uint32_t key_len,
 				TdeBlockCryptFn encrypt_block, TdeBlockCryptFn decrypt_block,
 				TdeKeystreamFn keystream)
 {
 	Assert(tde_cipher_count < MAX_TDE_CIPHERS);
 
+	tde_ciphers[tde_cipher_count].id = id;
 	tde_ciphers[tde_cipher_count].name = name;
 	tde_ciphers[tde_cipher_count].key_len = key_len;
 	tde_ciphers[tde_cipher_count].encrypt_block = encrypt_block;
@@ -52,8 +54,8 @@ TdeCipherRegistryInit(void)
 	 * and block/keystream implementations -- the enc_tde.c call sites resolve
 	 * ciphers through this registry and need no changes.
 	 */
-	register_cipher("aes-128", 16, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
-	register_cipher("aes-256", 32, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
+	register_cipher(CIPHER_AES_128, "aes-128", 16, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
+	register_cipher(CIPHER_AES_256, "aes-256", 32, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
 
 	tde_cipher_registry_initialized = true;
 }
@@ -82,6 +84,22 @@ TdeCipherByKeyLen(int key_len)
 	ereport(ERROR,
 			errcode(ERRCODE_INTERNAL_ERROR),
 			errmsg("no pg_tde cipher registered for key length %d", key_len));
+
+	return NULL;				/* keep the compiler happy */
+}
+
+const TdeCipher *
+TdeCipherById(uint32_t id)
+{
+	for (int i = 0; i < tde_cipher_count; i++)
+	{
+		if (tde_ciphers[i].id == id)
+			return &tde_ciphers[i];
+	}
+
+	ereport(ERROR,
+			errcode(ERRCODE_INTERNAL_ERROR),
+			errmsg("no pg_tde cipher registered for id %u", id));
 
 	return NULL;				/* keep the compiler happy */
 }

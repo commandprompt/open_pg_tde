@@ -42,6 +42,10 @@ typedef void (*TdeKeystreamFn) (void *ctxPtr, const unsigned char *key, int key_
 
 typedef struct TdeCipher
 {
+	uint32_t	id;				/* stable numeric id; persisted in the key map
+								 * (map_entry->cipher) and the WAL key file, so
+								 * ids must never be reused for a different
+								 * algorithm. Matches the CipherType enum. */
 	const char *name;			/* stable identifier, e.g. "aes-256" */
 	uint32_t	key_len;		/* key length in bytes (16 or 32) */
 
@@ -58,6 +62,15 @@ extern void TdeCipherRegistryInit(void);
 
 /* Look up a registered cipher by name, or NULL if none matches. */
 extern const TdeCipher *TdeCipherByName(const char *name);
+
+/*
+ * Look up a registered cipher by its stable id (the value persisted in the key
+ * map / WAL key file). Raises an error if no suite matches. This is the
+ * dispatch path used when encrypting/decrypting an existing relation, so the
+ * cipher is chosen by what was recorded at key-creation time rather than by
+ * key length.
+ */
+extern const TdeCipher *TdeCipherById(uint32_t id);
 
 /*
  * Look up the registered cipher for a given key length. This preserves the

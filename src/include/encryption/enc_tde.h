@@ -27,11 +27,12 @@ extern uint32 pg_tde_cipher_key_length(CipherType cipher);
 typedef struct InternalKey
 {
 	uint32		key_len;
+	CipherType	cipher;			/* which registered cipher this key uses */
 	uint8		base_iv[INTERNAL_KEY_IV_LEN];
 	uint8		key[INTERNAL_KEY_MAX_LEN];
 } InternalKey;
 
-extern void pg_tde_generate_internal_key(InternalKey *int_key, int key_len);
+extern void pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher);
 extern void pg_tde_stream_crypt(const char *iv_prefix,
 								uint32 start_offset,
 								const char *data,

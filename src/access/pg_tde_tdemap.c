@@ -450,8 +450,8 @@ pg_tde_initialize_map_entry(TDEMapEntry *map_entry, const TDEPrincipalKey *princ
 	memcpy(map_entry->key_base_iv, rel_key_data->base_iv, INTERNAL_KEY_IV_LEN);
 
 	Assert(rel_key_data->key_len == 16 || rel_key_data->key_len == 32);
-	map_entry->cipher = rel_key_data->key_len == 32 ? CIPHER_AES_256 : CIPHER_AES_128;	/* We support only those
-																						 * for now */
+	map_entry->cipher = rel_key_data->cipher;	/* recorded so reads dispatch on
+												 * the cipher chosen at creation */
 
 	if (!RAND_bytes(map_entry->entry_iv, MAP_ENTRY_IV_SIZE))
 		ereport(ERROR,
@@ -586,6 +586,7 @@ tde_decrypt_rel_key(const TDEPrincipalKey *principal_key, TDEMapEntry *map_entry
 
 	memcpy(key->base_iv, map_entry->key_base_iv, INTERNAL_KEY_IV_LEN);
 	key->key_len = key_len;
+	key->cipher = map_entry->cipher;
 
 	return key;
 }
