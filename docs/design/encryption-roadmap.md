@@ -55,25 +55,28 @@ tracks the tablespace OID, so this is mostly a policy layer.
 
 **4. AES-256-XTS for data files (Tier 2).**
 XTS is the recommended mode for storage encryption, but only AES-128-XTS is
-available today. Adding the cipher itself is small (a registry entry that wraps
-`EVP_aes_256_xts()`, a GUC value, and a second XTS context), but it is **not**
-a drop-in: AES-256-XTS needs a 64-byte key (two AES-256 subkeys), while the
-internal key is capped at 32 bytes. `INTERNAL_KEY_MAX_LEN` is 32, the
-`InternalKey.key` buffer is `uint8 key[32]`, and, critically, the on-disk key
-map entry stores the wrapped key in `TDEMapEntry.encrypted_key_data[32]`.
-Supporting a 64-byte internal key therefore requires enlarging the on-disk key
-map format and a migration (the existing `keys_version` mechanism), plus
-relaxing the `key_len == 16 || key_len == 32` assumption in the key wrap path.
-Clear value, but the on-disk format change moves it out of Tier 1. A natural
-companion to any future format bump.
+available today. AES-256-XTS needs a 64-byte key (two AES-256 subkeys), while
+the internal key is capped at 32 bytes (`INTERNAL_KEY_MAX_LEN`, the
+`InternalKey.key` buffer, and the on-disk `TDEMapEntry.encrypted_key_data`).
+Supporting it requires a **key-map** format bump: enlarge the key entry, bump
+the file-version magic, and migrate existing key files (the existing
+`FILEMAGIC_VERSION` mechanism, mirroring the V3 to V4 migration). This is a
+contained, low-risk change with a migration, and it needs no table rewrite,
+since only newly created AES-256-XTS tables use the larger key; existing tables
+keep their ciphers. See the dedicated design doc,
+[`aes-256-xts.md`](aes-256-xts.md).
 
 **5. Authenticated page encryption, AES-GCM (Tier 2).**
-Data pages use CBC/XTS, which provide confidentiality but not integrity, so
+Data pages use XTS/CBC, which provide confidentiality but not integrity, so
 tampering with an encrypted page on disk is not detected. AES-GCM would add a
-per-page authentication tag and detect tampering. The internal keys are already
-wrapped with GCM, so the primitive is present, but per-page tags need space in
-the page layout, which is an on-disk format change and a larger effort. High
-value for tamper-evidence and compliance.
+per-page authentication tag and detect tampering. This is a **separate and much
+larger** change from the AES-256-XTS key-map bump: the cost is in the page
+format, not the key map. Pages are encrypted length-preserving today, with no
+room for a per-page tag, and GCM's nonce-reuse hazard on in-place page rewrites
+requires per-write nonce management. It is the highest-value hardening on this
+list and also the highest effort. Scoped in its own design doc,
+[`aes-gcm-authenticated-pages.md`](aes-gcm-authenticated-pages.md); not planned
+for near-term implementation.
 
 **6. ChaCha20-Poly1305 (Tier 3).**
 An authenticated stream cipher that performs well on platforms without AES
@@ -119,19 +122,21 @@ policy effort on top of the existing OpenSSL usage.
 
 ## Suggested sequencing
 
-1. **Temporary file encryption**: closes a known gap, a prototype already
-   exists, and it reuses the existing key hierarchy (temp files use AES-CBC, so
-   the 32-byte internal key is enough, with no format change).
-2. **Cloud KMS providers**: high demand, extends the provider interface.
-3. **Tablespace-level encryption**: per its own design doc.
-4. **Automatic key rotation** and **key-access audit logging**: compliance
+1. **Temporary file encryption** (done): closed a known gap, reuses the
+   existing key hierarchy (temp files use AES-CBC, so the 32-byte internal key
+   is enough, with no format change).
+2. **AES-256-XTS**: a contained key-map format bump for compliance regimes that
+   mandate AES-256 with the XTS storage mode. See `aes-256-xts.md`.
+3. **Cloud KMS providers**: high demand, extends the provider interface.
+4. **Tablespace-level encryption**: per its own design doc.
+5. **Automatic key rotation** and **key-access audit logging**: compliance
    features on top of the existing key hierarchy.
-5. **On-disk key-map format bump**, carrying **AES-256-XTS** (64-byte key) and
-   room for **authenticated page encryption (AES-GCM)**: batch the format
-   change and its migration once, then add the ciphers that need it.
 6. **Statistics encryption**: catalog change to stop `pg_statistic` leaking
    sampled values.
-7. **HSM/PKCS#11**, **FIPS mode**, and **column-level encryption**: larger or
+7. **Authenticated page encryption (AES-GCM)**: a large standalone project
+   (page-format change plus nonce management). Scoped separately in
+   `aes-gcm-authenticated-pages.md`; not near-term.
+8. **HSM/PKCS#11**, **FIPS mode**, and **column-level encryption**: larger or
    more specialized, scheduled by demand.
 
 ## Notes

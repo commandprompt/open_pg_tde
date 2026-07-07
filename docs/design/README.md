@@ -10,4 +10,6 @@ a date.
 | Document | Status |
 | -------- | ------ |
 | [Encryption feature roadmap](encryption-roadmap.md) | Proposed |
+| [AES-256-XTS for data files](aes-256-xts.md) | In progress |
+| [Authenticated page encryption (AES-GCM)](aes-gcm-authenticated-pages.md) | Proposed (not scheduled) |
 | [Tablespace-level encryption](tablespace-encryption.md) | Proposed |
