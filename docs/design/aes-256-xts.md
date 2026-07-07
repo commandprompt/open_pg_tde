@@ -1,6 +1,6 @@
 # Design: AES-256-XTS for data files
 
-- Status: In progress
+- Status: Implemented (PR #3)
 - Date: 2026-07-07
 - Scope: add AES-256-XTS as a data-file cipher, alongside the existing
   AES-128-XTS, AES-128-CBC, and AES-256-CBC options.
@@ -99,7 +99,7 @@ there is a working migration from version 3 (`TDEMapEntryV3` and
    the XTS crypt path. XTS is block-only (no keystream), so, like AES-128-XTS,
    it is skipped by the WAL/stream key-length lookup.
 
-6. **Expose the GUC value.** Add `aes-256-xts` to `open_pg_tde.data_cipher`.
+6. **Expose the GUC value.** Add `aes_256_xts` to `open_pg_tde.data_cipher`.
 
 The cipher id is recorded per relation, so existing tables continue to decrypt
 with the cipher they were created with, and different tables in one cluster may
@@ -153,7 +153,7 @@ while the WAL entry size is fixed independently.
 
 ## Testing
 
-- A `tde_heap` table created with `open_pg_tde.data_cipher = 'aes-256-xts'`
+- A `tde_heap` table created with `open_pg_tde.data_cipher = 'aes_256_xts'`
   encrypts and decrypts correctly, is ciphertext on disk, and survives a
   restart.
 - Mixed ciphers in one database (AES-128-XTS and AES-256-XTS tables) both read
