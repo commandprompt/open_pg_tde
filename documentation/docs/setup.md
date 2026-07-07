@@ -63,6 +63,34 @@ psql -d template1 -c 'CREATE EXTENSION open_pg_tde;'
 !!! note
     It’s recommended to use an external key provider (KMS) to manage encryption keys. For configuration instructions, see [Next steps](#next-steps).
 
+## Recommended: enable data checksums
+
+`open_pg_tde` encrypts a whole 8 kB page as one unit. When a hint bit is updated
+on a page, the entire page is re-encrypted. PostgreSQL does not, by default,
+write-ahead log a hint-bit-only change, so under whole-page encryption a torn
+write of such a page during a crash could damage the page.
+
+Enable **data checksums** so PostgreSQL WAL-logs hint-bit changes and full-page
+images protect against torn pages. Initialize the cluster with checksums:
+
+```sh
+initdb --data-checksums -D /path/to/datadir
+```
+
+If the cluster was not initialized with checksums, set `wal_log_hints = on`
+instead. Data checksums also verify page integrity on read; the checksum is
+computed on the plaintext page and then the page is encrypted, so verification
+runs on the decrypted page and works normally with `open_pg_tde`.
+
+PostgreSQL 18 enables data checksums by default, so a default PostgreSQL 18
+cluster is already safe. On earlier versions checksums are off unless you enable
+them. If neither data checksums nor `wal_log_hints` is enabled, `open_pg_tde`
+emits a warning at server start:
+
+```
+WARNING:  open_pg_tde is loaded but neither data checksums nor wal_log_hints is enabled
+```
+
 ## Next steps
 
 [Configure Key Management (KMS) :material-arrow-right:](global-key-provider-configuration/overview.md){.md-button}

@@ -7,4 +7,6 @@
 * **Write-Ahead Log (WAL) data** for the entire database cluster. This includes WAL data in encrypted and non-encrypted tables.
 * **Indexes** on encrypted tables.
 
+For what encryption at rest does and does not protect against, see the [threat model](threat-model.md).
+
 [Check out the table access methods :material-arrow-right:](table-access-method.md){.md-button}
