@@ -975,6 +975,46 @@ index 03c9bba..7a29b52 100644
  
  /* --------------------------------------------------------------------------------
   * Public callback related functions operating on IO Handles
+diff --git a/src/backend/storage/buffer/bufmgr.c b/src/backend/storage/buffer/bufmgr.c
+index a5b4bc5..91cc3ae 100644
+--- a/src/backend/storage/buffer/bufmgr.c
++++ b/src/backend/storage/buffer/bufmgr.c
+@@ -946,7 +946,11 @@ ExtendBufferedRelTo(BufferManagerRelation bmr,
+ 
+ 		/* recheck, fork might have been created concurrently */
+ 		if (!smgrexists(bmr.smgr, fork))
++#ifdef USE_TDE_HOOKS
++			smgrcreate_percona(bmr.rel->rd_locator, bmr.smgr, fork, flags & EB_PERFORMING_RECOVERY);
++#else
+ 			smgrcreate(bmr.smgr, fork, flags & EB_PERFORMING_RECOVERY);
++#endif
+ 
+ 		UnlockRelationForExtension(bmr.rel, ExclusiveLock);
+ 	}
+@@ -5280,7 +5284,11 @@ CreateAndCopyRelationData(RelFileLocator src_rlocator,
+ 	 * directory.  Therefore, each individual relation doesn't need to be
+ 	 * registered for cleanup.
+ 	 */
++#ifdef USE_TDE_HOOKS
++	RelationCreateStoragePercona(src_rlocator, dst_rlocator, relpersistence, false);
++#else
+ 	RelationCreateStorage(dst_rlocator, relpersistence, false);
++#endif
+ 
+ 	/* copy main fork. */
+ 	RelationCopyStorageUsingBuffer(src_rlocator, dst_rlocator, MAIN_FORKNUM,
+@@ -5292,7 +5300,11 @@ CreateAndCopyRelationData(RelFileLocator src_rlocator,
+ 	{
+ 		if (smgrexists(src_rel, forkNum))
+ 		{
++#ifdef USE_TDE_HOOKS
++			smgrcreate_percona(src_rel->smgr_rlocator.locator, dst_rel, forkNum, false);
++#else
+ 			smgrcreate(dst_rel, forkNum, false);
++#endif
+ 
+ 			/*
+ 			 * WAL log creation if the relation is persistent, or this is the
 diff --git a/src/backend/storage/smgr/md.c b/src/backend/storage/smgr/md.c
 index db4595d..83bd661 100644
 --- a/src/backend/storage/smgr/md.c
