@@ -1,9 +1,9 @@
 # Architecture overview
 
-`open_pg_tde` is a **customizable, complete, data at rest encryption extension**. Extension means that `open_pg_tde` is delivered as a PostgreSQL extension.
+`open_pg_tde` is a customizable data-at-rest encryption extension, delivered as a PostgreSQL extension.
 
 !!! note
-    `open_pg_tde` relies on extensibility changes in the PostgreSQL core. It currently runs only with [Percona Server for PostgreSQL :octicons-link-external-16:](https://docs.percona.com/postgresql/17/index.html), which includes those changes.
+    `open_pg_tde` relies on extensibility changes in the PostgreSQL core. You add these by applying the `open_pg_tde` core patch to upstream PostgreSQL 16 or later and building it with the hooks enabled. See [Install from source](../install-from-source.md).
 
 The following sections break down the key architectural components of this design.
 

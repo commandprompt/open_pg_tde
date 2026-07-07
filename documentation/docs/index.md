@@ -1,8 +1,8 @@
-# Percona Transparent Data Encryption for PostgreSQL documentation
+# open_pg_tde documentation
 
-Percona Transparent Data Encryption for PostgreSQL (`open_pg_tde`) is an open source, community driven and futureproof PostgreSQL extension that provides Transparent Data Encryption (TDE) to protect data at rest. `open_pg_tde` ensures that the data stored on disk is encrypted, and that no one can read it without the proper encryption keys, even if they gain access to the physical storage media.
+`open_pg_tde` is an open source PostgreSQL extension that provides Transparent Data Encryption (TDE) to protect data at rest. It ensures that the data stored on disk is encrypted, and that no one can read it without the proper encryption keys, even if they gain access to the physical storage media.
 
-`open_pg_tde` is bundled as a component of Percona Server for PostgreSQL and requires its patches to function. It is packaged with Percona Distribution for PostgreSQL 17+ to ensure compatibility and proper operation. For more information, see the [Percona Distribution for PostgreSQL 18 documentation :octicons-link-external-16:](https://docs.percona.com/postgresql/18/).
+`open_pg_tde` is an open fork of Percona's `pg_tde`, maintained by Command Prompt, Inc. It runs on upstream PostgreSQL 16 and later: you apply the `open_pg_tde` core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See [Install from source](install-from-source.md).
 
 <div data-grid markdown><div data-banner markdown>
 

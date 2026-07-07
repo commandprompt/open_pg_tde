@@ -1,17 +1,17 @@
 # Limitations of open_pg_tde
 
-## Known incompatibilities in Percona Server for PostgreSQL
+## Known incompatibilities on a patched PostgreSQL
 
-Some PostgreSQL extensions may not work with Percona Server for PostgreSQL due to internal changes required by `open_pg_tde`.
+Some PostgreSQL extensions may not work on a PostgreSQL build patched with the `open_pg_tde` core patch, because of the storage-manager changes the patch introduces.
 
-These incompatibilities may occur even if `open_pg_tde` is not installed or enabled.
+These incompatibilities can occur even when the hooks are enabled but `open_pg_tde` is not installed. A build with the hooks compiled out behaves as unmodified PostgreSQL.
 
 ### Distributed and extension-based systems
 
 !!! warning "Citus and TimescaleDB are not supported"
-    Percona Server for PostgreSQL is not compatible with distributed PostgreSQL extensions such as Citus or time-series extensions such as TimescaleDB.
+    A patched PostgreSQL build with the hooks enabled is not compatible with distributed PostgreSQL extensions such as Citus or time-series extensions such as TimescaleDB.
 
-    This limitation is caused by internal PostgreSQL changes related to `open_pg_tde` and is not dependent on enabling the extension.
+    This limitation is caused by the storage-manager changes the core patch introduces, and does not depend on enabling `open_pg_tde`.
 
 ## Limitations when using open_pg_tde
 

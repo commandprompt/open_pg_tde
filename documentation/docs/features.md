@@ -1,7 +1,6 @@
 # Features
 
-`open_pg_tde` is available for [Percona Server for PostgreSQL](https://docs.percona.com/postgresql/17/)
-The Percona Server for PostgreSQL provides an extended Storage Manager API that allows integration with custom storage managers.
+`open_pg_tde` runs on upstream PostgreSQL 16 and later, patched with the `open_pg_tde` core patch. The patch provides the extended Storage Manager and WAL APIs that the extension uses to encrypt data at rest. See [Install from source](install-from-source.md).
 
 The following features are available for the extension:
 

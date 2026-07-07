@@ -1,21 +1,31 @@
-# Versions and Supported PostgreSQL deployments
+# Versions and supported PostgreSQL deployments
 
-The `open_pg_tde` extension is available for [Percona Server for PostgreSQL 17.x](https://docs.percona.com/postgresql/17/postgresql-server.html), an open source, drop-in replacement for PostgreSQL Community. This version provides the `tde_heap` access method and offers [full encryption capabilities](../features.md), including encryption of tables, indexes and WAL data.
+`open_pg_tde` runs on upstream PostgreSQL. It does not require a vendor fork of
+the server. Encryption relies on storage-manager and WAL extensibility that
+upstream PostgreSQL does not yet expose, so you apply the `open_pg_tde` core
+patch to a PostgreSQL source tree, build it with the hooks enabled, and build
+the extension against that install. See [Install from source](../install-from-source.md).
 
-The extension is tightly integrated with Percona Server for PostgreSQL to deliver enhanced encryption functionality that is not available in community builds.
+## Supported PostgreSQL versions
 
-## Why choose Percona Server for PostgreSQL?
+| PostgreSQL major | Status |
+| ---------------- | ------ |
+| 18 | Supported |
+| 17 | Supported |
+| 16 | Supported |
+| 14 - 15 | Not supported |
 
-By using our PostgreSQL distribution, you get:
+PostgreSQL 16 is the minimum supported version. The core patch is maintained as
+a per-major-version series under `patches/postgresql/`, because the storage
+manager interface changes between PostgreSQL majors. See
+`patches/postgresql/README.md` in the source tree for the current status and the
+maintenance process.
 
-- **Full encryption support** through the `tde_heap` access method, including tables, indexes and WAL data.
-- **Enhanced performance and enterprise-ready features** not available in community builds.
-- **Regular updates and security patches** backed by Percona’s expert support team.
-- **Professional support** and guidance for secure PostgreSQL deployments.
+On a supported version, `open_pg_tde` provides the `tde_heap` access method and
+encrypts tables, indexes, and WAL data.
 
 !!! note
-    Support for earlier or limited versions of `open_pg_tde` (such as `tde_heap_basic`) has been deprecated.
-
-Still unsure which deployment fits your needs? [Contact our experts](https://www.percona.com/about/contact) to find the best solution for your environment.
+    Support for the earlier `tde_heap_basic` access method has been removed.
+    Use `tde_heap`.
 
 [Get started with installation :material-arrow-right:](../install.md){.md-button}
