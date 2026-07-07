@@ -5,6 +5,7 @@
 
 #include "encryption/enc_tde.h"
 #include "encryption/enc_aes.h"
+#include "encryption/cipher_provider.h"
 
 #ifdef FRONTEND
 #include "pg_tde_fe.h"
@@ -112,6 +113,7 @@ pg_tde_stream_crypt(const char *iv_prefix,
 	const uint64 aes_block_no = start_offset % AES_BLOCK_SIZE;
 	uint32		batch_no = 0;
 	uint32		data_index = 0;
+	const TdeCipher *cipher = TdeCipherByKeyLen(key_len);
 
 	/*
 	 * Our callers pass either fully overlapping (out == data, in-place) or
@@ -127,7 +129,7 @@ pg_tde_stream_crypt(const char *iv_prefix,
 		uint32		key_offset;
 		uint64		batch_end_block = Min(batch_start_block + NUM_AES_BLOCKS_IN_BATCH, aes_end_block);
 
-		AesCtrEncryptedZeroBlocks(ctxPtr, key, key_len, iv_prefix, batch_start_block, batch_end_block, enc_key);
+		cipher->keystream(ctxPtr, key, key_len, iv_prefix, batch_start_block, batch_end_block, enc_key);
 
 #ifdef ENCRYPTION_DEBUG
 		{
@@ -219,7 +221,7 @@ tde_decrypt_smgr_block(InternalKey *rel_key, ForkNumber forknum, BlockNumber blo
 
 	CalcBlockIv(forknum, blocknum, rel_key->base_iv, iv);
 
-	AesDecrypt(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
+	TdeCipherByKeyLen(rel_key->key_len)->decrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
 }
 
 void
@@ -229,5 +231,5 @@ tde_encrypt_smgr_block(InternalKey *rel_key, ForkNumber forknum, BlockNumber blo
 
 	CalcBlockIv(forknum, blocknum, rel_key->base_iv, iv);
 
-	AesEncrypt(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
+	TdeCipherByKeyLen(rel_key->key_len)->encrypt_block(rel_key->key, rel_key->key_len, iv, in, BLCKSZ, out);
 }

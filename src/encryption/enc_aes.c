@@ -4,6 +4,7 @@
 #include <openssl/evp.h>
 
 #include "encryption/enc_aes.h"
+#include "encryption/cipher_provider.h"
 
 #ifdef FRONTEND
 #include "pg_tde_fe.h"
@@ -71,6 +72,9 @@ AesInit(void)
 	cipher_gcm_256 = EVP_aes_256_gcm();
 	cipher_ctr_ecb_256 = EVP_aes_256_ecb();
 	ctx_cbc_256 = AesCbcInitCtx(EVP_aes_256_cbc(), "AES-256-CBC");
+
+	/* Register the built-in cipher suites that wrap the primitives above. */
+	TdeCipherRegistryInit();
 }
 
 static void
