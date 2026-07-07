@@ -1,0 +1,16 @@
+name: Tests registered
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v6
+
+      - name: Every t/*.pl is registered in meson.build
+        run: ci_scripts/check-tests-registered.sh

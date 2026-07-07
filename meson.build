@@ -341,6 +341,7 @@ tap_tests = [
   't/key_validation.pl',
   't/kmip.pl',
   't/openbao.pl',
+  't/basebackup_default_key.pl',
   't/pg_basebackup.pl',
   't/pg_rewind_basic.pl',
   't/pg_rewind_databases.pl',
