@@ -79,5 +79,17 @@ Derive these the same way (diff the file against the matching stock tag).
 
 | PostgreSQL | Status |
 |------------|--------|
-| 18 | Core (11 files) verified: builds, initdb, `CREATE EXTENSION open_pg_tde`, `tde_heap` encrypts at rest (`is_encrypted = t`, ciphertext on disk). The ~15 caller-side files above are still to be folded in for full feature parity (TRUNCATE/VACUUM inheritance, WAL recovery). |
+| 18 | **Data-file encryption complete** with the 23-file patch here. Full `tde_heap` suite passes on stock PostgreSQL 18.4: basic, AES-256, AES-XTS, cipher selection, and new-file key inheritance (TRUNCATE / VACUUM FULL / CLUSTER). 20/42 of the extension suite passes. Remaining failures are WAL and frontend-tool features (below). |
 | 14-17 | Not yet ported. The SMGR interface differs per version (zeroextend in 16, readv/writev in 17, AIO in 18), so each needs its own re-derived patch from the matching `PSP_REL_<major>_STABLE`. |
+
+### Remaining for full parity on PG 18
+
+- **WAL encryption/recovery** — `access/transam/xlogutils.c`, `xlogrecovery.c`,
+  `replication/walreceiver.c`. These must be applied as **hunk-level patches,
+  not whole-file copies**: Percona's tree predates the native
+  `XLogFlushBufferForRedoIfInit` helper, so a wholesale copy deletes a symbol
+  that native index-AM redo (`hash_xlog.c`, etc.) needs. Fixes `wal_encrypt`,
+  `wal_key_tli`, `wal_archiving`, `crash_recovery`.
+- **Encryption-aware frontend tools** — the WAL/SMGR integration for
+  `open_pg_tde_rewind` and `open_pg_tde_basebackup` (buffer manager, frontend
+  xlog smgr). Fixes the `pg_rewind_*`, `pg_basebackup`, and upgrade tests.

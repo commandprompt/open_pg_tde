@@ -1,3 +1,52 @@
+diff --git a/src/backend/access/heap/heapam_handler.c b/src/backend/access/heap/heapam_handler.c
+index cb4bc35..cb97aa0 100644
+--- a/src/backend/access/heap/heapam_handler.c
++++ b/src/backend/access/heap/heapam_handler.c
+@@ -588,6 +588,8 @@ heapam_relation_set_new_filelocator(Relation rel,
+ {
+ 	SMgrRelation srel;
+ 
++	RelFileLocator oldlocator = rel->rd_locator;
++
+ 	/*
+ 	 * Initialize to the minimum XID that could put tuples in the table. We
+ 	 * know that no xacts older than RecentXmin are still running, so that
+@@ -605,7 +607,7 @@ heapam_relation_set_new_filelocator(Relation rel,
+ 	 */
+ 	*minmulti = GetOldestMultiXactId();
+ 
+-	srel = RelationCreateStorage(*newrlocator, persistence, true);
++	srel = RelationCreateStoragePercona(oldlocator, *newrlocator, persistence, true);
+ 
+ 	/*
+ 	 * If required, set up an init fork for an unlogged table so that it can
+@@ -615,7 +617,7 @@ heapam_relation_set_new_filelocator(Relation rel,
+ 	{
+ 		Assert(rel->rd_rel->relkind == RELKIND_RELATION ||
+ 			   rel->rd_rel->relkind == RELKIND_TOASTVALUE);
+-		smgrcreate(srel, INIT_FORKNUM, false);
++		smgrcreate_percona(oldlocator, srel, INIT_FORKNUM, false);
+ 		log_smgrcreate(newrlocator, INIT_FORKNUM);
+ 	}
+ 
+@@ -648,7 +650,7 @@ heapam_relation_copy_data(Relation rel, const RelFileLocator *newrlocator)
+ 	 * NOTE: any conflict in relfilenumber value will be caught in
+ 	 * RelationCreateStorage().
+ 	 */
+-	dstrel = RelationCreateStorage(*newrlocator, rel->rd_rel->relpersistence, true);
++	dstrel = RelationCreateStoragePercona(rel->rd_locator, *newrlocator, rel->rd_rel->relpersistence, true);
+ 
+ 	/* copy main fork */
+ 	RelationCopyStorage(RelationGetSmgr(rel), dstrel, MAIN_FORKNUM,
+@@ -660,7 +662,7 @@ heapam_relation_copy_data(Relation rel, const RelFileLocator *newrlocator)
+ 	{
+ 		if (smgrexists(RelationGetSmgr(rel), forkNum))
+ 		{
+-			smgrcreate(dstrel, forkNum, false);
++			smgrcreate_percona(rel->rd_locator, dstrel, forkNum, false);
+ 
+ 			/*
+ 			 * WAL log creation if the relation is persistent, or this is the
 diff --git a/src/backend/access/transam/xlog.c b/src/backend/access/transam/xlog.c
 index e07cb91..eb94d04 100644
 --- a/src/backend/access/transam/xlog.c
@@ -171,6 +220,445 @@ index 29d4df7..f5cfccb 100644
  		/* Update state for read */
  		recptr += readbytes;
  		nbytes -= readbytes;
+diff --git a/src/backend/catalog/heap.c b/src/backend/catalog/heap.c
+index 5df95dd..6b24181 100644
+--- a/src/backend/catalog/heap.c
++++ b/src/backend/catalog/heap.c
+@@ -296,7 +296,8 @@ heap_create(const char *relname,
+ 			bool allow_system_table_mods,
+ 			TransactionId *relfrozenxid,
+ 			MultiXactId *relminmxid,
+-			bool create_storage)
++			bool create_storage,
++			RelFileLocator *old_rlocator)
+ {
+ 	Relation	rel;
+ 
+@@ -381,14 +382,31 @@ heap_create(const char *relname,
+ 	 */
+ 	if (create_storage)
+ 	{
++		RelFileLocator prev_rlocator = rel->rd_locator;
++		RelFileLocator new_rlocator = rel->rd_locator;
++
++		if (old_rlocator != NULL)
++		{
++			prev_rlocator = *old_rlocator;
++
++			/*
++			 * table_relation_set_new_filelocator() takes old_rlocator from
++			 * rel->rd_locator
++			 */
++			rel->rd_locator = prev_rlocator;
++		}
++
+ 		if (RELKIND_HAS_TABLE_AM(rel->rd_rel->relkind))
+-			table_relation_set_new_filelocator(rel, &rel->rd_locator,
++			table_relation_set_new_filelocator(rel, &new_rlocator,
+ 											   relpersistence,
+ 											   relfrozenxid, relminmxid);
+ 		else if (RELKIND_HAS_STORAGE(rel->rd_rel->relkind))
+-			RelationCreateStorage(rel->rd_locator, relpersistence, true);
++			RelationCreateStoragePercona(prev_rlocator, new_rlocator, relpersistence, true);
+ 		else
+ 			Assert(false);
++
++		/* restore the orginal rel's locator */
++		rel->rd_locator = new_rlocator;
+ 	}
+ 
+ 	/*
+@@ -869,9 +887,6 @@ AddNewAttributeTuples(Oid new_rel_oid,
+ 	{
+ 		Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
+ 
+-		if (attr->attisdropped)
+-			continue;
+-
+ 		/* Add dependency info */
+ 		ObjectAddressSubSet(myself, RelationRelationId, new_rel_oid, i + 1);
+ 		ObjectAddressSet(referenced, TypeRelationId, attr->atttypid);
+@@ -1164,6 +1179,8 @@ heap_create_with_catalog(const char *relname,
+ 	Oid			existing_relid;
+ 	Oid			old_type_oid;
+ 	Oid			new_type_oid;
++	RelFileLocator *old_rlocator = NULL;
++	Relation	old_rel;
+ 
+ 	/* By default set to InvalidOid unless overridden by binary-upgrade */
+ 	RelFileNumber relfilenumber = InvalidRelFileNumber;
+@@ -1318,6 +1335,12 @@ heap_create_with_catalog(const char *relname,
+ 	else
+ 		relacl = NULL;
+ 
++	if (relrewrite != InvalidOid)
++	{
++		old_rel = table_open(relrewrite, AccessShareLock);
++		old_rlocator = &old_rel->rd_locator;
++	}
++
+ 	/*
+ 	 * Create the relcache entry (mostly dummy at this point) and the physical
+ 	 * disk file.  (If we fail further down, it's the smgr's responsibility to
+@@ -1341,7 +1364,11 @@ heap_create_with_catalog(const char *relname,
+ 							   allow_system_table_mods,
+ 							   &relfrozenxid,
+ 							   &relminmxid,
+-							   true);
++							   true,
++							   old_rlocator);
++
++	if (relrewrite != InvalidOid)
++		table_close(old_rel, AccessShareLock);
+ 
+ 	Assert(relid == RelationGetRelid(new_rel_desc));
+ 
+diff --git a/src/backend/catalog/index.c b/src/backend/catalog/index.c
+index aa21668..f7bef3c 100644
+--- a/src/backend/catalog/index.c
++++ b/src/backend/catalog/index.c
+@@ -674,6 +674,39 @@ UpdateIndexRelation(Oid indexoid,
+ 	heap_freetuple(tuple);
+ }
+ 
++Oid
++index_create(Relation heapRelation,
++			 const char *indexRelationName,
++			 Oid indexRelationId,
++			 Oid parentIndexRelid,
++			 Oid parentConstraintId,
++			 RelFileNumber relFileNumber,
++			 IndexInfo *indexInfo,
++			 const List *indexColNames,
++			 Oid accessMethodId,
++			 Oid tableSpaceId,
++			 const Oid *collationIds,
++			 const Oid *opclassIds,
++			 const Datum *opclassOptions,
++			 const int16 *coloptions,
++			 const NullableDatum *stattargets,
++			 Datum reloptions,
++			 bits16 flags,
++			 bits16 constr_flags,
++			 bool allow_system_table_mods,
++			 bool is_internal,
++			 Oid *constraintId)
++{
++	if (!percona_allow_upstream_smgr_api)
++		elog(ERROR, "An extension is trying to use the traditional index_create method, while another loaded extension (pg_tde) requires the new API.");
++
++	return index_create_percona(heapRelation, indexRelationName, indexRelationId,
++								parentIndexRelid, parentConstraintId, relFileNumber,
++								indexInfo, indexColNames, accessMethodId, tableSpaceId,
++								collationIds, opclassIds, opclassOptions, coloptions,
++								stattargets, reloptions, flags, constr_flags,
++								allow_system_table_mods, is_internal, constraintId, NULL);
++}
+ 
+ /*
+  * index_create
+@@ -723,27 +756,28 @@ UpdateIndexRelation(Oid indexoid,
+  * Returns the OID of the created index.
+  */
+ Oid
+-index_create(Relation heapRelation,
+-			 const char *indexRelationName,
+-			 Oid indexRelationId,
+-			 Oid parentIndexRelid,
+-			 Oid parentConstraintId,
+-			 RelFileNumber relFileNumber,
+-			 IndexInfo *indexInfo,
+-			 const List *indexColNames,
+-			 Oid accessMethodId,
+-			 Oid tableSpaceId,
+-			 const Oid *collationIds,
+-			 const Oid *opclassIds,
+-			 const Datum *opclassOptions,
+-			 const int16 *coloptions,
+-			 const NullableDatum *stattargets,
+-			 Datum reloptions,
+-			 bits16 flags,
+-			 bits16 constr_flags,
+-			 bool allow_system_table_mods,
+-			 bool is_internal,
+-			 Oid *constraintId)
++index_create_percona(Relation heapRelation,
++					 const char *indexRelationName,
++					 Oid indexRelationId,
++					 Oid parentIndexRelid,
++					 Oid parentConstraintId,
++					 RelFileNumber relFileNumber,
++					 IndexInfo *indexInfo,
++					 const List *indexColNames,
++					 Oid accessMethodId,
++					 Oid tableSpaceId,
++					 const Oid *collationIds,
++					 const Oid *opclassIds,
++					 const Datum *opclassOptions,
++					 const int16 *coloptions,
++					 const NullableDatum *stattargets,
++					 Datum reloptions,
++					 bits16 flags,
++					 bits16 constr_flags,
++					 bool allow_system_table_mods,
++					 bool is_internal,
++					 Oid *constraintId,
++					 RelFileLocator *old_rlocator)
+ {
+ 	Oid			heapRelationId = RelationGetRelid(heapRelation);
+ 	Relation	pg_class;
+@@ -987,7 +1021,8 @@ index_create(Relation heapRelation,
+ 								allow_system_table_mods,
+ 								&relfrozenxid,
+ 								&relminmxid,
+-								create_storage);
++								create_storage,
++								old_rlocator);
+ 
+ 	Assert(relfrozenxid == InvalidTransactionId);
+ 	Assert(relminmxid == InvalidMultiXactId);
+@@ -1442,27 +1477,29 @@ index_concurrently_create_copy(Relation heapRelation, Oid oldIndexId,
+ 	 * ensure a consistent state at all times.  That is why parentIndexRelid
+ 	 * is not set here.
+ 	 */
+-	newIndexId = index_create(heapRelation,
+-							  newName,
+-							  InvalidOid,	/* indexRelationId */
+-							  InvalidOid,	/* parentIndexRelid */
+-							  InvalidOid,	/* parentConstraintId */
+-							  InvalidRelFileNumber, /* relFileNumber */
+-							  newInfo,
+-							  indexColNames,
+-							  indexRelation->rd_rel->relam,
+-							  tablespaceOid,
+-							  indexRelation->rd_indcollation,
+-							  indclass->values,
+-							  opclassOptions,
+-							  indcoloptions->values,
+-							  stattargets,
+-							  reloptionsDatum,
+-							  INDEX_CREATE_SKIP_BUILD | INDEX_CREATE_CONCURRENT,
+-							  0,
+-							  true, /* allow table to be a system catalog? */
+-							  false,	/* is_internal? */
+-							  NULL);
++	newIndexId = index_create_percona(heapRelation,
++									  newName,
++									  InvalidOid,	/* indexRelationId */
++									  InvalidOid,	/* parentIndexRelid */
++									  InvalidOid,	/* parentConstraintId */
++									  InvalidRelFileNumber, /* relFileNumber */
++									  newInfo,
++									  indexColNames,
++									  indexRelation->rd_rel->relam,
++									  tablespaceOid,
++									  indexRelation->rd_indcollation,
++									  indclass->values,
++									  opclassOptions,
++									  indcoloptions->values,
++									  stattargets,
++									  reloptionsDatum,
++									  INDEX_CREATE_SKIP_BUILD | INDEX_CREATE_CONCURRENT,
++									  0,
++									  true, /* allow table to be a system
++											 * catalog? */
++									  false,	/* is_internal? */
++									  NULL,
++									  &indexRelation->rd_locator);
+ 
+ 	/* Close the relations used and clean up */
+ 	index_close(indexRelation, NoLock);
+@@ -3089,7 +3126,7 @@ index_build(Relation heapRelation,
+ 	if (indexRelation->rd_rel->relpersistence == RELPERSISTENCE_UNLOGGED &&
+ 		!smgrexists(RelationGetSmgr(indexRelation), INIT_FORKNUM))
+ 	{
+-		smgrcreate(RelationGetSmgr(indexRelation), INIT_FORKNUM, false);
++		smgrcreate_percona(indexRelation->rd_locator, RelationGetSmgr(indexRelation), INIT_FORKNUM, false);
+ 		log_smgrcreate(&indexRelation->rd_locator, INIT_FORKNUM);
+ 		indexRelation->rd_indam->ambuildempty(indexRelation);
+ 	}
+diff --git a/src/backend/catalog/storage.c b/src/backend/catalog/storage.c
+index 85d1219..34801d3 100644
+--- a/src/backend/catalog/storage.c
++++ b/src/backend/catalog/storage.c
+@@ -105,6 +105,17 @@ AddPendingSync(const RelFileLocator *rlocator)
+ 	pending->is_truncated = false;
+ }
+ 
++SMgrRelation
++RelationCreateStorage(RelFileLocator rlocator,
++					  char relpersistence,
++					  bool register_delete)
++{
++	if (!percona_allow_upstream_smgr_api)
++		elog(ERROR, "An extension is trying to use the traditional RelationCreateStorage method, while another loaded extension (pg_tde) requires the new API.");
++
++	return RelationCreateStoragePercona(rlocator, rlocator, relpersistence, register_delete);
++}
++
+ /*
+  * RelationCreateStorage
+  *		Create physical storage for a relation.
+@@ -119,8 +130,8 @@ AddPendingSync(const RelFileLocator *rlocator)
+  * pass register_delete = false.
+  */
+ SMgrRelation
+-RelationCreateStorage(RelFileLocator rlocator, char relpersistence,
+-					  bool register_delete)
++RelationCreateStoragePercona(RelFileLocator oldlocator, RelFileLocator rlocator, char relpersistence,
++							 bool register_delete)
+ {
+ 	SMgrRelation srel;
+ 	ProcNumber	procNumber;
+@@ -148,7 +159,7 @@ RelationCreateStorage(RelFileLocator rlocator, char relpersistence,
+ 	}
+ 
+ 	srel = smgropen(rlocator, procNumber);
+-	smgrcreate(srel, MAIN_FORKNUM, false);
++	smgrcreate_percona(oldlocator, srel, MAIN_FORKNUM, false);
+ 
+ 	if (needs_wal)
+ 		log_smgrcreate(&srel->smgr_rlocator.locator, MAIN_FORKNUM);
+@@ -992,7 +1003,7 @@ smgr_redo(XLogReaderState *record)
+ 		SMgrRelation reln;
+ 
+ 		reln = smgropen(xlrec->rlocator, INVALID_PROC_NUMBER);
+-		smgrcreate(reln, xlrec->forkNum, true);
++		smgrcreate_percona(xlrec->rlocator, reln, xlrec->forkNum, true);
+ 	}
+ 	else if (info == XLOG_SMGR_TRUNCATE)
+ 	{
+@@ -1013,7 +1024,7 @@ smgr_redo(XLogReaderState *record)
+ 		 * XLogReadBufferForRedo, we prefer to recreate the rel and replay the
+ 		 * log as best we can until the drop is seen.
+ 		 */
+-		smgrcreate(reln, MAIN_FORKNUM, true);
++		smgrcreate_percona(xlrec->rlocator, reln, MAIN_FORKNUM, true);
+ 
+ 		/*
+ 		 * Before we perform the truncation, update minimum recovery point to
+diff --git a/src/backend/catalog/toasting.c b/src/backend/catalog/toasting.c
+index 874a8fc..999f7b9 100644
+--- a/src/backend/catalog/toasting.c
++++ b/src/backend/catalog/toasting.c
+@@ -318,14 +318,14 @@ create_toast_table(Relation rel, Oid toastOid, Oid toastIndexOid,
+ 	coloptions[0] = 0;
+ 	coloptions[1] = 0;
+ 
+-	index_create(toast_rel, toast_idxname, toastIndexOid, InvalidOid,
+-				 InvalidOid, InvalidOid,
+-				 indexInfo,
+-				 list_make2("chunk_id", "chunk_seq"),
+-				 BTREE_AM_OID,
+-				 rel->rd_rel->reltablespace,
+-				 collationIds, opclassIds, NULL, coloptions, NULL, (Datum) 0,
+-				 INDEX_CREATE_IS_PRIMARY, 0, true, true, NULL);
++	index_create_percona(toast_rel, toast_idxname, toastIndexOid, InvalidOid,
++						 InvalidOid, InvalidOid,
++						 indexInfo,
++						 list_make2("chunk_id", "chunk_seq"),
++						 BTREE_AM_OID,
++						 rel->rd_rel->reltablespace,
++						 collationIds, opclassIds, NULL, coloptions, NULL, (Datum) 0,
++						 INDEX_CREATE_IS_PRIMARY, 0, true, true, NULL, NULL);
+ 
+ 	table_close(toast_rel, NoLock);
+ 
+diff --git a/src/backend/commands/indexcmds.c b/src/backend/commands/indexcmds.c
+index fd083e5..80858ba 100644
+--- a/src/backend/commands/indexcmds.c
++++ b/src/backend/commands/indexcmds.c
+@@ -1245,15 +1245,15 @@ DefineIndex(Oid tableId,
+ 		constr_flags |= INDEX_CONSTR_CREATE_WITHOUT_OVERLAPS;
+ 
+ 	indexRelationId =
+-		index_create(rel, indexRelationName, indexRelationId, parentIndexId,
+-					 parentConstraintId,
+-					 stmt->oldNumber, indexInfo, indexColNames,
+-					 accessMethodId, tablespaceId,
+-					 collationIds, opclassIds, opclassOptions,
+-					 coloptions, NULL, reloptions,
+-					 flags, constr_flags,
+-					 allowSystemTableMods, !check_rights,
+-					 &createdConstraintId);
++		index_create_percona(rel, indexRelationName, indexRelationId, parentIndexId,
++							 parentConstraintId,
++							 stmt->oldNumber, indexInfo, indexColNames,
++							 accessMethodId, tablespaceId,
++							 collationIds, opclassIds, opclassOptions,
++							 coloptions, NULL, reloptions,
++							 flags, constr_flags,
++							 allowSystemTableMods, !check_rights,
++							 &createdConstraintId, NULL);
+ 
+ 	ObjectAddressSet(address, RelationRelationId, indexRelationId);
+ 
+diff --git a/src/backend/commands/sequence.c b/src/backend/commands/sequence.c
+index c1ad656..50fa774 100644
+--- a/src/backend/commands/sequence.c
++++ b/src/backend/commands/sequence.c
+@@ -344,7 +344,7 @@ fill_seq_with_data(Relation rel, HeapTuple tuple)
+ 		SMgrRelation srel;
+ 
+ 		srel = smgropen(rel->rd_locator, INVALID_PROC_NUMBER);
+-		smgrcreate(srel, INIT_FORKNUM, false);
++		smgrcreate_percona(rel->rd_locator, srel, INIT_FORKNUM, false);
+ 		log_smgrcreate(&rel->rd_locator, INIT_FORKNUM);
+ 		fill_seq_fork_with_data(rel, tuple, INIT_FORKNUM);
+ 		FlushRelationBuffers(rel);
+@@ -1933,7 +1933,6 @@ seq_redo(XLogReaderState *record)
+ 
+ 	memcpy(page, localpage, BufferGetPageSize(buffer));
+ 	MarkBufferDirty(buffer);
+-	XLogFlushBufferForRedoIfInit(record, 0, buffer);
+ 	UnlockReleaseBuffer(buffer);
+ 
+ 	pfree(localpage);
+diff --git a/src/backend/commands/tablecmds.c b/src/backend/commands/tablecmds.c
+index 5abe026..97a5b50 100644
+--- a/src/backend/commands/tablecmds.c
++++ b/src/backend/commands/tablecmds.c
+@@ -12262,12 +12262,6 @@ ATExecAlterConstraint(List **wqueue, Relation rel, ATAlterConstraint *cmdcon,
+ 				errcode(ERRCODE_WRONG_OBJECT_TYPE),
+ 				errmsg("constraint \"%s\" of relation \"%s\" is not a not-null constraint",
+ 					   cmdcon->conname, RelationGetRelationName(rel)));
+-	if (cmdcon->alterInheritability &&
+-		cmdcon->noinherit && rel->rd_rel->relkind == RELKIND_PARTITIONED_TABLE)
+-		ereport(ERROR,
+-				errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+-				errmsg("not-null constraint \"%s\" on partitioned table \"%s\" cannot be NO INHERIT",
+-					   cmdcon->conname, RelationGetRelationName(rel)));
+ 
+ 	/* Refuse to modify inheritability of inherited constraints */
+ 	if (cmdcon->alterInheritability &&
+@@ -13011,9 +13005,6 @@ QueueFKConstraintValidation(List **wqueue, Relation conrel, Relation fkrel,
+ 	HeapTuple	copyTuple;
+ 	Form_pg_constraint copy_con;
+ 
+-	/* since this function recurses, it could be driven to stack overflow */
+-	check_stack_depth();
+-
+ 	con = (Form_pg_constraint) GETSTRUCT(contuple);
+ 	Assert(con->contype == CONSTRAINT_FOREIGN);
+ 	Assert(!con->convalidated);
+@@ -17174,7 +17165,7 @@ index_copy_data(Relation rel, RelFileLocator newrlocator)
+ 	 * NOTE: any conflict in relfilenumber value will be caught in
+ 	 * RelationCreateStorage().
+ 	 */
+-	dstrel = RelationCreateStorage(newrlocator, rel->rd_rel->relpersistence, true);
++	dstrel = RelationCreateStoragePercona(rel->rd_locator, newrlocator, rel->rd_rel->relpersistence, true);
+ 
+ 	/* copy main fork */
+ 	RelationCopyStorage(RelationGetSmgr(rel), dstrel, MAIN_FORKNUM,
+@@ -17186,7 +17177,7 @@ index_copy_data(Relation rel, RelFileLocator newrlocator)
+ 	{
+ 		if (smgrexists(RelationGetSmgr(rel), forkNum))
+ 		{
+-			smgrcreate(dstrel, forkNum, false);
++			smgrcreate_percona(rel->rd_locator, dstrel, forkNum, false);
+ 
+ 			/*
+ 			 * WAL log creation if the relation is persistent, or this is the
 diff --git a/src/backend/storage/aio/aio_callback.c b/src/backend/storage/aio/aio_callback.c
 index 03c9bba..594d30f 100644
 --- a/src/backend/storage/aio/aio_callback.c
@@ -1080,6 +1568,19 @@ index 37b99fa..4a97819 100644
  	RESUME_INTERRUPTS();
  }
  
+diff --git a/src/backend/utils/cache/relcache.c b/src/backend/utils/cache/relcache.c
+index 559ba9c..aabedf7 100644
+--- a/src/backend/utils/cache/relcache.c
++++ b/src/backend/utils/cache/relcache.c
+@@ -3880,7 +3880,7 @@ RelationSetNewRelfilenumber(Relation relation, char persistence)
+ 		/* handle these directly, at least for now */
+ 		SMgrRelation srel;
+ 
+-		srel = RelationCreateStorage(newrlocator, persistence, true);
++		srel = RelationCreateStoragePercona(relation->rd_locator, newrlocator, persistence, true);
+ 		smgrclose(srel);
+ 	}
+ 	else
 diff --git a/src/backend/utils/init/miscinit.c b/src/backend/utils/init/miscinit.c
 index df18257..d0461c1 100644
 --- a/src/backend/utils/init/miscinit.c
@@ -1167,6 +1668,85 @@ index 0000000..b1f7c4c
 +extern void SetXLogSmgr(const XLogSmgr *xlsmgr);
 +
 +#endif							/* XLOG_SMGR_H */
+diff --git a/src/include/catalog/heap.h b/src/include/catalog/heap.h
+index 7f3a0ef..63c5929 100644
+--- a/src/include/catalog/heap.h
++++ b/src/include/catalog/heap.h
+@@ -17,6 +17,7 @@
+ #include "catalog/indexing.h"
+ #include "catalog/objectaddress.h"
+ #include "parser/parse_node.h"
++#include "storage/relfilelocator.h"
+ 
+ 
+ /* flag bits for CheckAttributeType/CheckAttributeNamesTypes */
+@@ -62,7 +63,8 @@ extern Relation heap_create(const char *relname,
+ 							bool allow_system_table_mods,
+ 							TransactionId *relfrozenxid,
+ 							MultiXactId *relminmxid,
+-							bool create_storage);
++							bool create_storage,
++							RelFileLocator *old_rlocator);
+ 
+ extern Oid	heap_create_with_catalog(const char *relname,
+ 									 Oid relnamespace,
+diff --git a/src/include/catalog/index.h b/src/include/catalog/index.h
+index 4daa8be..f0d4b40 100644
+--- a/src/include/catalog/index.h
++++ b/src/include/catalog/index.h
+@@ -16,6 +16,7 @@
+ 
+ #include "catalog/objectaddress.h"
+ #include "nodes/execnodes.h"
++#include "storage/relfilelocator.h"
+ 
+ 
+ #define DEFAULT_INDEX_TYPE	"btree"
+@@ -88,6 +89,29 @@ extern Oid	index_create(Relation heapRelation,
+ 						 bool is_internal,
+ 						 Oid *constraintId);
+ 
++extern Oid	index_create_percona(Relation heapRelation,
++								 const char *indexRelationName,
++								 Oid indexRelationId,
++								 Oid parentIndexRelid,
++								 Oid parentConstraintId,
++								 RelFileNumber relFileNumber,
++								 IndexInfo *indexInfo,
++								 const List *indexColNames,
++								 Oid accessMethodId,
++								 Oid tableSpaceId,
++								 const Oid *collationIds,
++								 const Oid *opclassIds,
++								 const Datum *opclassOptions,
++								 const int16 *coloptions,
++								 const NullableDatum *stattargets,
++								 Datum reloptions,
++								 bits16 flags,
++								 bits16 constr_flags,
++								 bool allow_system_table_mods,
++								 bool is_internal,
++								 Oid *constraintId,
++								 RelFileLocator *old_rlocator);
++
+ #define	INDEX_CONSTR_CREATE_MARK_AS_PRIMARY	(1 << 0)
+ #define	INDEX_CONSTR_CREATE_DEFERRABLE		(1 << 1)
+ #define	INDEX_CONSTR_CREATE_INIT_DEFERRED	(1 << 2)
+diff --git a/src/include/catalog/storage.h b/src/include/catalog/storage.h
+index ba99225..b7d3eb0 100644
+--- a/src/include/catalog/storage.h
++++ b/src/include/catalog/storage.h
+@@ -25,6 +25,10 @@ extern PGDLLIMPORT int wal_skip_threshold;
+ extern SMgrRelation RelationCreateStorage(RelFileLocator rlocator,
+ 										  char relpersistence,
+ 										  bool register_delete);
++extern SMgrRelation RelationCreateStoragePercona(RelFileLocator oldlocator,
++												 RelFileLocator rlocator,
++												 char relpersistence,
++												 bool register_delete);
+ extern void RelationDropStorage(Relation rel);
+ extern void RelationPreserveStorage(RelFileLocator rlocator, bool atCommit);
+ extern void RelationPreTruncate(Relation rel);
 diff --git a/src/include/miscadmin.h b/src/include/miscadmin.h
 index 9a7d733..9784877 100644
 --- a/src/include/miscadmin.h
