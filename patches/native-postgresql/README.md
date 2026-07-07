@@ -55,9 +55,29 @@ PostgreSQL major or minor version, or on a periodic cadence, diff the relevant
 `PSP_REL_<major>_STABLE` files against the matching stock PostgreSQL tag and
 re-derive the per-version patch. Track it in `TODO.md`.
 
+## Full scope
+
+The 11 files above are the **core** and are enough to build, initdb, and
+encrypt a freshly created `tde_heap` table at rest. Full feature parity needs
+a further ~15 caller-side files from `percona/postgres` (all small; the true
+pg_tde-relevant subset of Percona Server's fork). These carry:
+
+- **New-file key inheritance** (TRUNCATE, VACUUM FULL, CLUSTER, reindex): the
+  `RelationCreateStoragePercona()` / `smgrcreate_percona()` variants that pass
+  the *old* relfilelocator so the new file inherits its key —
+  `catalog/storage.{c,h}`, `catalog/heap.c`, `catalog/index.{c,h}`,
+  `catalog/toasting.c`, `access/heap/heapam_handler.c`,
+  `commands/tablecmds.c`, `commands/indexcmds.c`, `commands/sequence.c`,
+  `utils/cache/relcache.c`.
+- **WAL decryption on recovery / receive**: `access/transam/xlogrecovery.c`,
+  `access/transam/xlogutils.c`, `replication/walreceiver.c`.
+- **Buffer manager SMGR integration**: `storage/buffer/bufmgr.c`.
+
+Derive these the same way (diff the file against the matching stock tag).
+
 ## Version status
 
 | PostgreSQL | Status |
 |------------|--------|
-| 18 | Verified: builds, initdb, `CREATE EXTENSION open_pg_tde`, `tde_heap` encrypts at rest. |
+| 18 | Core (11 files) verified: builds, initdb, `CREATE EXTENSION open_pg_tde`, `tde_heap` encrypts at rest (`is_encrypted = t`, ciphertext on disk). The ~15 caller-side files above are still to be folded in for full feature parity (TRUNCATE/VACUUM inheritance, WAL recovery). |
 | 14-17 | Not yet ported. The SMGR interface differs per version (zeroextend in 16, readv/writev in 17, AIO in 18), so each needs its own re-derived patch from the matching `PSP_REL_<major>_STABLE`. |
