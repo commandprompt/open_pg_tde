@@ -53,11 +53,19 @@ tracks the tablespace OID, so this is mostly a policy layer.
 
 ### Ciphers and cryptographic strength
 
-**4. AES-256-XTS for data files (Tier 1).**
+**4. AES-256-XTS for data files (Tier 2).**
 XTS is the recommended mode for storage encryption, but only AES-128-XTS is
-available today. AES-256-XTS is a small addition because the cipher registry is
-already pluggable; it is a new entry plus a GUC value, with no on-disk format
-change (the cipher id is recorded per relation). Low effort, clear value.
+available today. Adding the cipher itself is small (a registry entry that wraps
+`EVP_aes_256_xts()`, a GUC value, and a second XTS context), but it is **not**
+a drop-in: AES-256-XTS needs a 64-byte key (two AES-256 subkeys), while the
+internal key is capped at 32 bytes. `INTERNAL_KEY_MAX_LEN` is 32, the
+`InternalKey.key` buffer is `uint8 key[32]`, and, critically, the on-disk key
+map entry stores the wrapped key in `TDEMapEntry.encrypted_key_data[32]`.
+Supporting a 64-byte internal key therefore requires enlarging the on-disk key
+map format and a migration (the existing `keys_version` mechanism), plus
+relaxing the `key_len == 16 || key_len == 32` assumption in the key wrap path.
+Clear value, but the on-disk format change moves it out of Tier 1. A natural
+companion to any future format bump.
 
 **5. Authenticated page encryption, AES-GCM (Tier 2).**
 Data pages use CBC/XTS, which provide confidentiality but not integrity, so
@@ -111,15 +119,19 @@ policy effort on top of the existing OpenSSL usage.
 
 ## Suggested sequencing
 
-1. **Temporary file encryption** and **AES-256-XTS**: both close known gaps,
-   both are low effort, and both build directly on existing mechanisms.
+1. **Temporary file encryption**: closes a known gap, a prototype already
+   exists, and it reuses the existing key hierarchy (temp files use AES-CBC, so
+   the 32-byte internal key is enough, with no format change).
 2. **Cloud KMS providers**: high demand, extends the provider interface.
 3. **Tablespace-level encryption**: per its own design doc.
 4. **Automatic key rotation** and **key-access audit logging**: compliance
    features on top of the existing key hierarchy.
-5. **Authenticated page encryption (AES-GCM)** and **statistics encryption**:
-   higher-value hardening that involve format or catalog changes.
-6. **HSM/PKCS#11**, **FIPS mode**, and **column-level encryption**: larger or
+5. **On-disk key-map format bump**, carrying **AES-256-XTS** (64-byte key) and
+   room for **authenticated page encryption (AES-GCM)**: batch the format
+   change and its migration once, then add the ciphers that need it.
+6. **Statistics encryption**: catalog change to stop `pg_statistic` leaking
+   sampled values.
+7. **HSM/PKCS#11**, **FIPS mode**, and **column-level encryption**: larger or
    more specialized, scheduled by demand.
 
 ## Notes
