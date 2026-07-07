@@ -1,10 +1,10 @@
 # Install open_pg_tde
 
-`open_pg_tde` runs on **standard, upstream PostgreSQL 14 and later**. It does not
-require a vendor fork of the server. Because encryption relies on storage-manager
-and WAL extensibility that upstream PostgreSQL does not yet expose, you install
-`open_pg_tde` by applying a small, gated core patch to a stock PostgreSQL source
-tree and building it, then building the extension against that install.
+`open_pg_tde` runs on upstream PostgreSQL 14 and later. It does not require a
+vendor fork of the server. Because encryption relies on storage-manager and WAL
+extensibility that upstream PostgreSQL does not yet expose, you install
+`open_pg_tde` by applying a gated core patch to a PostgreSQL source tree and
+building it, then building the extension against that install.
 
 === ":octicons-git-branch-16: From source (recommended)"
 
@@ -24,7 +24,8 @@ tree and building it, then building the extension against that install.
 | **PostgreSQL major** | **Status** |
 | -------- | -------- |
 | 18 | Supported |
-| 14 - 17 | Patch series in progress |
+| 17 | Supported |
+| 14 - 16 | Patch series in progress |
 
 The core patch is maintained as a per-major-version series, since the storage
 manager interface changes between PostgreSQL majors. See

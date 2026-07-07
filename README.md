@@ -10,44 +10,34 @@
 
 1. [Overview](#overview)
 2. [Documentation](#documentation)
-3. [Percona Server for PostgreSQL](#percona-server-for-postgresql)
-4. [Run in docker](#run-in-docker)
-5. [Set up open_pg_tde](#set-up-open_pg_tde)
-6. [Downloads](#downloads)
-7. [Additional functions](#additional-functions)
+3. [Installation](#installation)
+4. [Set up open_pg_tde](#set-up-open_pg_tde)
+5. [Additional functions](#additional-functions)
 
 ## Overview
 
-Transparent Data Encryption offers encryption at the file level and solves the problem of protecting data at rest. The encryption is transparent for users allowing them to access and manipulate the data and not to worry about the encryption process. The extension supports [keyringfile and external Key Management Systems (KMS) through a Global Key Provider interface](../open_pg_tde/documentation/docs/global-key-provider-configuration/index.md).
+Transparent Data Encryption offers encryption at the file level and solves the problem of protecting data at rest. The encryption is transparent for users allowing them to access and manipulate the data and not to worry about the encryption process. The extension supports [a keyring file and external Key Management Systems (KMS) through a Global Key Provider interface](documentation/docs/global-key-provider-configuration/overview.md).
 
 ### This extension provides the `tde_heap` access method
 
 This access method:
 
-- Works only with [Percona Server for PostgreSQL 17](https://docs.percona.com/postgresql/17/postgresql-server.html) or [Percona Server for PostgreSQL 18](https://docs.percona.com/postgresql/18/postgresql-server.html)
+- Works with upstream PostgreSQL 14 and later, patched with the `open_pg_tde` core patch (see [Installation](#installation))
 - Uses extended Storage Manager and WAL APIs
 - Encrypts tuples, WAL and indexes
 - It **does not** encrypt temporary files and statistics **yet**
 
 ## Documentation
 
-For more information about `open_pg_tde`, [see the official documentation](https://docs.percona.com/pg-tde/index.html).
+The documentation source is in [`documentation/`](documentation/). Start with the [installation guide](documentation/docs/install.md) and the [setup guide](documentation/docs/setup.md).
 
-## Percona Server for PostgreSQL
+## Installation
 
-Percona provides binary packages of `open_pg_tde` extension only for Percona Server for PostgreSQL. Learn how to install them or build `open_pg_tde` from sources for PSPG in the [documentation](https://docs.percona.com/pg-tde/install.html).
-
-## Run in Docker
-
-To run `open_pg_tde` in Docker, follow the instructions in the [official open_pg_tde Docker documentation](https://docs.percona.com/postgresql/17/docker.html#enable-encryption).
-
-_For details on the build process and developer setup, see [Make Builds for Developers](https://github.com/commandprompt/open_pg_tde/wiki/Make-builds-for-developers)._
+`open_pg_tde` runs on upstream PostgreSQL 14 and later. You apply the `open_pg_tde` core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See [Install from source](documentation/docs/install-from-source.md) for the step-by-step guide, and [`patches/postgresql/README.md`](patches/postgresql/README.md) for the patch series and per-version status.
 
 ## Set up open_pg_tde
 
-For more information on setting up and configuring `open_pg_tde`, see the [official open_pg_tde setup topic](https://docs.percona.com/pg-tde/setup.html).
-
-The guide also includes instructions for:
+For setting up and configuring `open_pg_tde`, see the [setup guide](documentation/docs/setup.md). It covers:
 
 - Installing and enabling the extension
 - Setting up key providers
@@ -55,4 +45,4 @@ The guide also includes instructions for:
 
 ## Additional functions
 
-Learn more about the helper functions available in `open_pg_tde`, including how to check table encryption status, in the [Functions topic](https://docs.percona.com/pg-tde/functions.html?h=open_pg_tde_is_encrypted#encryption-status-check).
+For the helper functions available in `open_pg_tde`, including how to check table encryption status with `open_pg_tde_is_encrypted`, see the [functions reference](documentation/docs/functions.md).

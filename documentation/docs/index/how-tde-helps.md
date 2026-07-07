@@ -13,7 +13,7 @@ The benefits of using `open_pg_tde` are outlined below for different users and o
 * **Operational simplicity:** Works transparently without requiring major application changes.
 * **Defense in depth:** Adds another layer of protection to existing controls like TLS (encryption in transit), access control, and role-based permissions.
 
-When combined with the external Key Management Systems (KMS), `open_pg_tde` enables centralized control, auditing, and rotation of encryption keys—critical for secure production environments.
+When combined with an external Key Management System (KMS), `open_pg_tde` enables centralized control, auditing, and rotation of encryption keys, which is important for production environments.
 
 !!! admonition "See also"
 

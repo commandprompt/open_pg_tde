@@ -1,14 +1,14 @@
 # Install open_pg_tde on native PostgreSQL
 
-`open_pg_tde` runs on **standard, upstream PostgreSQL 14 and later**. It does
-not require a vendor fork of the server. Encryption is implemented through two
-extensibility points that upstream PostgreSQL does not yet expose: a pluggable
-storage manager (for data files) and a WAL storage manager (for the write-ahead
-log). `open_pg_tde` provides these as a small, self-contained patch that you
-apply to a stock PostgreSQL source tree before building.
+`open_pg_tde` runs on upstream PostgreSQL 14 and later. It does not require a
+vendor fork of the server. Encryption is implemented through two extensibility
+points that upstream PostgreSQL does not yet expose: a pluggable storage
+manager for data files and a WAL storage manager for the write-ahead log.
+`open_pg_tde` provides these as a self-contained patch that you apply to a
+PostgreSQL source tree before building.
 
-The patch is gated behind a build flag, so a patched tree builds as clean,
-unmodified PostgreSQL unless you explicitly enable the hooks.
+The patch is gated behind a build flag, so a patched tree builds as unmodified
+PostgreSQL unless you enable the hooks.
 
 ## Overview
 

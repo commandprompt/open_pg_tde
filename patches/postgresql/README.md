@@ -6,8 +6,10 @@ extensible, so `open_pg_tde` ships those extensibility points as a small,
 maintained patch series that you apply to a stock PostgreSQL source tree. This
 keeps the project on native PostgreSQL rather than a vendor fork.
 
-The patch is **derived from** Percona Server for PostgreSQL
-(`github.com/percona/postgres`), which is the canonical upstream for this work.
+The patch is derived from the Percona `pg_tde` project at
+`github.com/percona/postgres`, which is the upstream for this work. Each
+series is taken from that project's `TDE_REL_*_STABLE` branch, which carries
+the core changes the extension needs on top of a stock PostgreSQL release.
 
 ## Layout
 
@@ -102,11 +104,11 @@ scratch. Two lessons already recorded:
 `LD_LIBRARY_PATH=<prefix>/lib` so the frontend tools find `libpq` at runtime.
 
 The PG17 series is derived from the pg_tde project's `TDE_REL_17_STABLE`
-branch (rather than full Percona Server), so it carries only the core changes
-the extension needs. PG17 has no AIO subsystem (so no `aio.h`/`aio_callback.c`)
-and registers the md storage manager in `postmaster.c` + `miscinit.c` (no
-`launch_backend.c` change). It also backports one small PostgreSQL 18 security
-helper, `path_is_safe_for_extraction()`, that the frontend tools require.
-| 14-17 | Not started | — | — | — |
+branch rather than full Percona Server, so it carries only the core changes
+the extension needs. PG17 has no AIO subsystem, so it omits
+`aio.h`/`aio_callback.c`, and it registers the md storage manager in
+`postmaster.c` and `miscinit.c` with no `launch_backend.c` change. It also
+backports one PostgreSQL 18 security helper, `path_is_safe_for_extraction()`,
+that the frontend tools require.
 
 See `../../TODO.md` for the tracked work.
