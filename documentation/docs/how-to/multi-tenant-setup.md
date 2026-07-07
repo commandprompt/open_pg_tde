@@ -61,7 +61,7 @@ You must do these steps for every database where you have created the extension.
 
         The KMIP server setup is out of scope of this document. 
 
-        Make sure you have obtained the root certificate for the KMIP server and the keypair for the client. The client key needs permissions to create / read keys on the server. Find the [configuration guidelines for the HashiCorp Vault Enterprise KMIP Secrets Engine :octicons-link-external-16:](https://developer.hashicorp.com/vault/tutorials/enterprise/kmip-engine).
+        Make sure you have obtained the root certificate for the KMIP server and the keypair for the client. The client key needs permissions to create / read keys on the server.
 
         For testing purposes, you can use the Eviden KMS server which enables you to set up required certificates. To use a real KMIP server, make sure to obtain the valid certificates issued by the key management appliance.
 
@@ -95,39 +95,6 @@ You must do these steps for every database where you have created the extension.
             '/tmp/client_cert_jane_doe.pem', 
             '/tmp/client_key_jane_doe.pem', 
             '/tmp/server_certificate.pem'
-        );
-        ```
-
-    === "With HashiCorp Vault"
-
-        The Vault server setup is out of scope of this document.
-
-        ```sql
-        SELECT pg_tde_add_database_key_provider_vault_v2(
-            'provider-name', 
-            'url', 
-            'mount', 
-            'secret_token_path', 
-            'ca_path'
-        );
-        ```
-
-        where:
-
-        * `url` is the URL of the Vault server
-        * `mount` is the mount point where the keyring should store the keys
-        * `secret_token_path` is a path to the file that contains an access token with read and write access to the above mount point
-        * [optional] `ca_path` is the path of the CA file used for SSL verification
-
-        <i warning>:material-information: Warning:</i> This example is for testing purposes only:
-
-        ```sql
-        SELECT pg_tde_add_database_key_provider_file_vault_v2(
-            'my-vault',
-            'http://vault.vault.svc.cluster.local:8200',
-            'secret/data',
-            'hvs.zPuyktykA...example...ewUEnIRVaKoBzs2', 
-            NULL
         );
         ```
 

@@ -16,7 +16,7 @@ A description of the main `pg_tde` operations available, including configuring k
 
 ### :material-function-variant: Functions { .title }
 
-Use built-in functions to manage key providers, create and rotate principal keys, and verify encryption status. Includes commands for Vault, KMIP, and local providers, plus utilities to inspect or validate keys.
+Use built-in functions to manage key providers, create and rotate principal keys, and verify encryption status. Includes commands for KMIP and local providers, plus utilities to inspect or validate keys.
 
 [Browse available functions :material-arrow-right:→](../functions.md){.md-button}
 

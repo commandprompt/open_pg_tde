@@ -72,11 +72,11 @@ sudo systemctl start postgresql
 
 !!! warning "Key management consistency **required** for replication"
 
-    If you're using a KMS provider, such as Vault or KMIP, make sure that both the primary and the standby have access to the **same** key management configuration, and that the paths to the configuration files are identical on both systems.
+    If you're using a KMS provider, such as KMIP, make sure that both the primary and the standby have access to the **same** key management configuration, and that the paths to the configuration files are identical on both systems.
 
     For example:
 
-    - If you configure Vault with a secret path: `/path/to/secret.file`, then that file **must** exist at the same path on both the primary and the standby.
+    - If you configure a KMIP provider with certificate paths such as `/path/to/client_cert.pem`, then those files **must** exist at the same paths on both the primary and the standby.
     - If you use the `keyring_file` provider, be aware that it stores key material in a local file and it is **not designed** for shared or concurrent use across multiple servers. It is **not recommended** in replication setups.
 
 * On primary:

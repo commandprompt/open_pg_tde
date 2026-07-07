@@ -83,13 +83,9 @@ Thus, to protect your sensitive data, consider using TDE to encrypt it at the ta
 
 You can use the following KMSs:
 
-* [HashiCorp Vault](https://developer.hashicorp.com/vault/docs/what-is-vault). `pg_tde` supports the KV secrets engine v2 of Vault, for more information see [Vault Configuration](global-key-provider-configuration/vault.md).
-* [OpenBao](https://openbao.org/) implementation of Vault
-* KMIP-compatible servers, KMIP is a standardized protocol for handling cryptographic workloads and secrets management, for more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
+* KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management; for more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
 
-!!! note
-    HashiCorp Vault can also act as a KMIP server, managing cryptographic keys for clients that use the KMIP protocol.
-    *(KMIP functionality is available in Vault's enterprise edition.)*
+For development and testing, keys can also be stored in a local keyring file instead of an external KMS.
 
 Let's break the encryption down into two parts:
 

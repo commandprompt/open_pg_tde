@@ -46,94 +46,6 @@ Provider specific parameters differ for each implementation. Refer to the  respe
     The updated provider must be able to retrieve the same principal keys as the original configuration.
     If the new configuration cannot access existing keys, encrypted data and backups will become unreadable.
 
-#### Add or modify Vault providers
-
-The Vault provider connects to a HashiCorp Vault or an OpenBao server, and stores the keys on a key-value store version 2.
-
-Use the following functions to add the Vault provider:
-
-```sql
-SELECT pg_tde_add_database_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path'
-);
-
-SELECT pg_tde_add_global_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path'
-);
-
-SELECT pg_tde_add_database_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path',
-  'namespace'
-);
-
-SELECT pg_tde_add_global_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path',
-  'namespace'
-);
-```
-
-These functions change the Vault provider:
-
-```sql
-SELECT pg_tde_change_database_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path'
-);
-
-SELECT pg_tde_change_global_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path'
-);
-SELECT pg_tde_change_database_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path',
-  'namespace'
-);
-
-SELECT pg_tde_change_global_key_provider_vault_v2(
-  'provider-name',
-  'url',
-  'mount',
-  'secret_token_path',
-  'ca_path',
-  'namespace'
-);
-```
-
-where:
-
-* `provider-name` is the name of the key provider
-* `url` is the URL of the Vault server
-* `mount` is the mount point on the Vault server where the key provider should store the keys
-* `secret_token_path` is a path to the file that contains an access token with read and write access to the above mount point
-* **[optional]** `ca_path` is the path of the CA file used for SSL verification
-* **[namespace]** `namespace` is the path of the namespace when using [Vault with namespaes](https://developer.hashicorp.com/vault/docs/enterprise/namespaces)
-
 #### Add or modify KMIP providers
 
 The KMIP provider uses a remote KMIP server.
@@ -259,7 +171,7 @@ These functions list the details of all key providers for the current database o
 
 Use these functions to create a new principal key at a given keyprover, and to use those keys for a specific scope such as a current database, a global or default scope. You can also use them to start using a different existing key for a specific scope.
 
-Principal keys are stored on key providers by the name specified in this function - for example, when using the Vault provider, after creating a key named "foo", a key named "foo" will be visible on the Vault server at the specified mount point.
+Principal keys are stored on key providers by the name specified in this function - for example, when using the KMIP provider, after creating a key named "foo", a key named "foo" will be visible on the KMIP server.
 
 ### pg_tde_create_key_using_database_key_provider
 

@@ -27,6 +27,18 @@ A table with 4 indexes will have at least 5 internal keys, one for the table and
 * `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
 * `AES-128-GCM`, `AES-256-GCM` for encrypting internal keys; encrypted with the principal key
 
+## Pluggable cipher providers
+
+The ciphers used for data files and WAL are supplied through a small internal **cipher provider registry** (`src/encryption/cipher_provider.{c,h}`). Each entry — a `TdeCipher` — bundles:
+
+* a stable numeric **id** that is persisted with every internal key (in the key map and the WAL key file), so a key always decrypts with the algorithm it was created with;
+* the block-mode operations used to encrypt/decrypt data pages;
+* the keystream operation used for the WAL/stream XOR path.
+
+The built-in entries (`aes-128`, `aes-256`) wrap the OpenSSL-backed primitives, so the registry is a dispatch layer rather than a second implementation. Encryption and decryption look up the cipher by its persisted id, which decouples the algorithm from the key length: two ciphers that share a key length can coexist.
+
+Which cipher a new table's data files use is selected by the [`pg_tde.data_cipher`](../variables.md#pg_tdedata_cipher) GUC. To add a new algorithm, register another `TdeCipher` in `TdeCipherRegistryInit()` with a new id and expose it as a `pg_tde.data_cipher` option — no changes to the encryption call sites or the on-disk format are required.
+
 ## Encryption workflow
 
 You can use `pg_tde` to encrypt entire databases or only selected tables.

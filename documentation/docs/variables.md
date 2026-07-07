@@ -70,3 +70,18 @@ You can set this variable at the following levels:
 A `string` variable that selects the cipher (encryption algorithm). Currently, the supported values are `aes_128` and `aes_256`, corresponding to AES 128-bit and 256-bit key lengths, respectively.
 
 The setting applies only to objects created after the value is set, including principal keys, internal keys, and data encrypted by those keys. Existing objects are not re-encrypted.
+
+## pg_tde.data_cipher
+
+**Type** - enum <br>
+**Default** - inherit
+
+Selects the cipher used to encrypt the data files of **new** encrypted tables (`tde_heap`). Supported values:
+
+* `inherit` - follow the [`pg_tde.cipher`](#pg_tdecipher) setting (default; preserves the historical behavior)
+* `aes_128` - AES 128-bit
+* `aes_256` - AES 256-bit
+
+The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `pg_tde.data_cipher` therefore only affects tables created afterwards; existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
+
+This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format.

@@ -22,7 +22,7 @@ To create a global principal key, run:
 ```sql
 SELECT pg_tde_create_key_using_global_key_provider(
     'key-name',
-    'global_vault_provider'
+    'global_kmip_provider'
 );
 ```
 
@@ -45,7 +45,7 @@ To set a default principal key, run:
 ```sql
 SELECT pg_tde_set_default_key_using_global_key_provider(
     'key-name',
-    'global_vault_provider'
+    'global_kmip_provider'
 );
 ```
 
@@ -64,7 +64,7 @@ SELECT pg_tde_set_default_key_using_global_key_provider(
 ## Parameter description
 
 * `key-name` is the name under which the principal key is stored in the provider.
-* `global_vault_provider` is the name of the global key provider you previously configured.
+* `global_kmip_provider` is the name of the global key provider you previously configured.
 
 !!! note
 
