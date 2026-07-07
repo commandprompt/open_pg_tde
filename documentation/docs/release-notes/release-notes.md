@@ -1,6 +1,6 @@
 # Percona Transparent Data Encryption for PostgreSQL release notes index
 
-This page lists all release notes for `pg_tde`, organized by year and version. Use it to track new features, fixes, and updates across major and minor versions.
+This page lists all release notes for `open_pg_tde`, organized by year and version. Use it to track new features, fixes, and updates across major and minor versions.
 
 ## 2026
 

@@ -1,4 +1,4 @@
-# Table Access Methods and pg_tde
+# Table Access Methods and open_pg_tde
 
 A table access method is the way how PostgreSQL stores the data in a table. The default table access method is `heap`. PostgreSQL organizes data in a heap structure, meaning there is no particular order to the rows in the table. Each row is stored independently and identified by its unique row identifier (TID).
 
@@ -16,7 +16,7 @@ Custom access methods allow you to implement and define your own way of organizi
 
 Custom access methods are typically available with PostgreSQL extensions. When you install an extension and enable it in PostgreSQL, a custom access method is created.
 
-An example of such an approach is the `tde_heap` access method. It is automatically created **only** for the databases where you [enabled the `pg_tde` extension](../setup.md) and configured the key provider, enabling you to encrypt the data.
+An example of such an approach is the `tde_heap` access method. It is automatically created **only** for the databases where you [enabled the `open_pg_tde` extension](../setup.md) and configured the key provider, enabling you to encrypt the data.
 
 To use a custom access method, specify the `USING` clause for the `CREATE TABLE` command:
 
@@ -28,9 +28,9 @@ CREATE TABLE table_name (
 ) USING tde_heap;
 ```
 
-### How tde_heap works with pg_tde
+### How tde_heap works with open_pg_tde
 
-The `tde_heap` access method works on top of the default `heap` access method and is a marker to point which tables require encryption. It uses the custom storage manager TDE SMGR, which becomes active only after you installed the `pg_tde` extension.
+The `tde_heap` access method works on top of the default `heap` access method and is a marker to point which tables require encryption. It uses the custom storage manager TDE SMGR, which becomes active only after you installed the `open_pg_tde` extension.
 
 Every data modification operation is first sent to the Buffer Manager, which updates the buffer cache. Then, it is passed to the storage manager, which then writes it to disk. When a table requires encryption, the data is sent to the TDE storage manager, where it is encrypted before written to disk.
 
@@ -46,7 +46,7 @@ However, consider the following before making this change:
 
 * This is a global setting and applies across the entire database cluster and not just a single database.
 We recommend setting it with caution because all tables and materialized views created without an explicit access method in their `CREATE` statement will default to the specified table access method.
-* You must create the `pg_tde` extension and configure the key provider for all databases before you modify the configuration. Otherwise PostgreSQL won't find the specified access method and will throw an error.
+* You must create the `open_pg_tde` extension and configure the key provider for all databases before you modify the configuration. Otherwise PostgreSQL won't find the specified access method and will throw an error.
 
 Here is how you can set the new default table access method:
 
@@ -88,4 +88,4 @@ Here is how you can set the new default table access method:
     SELECT pg_reload_conf();
     ```
 
-[Understand pg_tde's limitations :material-arrow-right:](tde-limitations.md){.md-button}
+[Understand open_pg_tde's limitations :material-arrow-right:](tde-limitations.md){.md-button}

@@ -9,19 +9,19 @@ You can configure key providers either at the database level (for development an
 
 The steps below provide an example on how to add a [database-scoped key provider](../functions.md#add-or-modify-local-key-file-providers):
 
-1. Create a database-scoped file key provider (`file-keyring` in this example) in the `/tmp/pg_tde_test_local_keyring.per` file:
+1. Create a database-scoped file key provider (`file-keyring` in this example) in the `/tmp/open_pg_tde_test_local_keyring.per` file:
 
     ```sql
-    SELECT pg_tde_add_database_key_provider_file(
+    SELECT open_pg_tde_add_database_key_provider_file(
         'file-keyring',
-        '/tmp/pg_tde_test_local_keyring.per'
+        '/tmp/open_pg_tde_test_local_keyring.per'
     );
     ```
 
 2. Create a key (`my_default_key` in this example) inside the newly created `file-keyring` provider:
 
     ```sql
-    SELECT pg_tde_create_key_using_database_key_provider(
+    SELECT open_pg_tde_create_key_using_database_key_provider(
         'my_default_key',
         'file-keyring'
     );
@@ -30,7 +30,7 @@ The steps below provide an example on how to add a [database-scoped key provider
 3. Set the key (`my_default_key`) from the key provider (`file-keyring`):
 
     ```sql
-    SELECT pg_tde_set_key_using_database_key_provider(
+    SELECT open_pg_tde_set_key_using_database_key_provider(
         'my_default_key',
         'file-keyring'
     );
@@ -40,10 +40,10 @@ The steps below provide an example on how to add a [database-scoped key provider
         You can check the default key information (such as the date and time of creation). Run:
 
         ```sql
-        SELECT pg_tde_default_key_info();
+        SELECT open_pg_tde_default_key_info();
         ```
 
-4. Now, create a table using [tde_heap](../index/table-access-method.md#how-tde_heap-works-with-pg_tde):
+4. Now, create a table using [tde_heap](../index/table-access-method.md#how-tde_heap-works-with-open_pg_tde):
 
     ```sql
     CREATE TABLE customer_table (a INT) USING tde_heap;
@@ -72,6 +72,6 @@ The steps below provide an example on how to add a [database-scoped key provider
 
 Next, for production deployments, [configure a global principal key](set-principal-key.md) using a proper [KMS provider](../global-key-provider-configuration/overview.md).
 
-Alternatively, you can skip directly to [validating encryption with pg_tde](../test.md) or [configuring WAL encryption](../wal-encryption.md).
+Alternatively, you can skip directly to [validating encryption with open_pg_tde](../test.md) or [configuring WAL encryption](../wal-encryption.md).
 
-You can also review the available `pg_tde` functions in [Functions](../functions.md).
+You can also review the available `open_pg_tde` functions in [Functions](../functions.md).

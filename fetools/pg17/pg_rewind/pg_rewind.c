@@ -33,9 +33,9 @@
 #include "storage/bufpage.h"
 #include "tde_ops.h"
 
-#include "pg_tde.h"
-#include "pg_tde_fe.h"
-#include "access/pg_tde_xlog_smgr.h"
+#include "open_pg_tde.h"
+#include "open_pg_tde_fe.h"
+#include "access/open_pg_tde_xlog_smgr.h"
 #include "catalog/tde_global_space.h"
 
 static void usage(const char *progname);
@@ -371,11 +371,11 @@ main(int argc, char **argv)
 					 ControlFile_target.checkPointCopy.ThisTimeLineID);
 
 	{
-		/* TODO: tde_path setup should be moved to the pg_tde side? */
+		/* TODO: tde_path setup should be moved to the open_pg_tde side? */
 		char		tde_path[MAXPGPATH];
 
-		snprintf(tde_path, sizeof(tde_path), "%s/%s", datadir_target, PG_TDE_DATA_DIR);
-		pg_tde_fe_init(tde_path);
+		snprintf(tde_path, sizeof(tde_path), "%s/%s", datadir_target, OPEN_PG_TDE_DATA_DIR);
+		open_pg_tde_fe_init(tde_path);
 		TDEXLogSmgrInit();
 	}
 

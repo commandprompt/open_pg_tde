@@ -1,26 +1,26 @@
 \! rm -f '/tmp/template_provider_global.per'
 \! rm -f '/tmp/template_provider.per'
-CREATE EXTENSION pg_tde;
+CREATE EXTENSION open_pg_tde;
 CREATE DATABASE template_db;
 SELECT current_database() AS regress_database
 \gset
 \c template_db
-CREATE EXTENSION pg_tde;
-SELECT pg_tde_add_database_key_provider_file('file-vault', '/tmp/template_provider.per');
- pg_tde_add_database_key_provider_file 
----------------------------------------
- 
-(1 row)
-
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
- pg_tde_create_key_using_database_key_provider 
------------------------------------------------
- 
-(1 row)
-
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
- pg_tde_set_key_using_database_key_provider 
+CREATE EXTENSION open_pg_tde;
+SELECT open_pg_tde_add_database_key_provider_file('file-vault', '/tmp/template_provider.per');
+ open_pg_tde_add_database_key_provider_file 
 --------------------------------------------
+ 
+(1 row)
+
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
+ open_pg_tde_create_key_using_database_key_provider 
+----------------------------------------------------
+ 
+(1 row)
+
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+ open_pg_tde_set_key_using_database_key_provider 
+-------------------------------------------------
  
 (1 row)
 
@@ -31,21 +31,21 @@ INSERT INTO test_plain (x) VALUES (30), (40);
 \c :regress_database
 -- TODO: Test the case where we have no default key once we can delete default keys
 --CREATE DATABASE new_db TEMPLATE template_db;
-SELECT pg_tde_add_global_key_provider_file('global-file-vault','/tmp/template_provider_global.per');
- pg_tde_add_global_key_provider_file 
--------------------------------------
+SELECT open_pg_tde_add_global_key_provider_file('global-file-vault','/tmp/template_provider_global.per');
+ open_pg_tde_add_global_key_provider_file 
+------------------------------------------
  
 (1 row)
 
-SELECT pg_tde_create_key_using_global_key_provider('default-key', 'global-file-vault');
- pg_tde_create_key_using_global_key_provider 
----------------------------------------------
- 
-(1 row)
-
-SELECT pg_tde_set_default_key_using_global_key_provider('default-key', 'global-file-vault');
- pg_tde_set_default_key_using_global_key_provider 
+SELECT open_pg_tde_create_key_using_global_key_provider('default-key', 'global-file-vault');
+ open_pg_tde_create_key_using_global_key_provider 
 --------------------------------------------------
+ 
+(1 row)
+
+SELECT open_pg_tde_set_default_key_using_global_key_provider('default-key', 'global-file-vault');
+ open_pg_tde_set_default_key_using_global_key_provider 
+-------------------------------------------------------
  
 (1 row)
 
@@ -60,21 +60,21 @@ SELECT * FROM test_enc;
   3 | 25
 (3 rows)
 
-SELECT pg_tde_is_encrypted('test_enc');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_enc');
+ open_pg_tde_is_encrypted 
+--------------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('test_enc_pkey');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_enc_pkey');
+ open_pg_tde_is_encrypted 
+--------------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('test_enc_id_seq');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_enc_id_seq');
+ open_pg_tde_is_encrypted 
+--------------------------
  t
 (1 row)
 
@@ -87,21 +87,21 @@ SELECT * FROM test_plain;
   3 | 45
 (3 rows)
 
-SELECT pg_tde_is_encrypted('test_plain');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_plain');
+ open_pg_tde_is_encrypted 
+--------------------------
  f
 (1 row)
 
-SELECT pg_tde_is_encrypted('test_plain_pkey');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_plain_pkey');
+ open_pg_tde_is_encrypted 
+--------------------------
  f
 (1 row)
 
-SELECT pg_tde_is_encrypted('test_plain_id_seq');
- pg_tde_is_encrypted 
----------------------
+SELECT open_pg_tde_is_encrypted('test_plain_id_seq');
+ open_pg_tde_is_encrypted 
+--------------------------
  f
 (1 row)
 
@@ -116,16 +116,16 @@ CREATE DATABASE new_db_file_copy TEMPLATE template_db STRATEGY FILE_COPY;
 DROP DATABASE new_db_file_copy;
 DROP DATABASE new_db;
 DROP DATABASE template_db;
-SELECT pg_tde_delete_default_key();
- pg_tde_delete_default_key 
----------------------------
+SELECT open_pg_tde_delete_default_key();
+ open_pg_tde_delete_default_key 
+--------------------------------
  
 (1 row)
 
-SELECT pg_tde_delete_global_key_provider('global-file-vault');
- pg_tde_delete_global_key_provider 
------------------------------------
+SELECT open_pg_tde_delete_global_key_provider('global-file-vault');
+ open_pg_tde_delete_global_key_provider 
+----------------------------------------
  
 (1 row)
 
-DROP EXTENSION pg_tde;
+DROP EXTENSION open_pg_tde;

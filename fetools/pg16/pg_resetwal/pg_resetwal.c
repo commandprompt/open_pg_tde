@@ -59,9 +59,9 @@
 #include "pg_getopt.h"
 #include "storage/large_object.h"
 
-#include "pg_tde.h"
-#include "pg_tde_fe.h"
-#include "access/pg_tde_xlog_smgr.h"
+#include "open_pg_tde.h"
+#include "open_pg_tde_fe.h"
+#include "access/open_pg_tde_xlog_smgr.h"
 #include "access/xlog_smgr.h"
 
 static ControlFileData ControlFile; /* pg_control values */
@@ -353,8 +353,8 @@ main(int argc, char *argv[])
 	{
 		char		tde_path[MAXPGPATH];
 
-		snprintf(tde_path, sizeof(tde_path), "%s/%s", DataDir, PG_TDE_DATA_DIR);
-		pg_tde_fe_init(tde_path);
+		snprintf(tde_path, sizeof(tde_path), "%s/%s", DataDir, OPEN_PG_TDE_DATA_DIR);
+		open_pg_tde_fe_init(tde_path);
 		TDEXLogSmgrInit();
 	}
 

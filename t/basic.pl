@@ -10,10 +10,10 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
-$node->safe_psql('postgres', 'CREATE EXTENSION pg_tde;');
+$node->safe_psql('postgres', 'CREATE EXTENSION open_pg_tde;');
 
 $stdout = $node->safe_psql(
 	'postgres',
@@ -25,18 +25,18 @@ $stdout = $node->safe_psql(
 			JOIN pg_catalog.pg_language ON prolang = pg_language.oid
 			LEFT JOIN LATERAL aclexplode(proacl) ON TRUE
 		WHERE
-			proname LIKE 'pg_tde%' AND
+			proname LIKE 'open_pg_tde%' AND
 			(lanname = 'c' OR prosecdef) AND
 			(grantee IS NULL OR grantee = 0)
 		ORDER BY pg_proc.oid::regprocedure::text;
 	});
 is( $stdout,
-	"pg_tde_is_encrypted(regclass)\npg_tde_version()",
+	"open_pg_tde_is_encrypted(regclass)\nopen_pg_tde_version()",
 	'only whitelisted functions are callable by public');
 
 $stdout = $node->safe_psql('postgres',
-	"SELECT extname, extversion FROM pg_extension WHERE extname = 'pg_tde';");
-is($stdout, 'pg_tde|2.2', 'is installed with right version');
+	"SELECT extname, extversion FROM pg_extension WHERE extname = 'open_pg_tde';");
+is($stdout, 'open_pg_tde|2.2', 'is installed with right version');
 
 (undef, undef, $stderr) = $node->psql('postgres',
 	'CREATE TABLE test_enc (id SERIAL, k INTEGER, PRIMARY KEY (id)) USING tde_heap;'
@@ -48,9 +48,9 @@ like(
 
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+	SELECT open_pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
+	SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
 
 	CREATE TABLE test_enc (id SERIAL, k VARCHAR(32), PRIMARY KEY (id)) USING tde_heap;
 	INSERT INTO test_enc (k) VALUES ('foobar'), ('barfoo');
@@ -72,14 +72,14 @@ $node->stop;
 unlink("$keydir/db.keys");
 $node->start;
 (undef, undef, $stderr) =
-  $node->psql('postgres', 'SELECT pg_tde_verify_key()');
+  $node->psql('postgres', 'SELECT open_pg_tde_verify_key()');
 like(
 	$stderr,
 	qr/ERROR:  key "test-db-key" not found in key provider "file-vault"/,
 	'complains about missing key');
 $node->safe_psql('postgres', 'DROP TABLE test_enc;');
 
-$node->safe_psql('postgres', 'DROP EXTENSION pg_tde;');
+$node->safe_psql('postgres', 'DROP EXTENSION open_pg_tde;');
 
 $node->stop;
 

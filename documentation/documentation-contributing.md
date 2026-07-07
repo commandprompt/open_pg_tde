@@ -1,6 +1,6 @@
 # Documentation contributing guide
 
-Thank you for deciding to contribute and help us improve the **pg_tde documentation**!
+Thank you for deciding to contribute and help us improve the **open_pg_tde documentation**!
 
 We welcome contributors from all users and the community. By contributing, you agree to the [Percona Community code of conduct](https://github.com/percona/community/blob/main/content/contribute/coc.md). 
 
@@ -11,7 +11,7 @@ You can contribute to the documentation in one of the following ways:
 1. [Submit a pull request (PR) for documentation on GitHub](#edit-documentation-on-github)
 2. Reach us on our [Forums](https://forums.percona.com/c/postgresql/pg-tde-transparent-data-encryption-tde/82)
 
-The `pg_tde` documentation is written in Markdown.
+The `open_pg_tde` documentation is written in Markdown.
 
 ## Edit documentation on GitHub
 
@@ -40,7 +40,7 @@ To edit the documentation locally:
 git clone --recursive git@github.com:<your-name>/postgres.git
 ```
 
-3. Change the directory to `contrib/pg_tde` and add the remote upstream repository:
+3. Change the directory to `contrib/open_pg_tde` and add the remote upstream repository:
 
 ```sh
 git remote add upstream git@github.com:percona/postgres.git
@@ -83,7 +83,7 @@ To verify how your changes look, you can generate a static site locally:
 2. Install [MkDocs] and the required extensions:
 
 ```sh
-cd pg_tde/documentation
+cd open_pg_tde/documentation
 pip install -r requirements.txt
 ```
 

@@ -20,7 +20,7 @@
 #include "rewind_source.h"
 #include "tde_ops.h"
 
-#include "pg_tde.h"
+#include "open_pg_tde.h"
 
 /*
  * Files are fetched MAX_CHUNK_SIZE bytes at a time, and with a
@@ -716,7 +716,7 @@ libpq_fetch_tde_keys(rewind_source *source)
 	PGconn	   *conn = ((libpq_source *) source)->conn;
 	PGresult   *res;
 
-	res = PQexec(conn, "SELECT pg_ls_dir('" PG_TDE_DATA_DIR "', true, false)");
+	res = PQexec(conn, "SELECT pg_ls_dir('" OPEN_PG_TDE_DATA_DIR "', true, false)");
 
 	if (PQresultStatus(res) != PGRES_TUPLES_OK)
 		pg_fatal("could not fetch file list: %s",
@@ -749,7 +749,7 @@ libpq_fetch_tde_keys(rewind_source *source)
 
 		path = PQgetvalue(res, i, 0);
 
-		snprintf(target_path, MAXPGPATH, "%s/%s", PG_TDE_DATA_DIR, path);
+		snprintf(target_path, MAXPGPATH, "%s/%s", OPEN_PG_TDE_DATA_DIR, path);
 		tde_file_buf = libpq_fetch_file(source, target_path, &size);
 
 		write_tmp_source_file(path, tde_file_buf, size);

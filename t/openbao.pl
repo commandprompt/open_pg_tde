@@ -25,15 +25,15 @@ my ($ret, $stdout, $stderr);
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 my $bao = bao_setup($bao_bin);
 
-$node->safe_psql('postgres', 'CREATE EXTENSION pg_tde;');
+$node->safe_psql('postgres', 'CREATE EXTENSION open_pg_tde;');
 
 ($ret, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'DUMMY-MOUNT-PATH', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
+	"SELECT open_pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'DUMMY-MOUNT-PATH', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
 );
 is($ret, 0, 'adds key provider despite path not existing');
 like(
@@ -42,7 +42,7 @@ like(
 	'warns if mount path does not exist');
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'cubbyhole', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
+	"SELECT open_pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'cubbyhole', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
 );
 like(
 	$stderr,
@@ -50,7 +50,7 @@ like(
 	"fails as it's not supported engine type");
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'kv-v1', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
+	"SELECT open_pg_tde_add_database_key_provider_openbao('openbao-incorrect', 'https://127.0.0.1:@{[$bao->{port}]}', 'kv-v1', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
 );
 like(
 	$stderr,
@@ -59,9 +59,9 @@ like(
 
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_add_database_key_provider_openbao('openbao', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');
-	SELECT pg_tde_create_key_using_database_key_provider('openbao-key', 'openbao');
-	SELECT pg_tde_set_key_using_database_key_provider('openbao-key', 'openbao');
+	SELECT open_pg_tde_add_database_key_provider_openbao('openbao', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');
+	SELECT open_pg_tde_create_key_using_database_key_provider('openbao-key', 'openbao');
+	SELECT open_pg_tde_set_key_using_database_key_provider('openbao-key', 'openbao');
 
 	CREATE TABLE test_enc (x int PRIMARY KEY) USING tde_heap;
 	INSERT INTO test_enc (x) VALUES (1), (2);
@@ -70,11 +70,11 @@ $node->safe_psql(
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc;');
 is($stdout, "1\n2", 'can read test_enc');
 
-$stdout = $node->safe_psql('postgres', 'SELECT pg_tde_verify_key();');
+$stdout = $node->safe_psql('postgres', 'SELECT open_pg_tde_verify_key();');
 is($stdout, '', 'key verification succeeds');
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_add_database_key_provider_openbao('will-not-work', 'https://127.0.0.1:61', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
+	"SELECT open_pg_tde_add_database_key_provider_openbao('will-not-work', 'https://127.0.0.1:61', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
 );
 like(
 	$stderr,
@@ -82,7 +82,7 @@ like(
 	"creating provider fails if we can't connect to openbao");
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_change_database_key_provider_openbao('openbao', 'https://127.0.0.1:61', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
+	"SELECT open_pg_tde_change_database_key_provider_openbao('openbao', 'https://127.0.0.1:61', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}');"
 );
 like(
 	$stderr,
@@ -90,7 +90,7 @@ like(
 	"changing provider fails if we can't connect to openbao");
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_change_database_key_provider_openbao('openbao', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', NULL);"
+	"SELECT open_pg_tde_change_database_key_provider_openbao('openbao', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', NULL);"
 );
 like(
 	$stderr,
@@ -98,7 +98,7 @@ like(
 	'HTTPS without cert fails');
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_change_database_key_provider_openbao('openbao', 'http://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', NULL);"
+	"SELECT open_pg_tde_change_database_key_provider_openbao('openbao', 'http://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', NULL);"
 );
 like(
 	$stderr,
@@ -113,9 +113,9 @@ like(
 
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_add_database_key_provider_openbao('openbaons', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}', 'pgns');
-	SELECT pg_tde_create_key_using_database_key_provider('openbao-key-in-ns', 'openbaons');
-	SELECT pg_tde_set_key_using_database_key_provider('openbao-key-in-ns', 'openbaons');
+	SELECT open_pg_tde_add_database_key_provider_openbao('openbaons', 'https://127.0.0.1:@{[$bao->{port}]}', 'secret', '@{[$bao->{root_token_path}]}', '@{[$bao->{ca_cert_path}]}', 'pgns');
+	SELECT open_pg_tde_create_key_using_database_key_provider('openbao-key-in-ns', 'openbaons');
+	SELECT open_pg_tde_set_key_using_database_key_provider('openbao-key-in-ns', 'openbaons');
 
 	CREATE TABLE test_enc_ns (x int PRIMARY KEY) USING tde_heap;
 	INSERT INTO test_enc_ns (x) VALUES (1), (2);
@@ -124,7 +124,7 @@ $node->safe_psql(
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc_ns;');
 is($stdout, "1\n2", 'can read test_enc_ns');
 
-$stdout = $node->safe_psql('postgres', 'SELECT pg_tde_verify_key();');
+$stdout = $node->safe_psql('postgres', 'SELECT open_pg_tde_verify_key();');
 is($stdout, '', 'key verification succeeds with namespaces');
 
 $node->stop;

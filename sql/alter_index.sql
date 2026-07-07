@@ -1,10 +1,10 @@
-\! rm -f '/tmp/pg_tde_test_keyring.per'
+\! rm -f '/tmp/open_pg_tde_test_keyring.per'
 
-CREATE EXTENSION pg_tde;
+CREATE EXTENSION open_pg_tde;
 
-SELECT pg_tde_add_database_key_provider_file('file-vault','/tmp/pg_tde_test_keyring.per');
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
 
 SET default_table_access_method = "tde_heap";
 
@@ -36,7 +36,7 @@ SELECT relid, parentrelid, level FROM pg_partition_tree('concur_reindex_part_ind
 SELECT relid, parentrelid, level FROM pg_partition_tree('concur_reindex_part_index')
   ORDER BY relid, level;
 DROP TABLE concur_reindex_part;
-SELECT pg_tde_delete_key();
-SELECT pg_tde_delete_database_key_provider('file-vault');
-DROP EXTENSION pg_tde;
+SELECT open_pg_tde_delete_key();
+SELECT open_pg_tde_delete_database_key_provider('file-vault');
+DROP EXTENSION open_pg_tde;
 RESET default_table_access_method;

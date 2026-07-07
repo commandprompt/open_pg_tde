@@ -11,21 +11,21 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_database_key_provider_file('test-file-provider', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('key1', 'test-file-provider');
-	SELECT pg_tde_create_key_using_database_key_provider('key2', 'test-file-provider');
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_database_key_provider_file('test-file-provider', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('key1', 'test-file-provider');
+	SELECT open_pg_tde_create_key_using_database_key_provider('key2', 'test-file-provider');
 ));
 
 corrupt_key_file("$keydir/db.keys");
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_set_key_using_database_key_provider('key1', 'test-file-provider');"
+	"SELECT open_pg_tde_set_key_using_database_key_provider('key1', 'test-file-provider');"
 );
 
 like(
@@ -38,7 +38,7 @@ like(
 	'gets error');
 
 (undef, undef, $stderr) = $node->psql('postgres',
-	"SELECT pg_tde_set_key_using_database_key_provider('key2', 'test-file-provider');"
+	"SELECT open_pg_tde_set_key_using_database_key_provider('key2', 'test-file-provider');"
 );
 
 like(

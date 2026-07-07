@@ -24,7 +24,7 @@
 #include "filemap.h"
 #include "pg_rewind.h"
 
-#include "access/pg_tde_xlog_smgr.h"
+#include "access/open_pg_tde_xlog_smgr.h"
 #include "access/xlog_smgr.h"
 
 /*

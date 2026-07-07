@@ -37,19 +37,19 @@ END
 # ---------------------------------------------------------------------------
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
-$node->safe_psql('postgres', 'CREATE EXTENSION pg_tde;');
+$node->safe_psql('postgres', 'CREATE EXTENSION open_pg_tde;');
 
 # Provider + key + encrypted table.
 $node->safe_psql('postgres', <<SQL);
-SELECT pg_tde_add_database_key_provider_kmip(
+SELECT open_pg_tde_add_database_key_provider_kmip(
     'kmip-prov', '127.0.0.1', $kmip_port,
     '$tmpdir/client.pem', '$tmpdir/client.key', '$tmpdir/ca.pem');
-SELECT pg_tde_create_key_using_database_key_provider(
+SELECT open_pg_tde_create_key_using_database_key_provider(
     'kmip-key', 'kmip-prov');
-SELECT pg_tde_set_key_using_database_key_provider(
+SELECT open_pg_tde_set_key_using_database_key_provider(
     'kmip-key', 'kmip-prov');
 CREATE TABLE test_enc(
     id SERIAL, k INTEGER NOT NULL, PRIMARY KEY(id)) USING tde_heap;
@@ -66,9 +66,9 @@ is($node->safe_psql('postgres', 'SELECT k FROM test_enc ORDER BY id;'),
 
 # Key rotation + post-rotation insert.
 $node->safe_psql('postgres', <<SQL);
-SELECT pg_tde_create_key_using_database_key_provider(
+SELECT open_pg_tde_create_key_using_database_key_provider(
     'kmip-key2', 'kmip-prov');
-SELECT pg_tde_set_key_using_database_key_provider(
+SELECT open_pg_tde_set_key_using_database_key_provider(
     'kmip-key2', 'kmip-prov');
 INSERT INTO test_enc(k) VALUES (4), (5);
 SQL
@@ -104,7 +104,7 @@ is($node->safe_psql('postgres', 'SELECT k FROM test_enc ORDER BY id;'),
 }
 
 # ---------------------------------------------------------------------------
-# Negative path: pg_tde fails fast (<= 5s) when KMIP endpoint accepts TCP
+# Negative path: open_pg_tde fails fast (<= 5s) when KMIP endpoint accepts TCP
 # but immediately closes (no TLS, no KMIP).
 # ---------------------------------------------------------------------------
 sub _bind_and_fork_reject_listener
@@ -139,7 +139,7 @@ sub _bind_and_fork_reject_listener
 	my ($pid, $nope_port) = _bind_and_fork_reject_listener();
 
 	my (undef, undef, $stderr) = $node->psql('postgres', <<SQL);
-SELECT pg_tde_add_database_key_provider_kmip(
+SELECT open_pg_tde_add_database_key_provider_kmip(
     'will-not-work', '127.0.0.1', $nope_port,
     '$tmpdir/client.pem', '$tmpdir/client.key', '$tmpdir/ca.pem');
 SQL

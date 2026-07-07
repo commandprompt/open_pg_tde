@@ -1,14 +1,14 @@
-SELECT * FROM pg_get_loaded_modules() WHERE file_name IN ('pg_tde.so', 'pg_tde.dylib');
- module_name | version | file_name 
--------------+---------+-----------
- pg_tde      | 2.2.0   | pg_tde.so
+SELECT * FROM pg_get_loaded_modules() WHERE file_name IN ('open_pg_tde.so', 'open_pg_tde.dylib');
+ module_name | version |   file_name    
+-------------+---------+----------------
+ open_pg_tde | 2.2.0   | open_pg_tde.so
 (1 row)
 
-CREATE EXTENSION pg_tde;
-SELECT pg_tde_version();
- pg_tde_version 
-----------------
- pg_tde 2.2.0
+CREATE EXTENSION open_pg_tde;
+SELECT open_pg_tde_version();
+ open_pg_tde_version 
+---------------------
+ open_pg_tde 2.2.0
 (1 row)
 
-DROP EXTENSION pg_tde;
+DROP EXTENSION open_pg_tde;

@@ -3,7 +3,7 @@
 
 #include "encryption/enc_tde.h"
 
-#define MAX_PROVIDER_NAME_LEN 128	/* pg_tde_key_provider's provider_name
+#define MAX_PROVIDER_NAME_LEN 128	/* open_pg_tde_key_provider's provider_name
 									 * size */
 #define MAX_KEYRING_OPTION_LEN 1024
 

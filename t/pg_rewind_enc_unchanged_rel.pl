@@ -60,7 +60,7 @@ run_test('local');
 run_test('remote');
 run_test('archive');
 
-my @conf_params = ("pg_tde.cipher = 'aes_256'");
+my @conf_params = ("open_pg_tde.cipher = 'aes_256'");
 run_test('local', "_aes_256", \@conf_params);
 
 done_testing();

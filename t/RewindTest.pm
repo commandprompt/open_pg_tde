@@ -119,7 +119,7 @@ sub setup_cluster
 	my ($test_name) = basename($0) =~ /([^.]*)/;
 	my ($test_mode) = $extra_name //= 'default';
 	my $tde_keyring_file =
-	  "/tmp/pg_tde_rewind_test_${test_name}_${test_mode}.per";
+	  "/tmp/open_pg_tde_rewind_test_${test_name}_${test_mode}.per";
 
 	unlink($tde_keyring_file);
 
@@ -143,7 +143,7 @@ sub setup_cluster
 wal_keep_size = 320MB
 allow_in_place_tablespaces = on
 
-shared_preload_libraries = 'pg_tde'
+shared_preload_libraries = 'open_pg_tde'
 ));
 
 	foreach my $param_item (@$extra_conf)
@@ -154,30 +154,30 @@ shared_preload_libraries = 'pg_tde'
 	$node_primary->start;
 
 	$node_primary->safe_psql('postgres',
-		"CREATE EXTENSION IF NOT EXISTS pg_tde;");
+		"CREATE EXTENSION IF NOT EXISTS open_pg_tde;");
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_add_global_key_provider_file('file-keyring-wal','${tde_keyring_file}');"
+		"SELECT open_pg_tde_add_global_key_provider_file('file-keyring-wal','${tde_keyring_file}');"
 	);
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_create_key_using_global_key_provider('global-db-principal-key', 'file-keyring-wal');"
+		"SELECT open_pg_tde_create_key_using_global_key_provider('global-db-principal-key', 'file-keyring-wal');"
 	);
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_set_server_key_using_global_key_provider('global-db-principal-key', 'file-keyring-wal');"
+		"SELECT open_pg_tde_set_server_key_using_global_key_provider('global-db-principal-key', 'file-keyring-wal');"
 	);
 
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_add_database_key_provider_file('file-keyring','${tde_keyring_file}');"
+		"SELECT open_pg_tde_add_database_key_provider_file('file-keyring','${tde_keyring_file}');"
 	);
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-keyring');"
+		"SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-keyring');"
 	);
 	$node_primary->safe_psql('postgres',
-		"SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-keyring');"
+		"SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-keyring');"
 	);
 
 	$node_primary->append_conf(
 		'postgresql.conf', q{
-pg_tde.wal_encrypt = on
+open_pg_tde.wal_encrypt = on
 default_table_access_method='tde_heap'
 });
 
@@ -316,7 +316,7 @@ sub run_pg_rewind
 		$node_standby->stop;
 		command_ok(
 			[
-				'pg_tde_rewind',
+				'open_pg_tde_rewind',
 				"--debug",
 				"--source-pgdata=$standby_pgdata",
 				"--target-pgdata=$primary_pgdata",
@@ -332,7 +332,7 @@ sub run_pg_rewind
 		# recovery configuration automatically.
 		command_ok(
 			[
-				'pg_tde_rewind', "--debug",
+				'open_pg_tde_rewind', "--debug",
 				"--source-server", $standby_connstr,
 				"--target-pgdata=$primary_pgdata", "--no-sync",
 				"--write-recovery-conf", "--config-file",
@@ -388,7 +388,7 @@ sub run_pg_rewind
 		# postgresql.conf as restore_command has been enabled above.
 		command_ok(
 			[
-				'pg_tde_rewind',
+				'open_pg_tde_rewind',
 				"--debug",
 				"--source-pgdata=$standby_pgdata",
 				"--target-pgdata=$primary_pgdata",

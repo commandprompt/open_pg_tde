@@ -23,7 +23,7 @@ my @tests = qw(
   insert_update_delete
   key_provider
   partition_table
-  pg_tde_is_encrypted
+  open_pg_tde_is_encrypted
   recreate_storage
   relocate
   tablespace
@@ -33,7 +33,7 @@ my @tests = qw(
 
 my $node = PostgreSQL::Test::Cluster->new('regress');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 IPC::Run::run [

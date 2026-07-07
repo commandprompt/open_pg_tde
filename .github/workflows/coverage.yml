@@ -43,10 +43,10 @@ jobs:
       - name: Build postgres
         run: src/ci_scripts/build-and-install-psp.sh coverage
 
-      - name: Build pg_tde
+      - name: Build open_pg_tde
         run: src/ci_scripts/build.sh coverage
 
-      - name: Run pg_tde tests
+      - name: Run open_pg_tde tests
         run: src/ci_scripts/test.sh
 
       - name: Process coverage

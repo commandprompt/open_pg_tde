@@ -1,7 +1,7 @@
 /*
- * Pluggable cipher provider interface for pg_tde.
+ * Pluggable cipher provider interface for open_pg_tde.
  *
- * pg_tde encrypts data pages with a block cipher (AES-CBC) and the WAL /
+ * open_pg_tde encrypts data pages with a block cipher (AES-CBC) and the WAL /
  * streamed files with a CTR keystream (AES-CTR, implemented on top of ECB).
  * Historically both were hard-wired to AES with the key length (16 vs 32
  * bytes) selecting AES-128 vs AES-256.

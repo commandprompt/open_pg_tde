@@ -13,11 +13,11 @@
 #include "pg_rewind.h"
 #include "tde_ops.h"
 
-#include "access/pg_tde_tdemap.h"
-#include "access/pg_tde_xlog_keys.h"
-#include "access/pg_tde_xlog_smgr.h"
-#include "common/pg_tde_utils.h"
-#include "pg_tde.h"
+#include "access/open_pg_tde_tdemap.h"
+#include "access/open_pg_tde_xlog_keys.h"
+#include "access/open_pg_tde_xlog_smgr.h"
+#include "common/open_pg_tde_utils.h"
+#include "open_pg_tde.h"
 
 static void copy_dir(const char *src, const char *dst);
 static void create_tde_tmp_dir(void);
@@ -138,8 +138,8 @@ flush_current_tde_rel_key(void)
 	reencrypt_fork(VISIBILITYMAP_FORKNUM);
 
 	pg_log_debug("update internal key for \"%s\"", current_tde_file.path);
-	pg_tde_set_data_dir(tde_tmp_source);
-	pg_tde_save_smgr_key(current_tde_file.rlocator, current_tde_file.target_key, true);
+	open_pg_tde_set_data_dir(tde_tmp_source);
+	open_pg_tde_save_smgr_key(current_tde_file.rlocator, current_tde_file.target_key, true);
 
 	pfree(current_tde_file.source_key);
 	pfree(current_tde_file.target_key);
@@ -208,7 +208,7 @@ ensure_tde_wal_seg(const char *relpath)
 		return;
 	}
 
-	snprintf(target_tde_path, sizeof(target_tde_path), "%s/%s", datadir_target, PG_TDE_DATA_DIR);
+	snprintf(target_tde_path, sizeof(target_tde_path), "%s/%s", datadir_target, OPEN_PG_TDE_DATA_DIR);
 
 	/*
 	 * XXX: Should we slurp the whole segment and don't bother with switching
@@ -217,11 +217,11 @@ ensure_tde_wal_seg(const char *relpath)
 	while ((read_len = pg_pread(fd, buf.data, sizeof(buf.data), offset)) > 0)
 	{
 		/* decrypt with target keys */
-		pg_tde_set_data_dir(target_tde_path);
+		open_pg_tde_set_data_dir(target_tde_path);
 		TDEXLogCryptBuffer(buf.data, buf.data, read_len, offset, tli, segno, WalSegSz);
 
 		/* reencrypt with source keys */
-		pg_tde_set_data_dir(tde_tmp_source);
+		open_pg_tde_set_data_dir(tde_tmp_source);
 		TDEXLogCryptBuffer(buf.data, buf.data, read_len, offset, tli, segno, WalSegSz);
 
 		if (pg_pwrite(fd, buf.data, read_len, offset) != read_len)
@@ -255,12 +255,12 @@ ensure_tde_keys(const char *relpath)
 	if (!path_rlocator(relpath, &rlocator, &segNo))
 		return;
 
-	pg_tde_set_data_dir(tde_tmp_source);
-	current_tde_file.source_key = pg_tde_get_smgr_key(rlocator);
+	open_pg_tde_set_data_dir(tde_tmp_source);
+	current_tde_file.source_key = open_pg_tde_get_smgr_key(rlocator);
 
-	snprintf(target_tde_path, sizeof(target_tde_path), "%s/%s", datadir_target, PG_TDE_DATA_DIR);
-	pg_tde_set_data_dir(target_tde_path);
-	current_tde_file.target_key = pg_tde_get_smgr_key(rlocator);
+	snprintf(target_tde_path, sizeof(target_tde_path), "%s/%s", datadir_target, OPEN_PG_TDE_DATA_DIR);
+	open_pg_tde_set_data_dir(target_tde_path);
+	current_tde_file.target_key = open_pg_tde_get_smgr_key(rlocator);
 
 	if (current_tde_file.source_key != NULL)
 	{
@@ -307,12 +307,12 @@ create_tde_tmp_dir(void)
 		tmpdir = "/tmp";
 
 	snprintf(tde_tmp_source, sizeof(tde_tmp_source),
-			 "%s/pg_tde_rewindXXXXXX", tmpdir);
+			 "%s/open_pg_tde_rewindXXXXXX", tmpdir);
 
 	if (mkdtemp(tde_tmp_source) == NULL)
 		pg_fatal("could not create temporary directory \"%s\": %m", tde_tmp_source);
 
-	pg_log_debug("created temporary pg_tde directory: %s", tde_tmp_source);
+	pg_log_debug("created temporary open_pg_tde directory: %s", tde_tmp_source);
 }
 
 void
@@ -419,7 +419,7 @@ fetch_tde_dir(void)
 	if (!source_has_tde)
 		return;
 
-	snprintf(target_tde_dir, MAXPGPATH, "%s/%s", datadir_target, PG_TDE_DATA_DIR);
+	snprintf(target_tde_dir, MAXPGPATH, "%s/%s", datadir_target, OPEN_PG_TDE_DATA_DIR);
 
 	rmtree(target_tde_dir, false);
 	copy_dir(tde_tmp_source, target_tde_dir);

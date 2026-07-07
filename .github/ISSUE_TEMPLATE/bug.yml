@@ -31,8 +31,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: What version of pg_tde and Percona Server PostgreSQL are you running?
-      placeholder: pg_tde 2.2, Percona Server for PostgreSQL 18.0
+      description: What version of open_pg_tde and Percona Server PostgreSQL are you running?
+      placeholder: open_pg_tde 2.2, Percona Server for PostgreSQL 18.0
     validations:
       required: true
   - type: textarea

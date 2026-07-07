@@ -11,12 +11,12 @@ If you have not yet configured a default principal key, see [Default Principal K
 ## Option 2: Configure a dedicated server principal key for WAL
 
 !!! note
-    For a comprehensive list of supported `pg_tde` WAL encryption tools see [Limitations of pg_tde](index/tde-limitations.md).
+    For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](index/tde-limitations.md).
 
-1. Create the `pg_tde` extension if it does not exist:
+1. Create the `open_pg_tde` extension if it does not exist:
 
     ```sql
-    CREATE EXTENSION IF NOT EXISTS pg_tde;
+    CREATE EXTENSION IF NOT EXISTS open_pg_tde;
     ```
 
 2. Configure a global key provider
@@ -25,16 +25,16 @@ If you have not yet configured a default principal key, see [Default Principal K
 
 3. Create the server (principal) key using the global key provider
 
-    The server key (also referred to as the principal key) is the key used by PostgreSQL to encrypt WAL data. See [pg_tde_create_key_using_global_key_provider](functions.md#pg_tde_create_key_using_global_key_provider) for  more detailed instructions.
+    The server key (also referred to as the principal key) is the key used by PostgreSQL to encrypt WAL data. See [open_pg_tde_create_key_using_global_key_provider](functions.md#open_pg_tde_create_key_using_global_key_provider) for  more detailed instructions.
 
 4. Set the server (principal) key
 
-    This step sets the previously created server (principal) key as the active key used by PostgreSQL for WAL encryption. See [pg_tde_set_server_key_using_global_key_provider](functions.md#pg_tde_set_server_key_using_global_key_provider) for  more detailed instructions.
+    This step sets the previously created server (principal) key as the active key used by PostgreSQL for WAL encryption. See [open_pg_tde_set_server_key_using_global_key_provider](functions.md#open_pg_tde_set_server_key_using_global_key_provider) for  more detailed instructions.
 
 5. Enable WAL encryption using the `ALTER SYSTEM` command. You need the privileges of the superuser to run this command:
 
     ```sql
-    ALTER SYSTEM SET pg_tde.wal_encrypt = on;
+    ALTER SYSTEM SET open_pg_tde.wal_encrypt = on;
     ```
 
 6. Restart the server to apply the changes.
@@ -54,7 +54,7 @@ If you have not yet configured a default principal key, see [Default Principal K
 7. (Optional) Verify that WAL encryption is enabled:
 
     ```sql
-    SHOW pg_tde.wal_encrypt;
+    SHOW open_pg_tde.wal_encrypt;
     ```
 
 Now WAL files start to be encrypted for both encrypted and unencrypted tables.

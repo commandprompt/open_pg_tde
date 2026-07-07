@@ -10,18 +10,18 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 # This test exercises the AES-256-CBC data path, so request it explicitly
 # rather than relying on the data-file default (which is AES-XTS).
-$node->append_conf('postgresql.conf', "pg_tde.data_cipher = 'aes_256'");
+$node->append_conf('postgresql.conf', "open_pg_tde.data_cipher = 'aes_256'");
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
+	SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
 ));
 
 # test_enc0 (simple create table w tde_heap and aes_128 and then add data when changed key size)
@@ -35,7 +35,7 @@ $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc0 ORDER BY id;');
 is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc0');
 
-$node->append_conf('postgresql.conf', "pg_tde.cipher = 'aes_256'");
+$node->append_conf('postgresql.conf', "open_pg_tde.cipher = 'aes_256'");
 $node->restart;
 
 $stdout =

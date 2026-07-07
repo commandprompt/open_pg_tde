@@ -1,6 +1,6 @@
 # Encryption Enforcement
 
-For `pg_tde`, encryption enforcement ensures that only encrypted storage is allowed for specific operations, tables, or the entire database. It prevents the accidental creation of unencrypted tables or indexes in environments where encryption is required for compliance, security, or policy enforcement.
+For `open_pg_tde`, encryption enforcement ensures that only encrypted storage is allowed for specific operations, tables, or the entire database. It prevents the accidental creation of unencrypted tables or indexes in environments where encryption is required for compliance, security, or policy enforcement.
 
 ## What does enforcement do?
 
@@ -12,14 +12,14 @@ When enabled, encryption enforcement:
 
 ## Enforce encryption usage
 
-Use the following techniques to enforce the secure use of `pg_tde`.
+Use the following techniques to enforce the secure use of `open_pg_tde`.
 
 ### 1. Enforce encryption across the server
 
-To enforce encryption cluster-wide, set the [`pg_tde.enforce_encryption`](../variables.md/#pg_tdeenforce_encryption) variable in `postgresql.conf`:
+To enforce encryption cluster-wide, set the [`open_pg_tde.enforce_encryption`](../variables.md/#open_pg_tdeenforce_encryption) variable in `postgresql.conf`:
 
 ```ini
-pg_tde.enforce_encryption = on
+open_pg_tde.enforce_encryption = on
 ```
 
 !!! note
@@ -32,7 +32,7 @@ This ensures that no user, including superusers, can create unencrypted tables. 
 To apply encryption enforcement only within a specific database, run:
 
 ```sql
-ALTER DATABASE example_db SET pg_tde.enforce_encryption = on;
+ALTER DATABASE example_db SET open_pg_tde.enforce_encryption = on;
 ```
 
 This ensures encryption is enforced **only** when connected to that database.
@@ -42,7 +42,7 @@ This ensures encryption is enforced **only** when connected to that database.
 You can also enforce encryption on a per-user basis, run:
 
 ```sql
-ALTER USER example_user SET pg_tde.enforce_encryption = on;
+ALTER USER example_user SET open_pg_tde.enforce_encryption = on;
 ```
 
 This ensures that the user `example_user` cannot create unencrypted tables, regardless of which database they connect to.
@@ -52,7 +52,7 @@ This ensures that the user `example_user` cannot create unencrypted tables, rega
 Superusers can override the variable at the session level:
 
 ```sql
-SET pg_tde.enforce_encryption = off;
+SET open_pg_tde.enforce_encryption = off;
 ```
 
 This allows temporary creation of unencrypted tables in special cases, such as:

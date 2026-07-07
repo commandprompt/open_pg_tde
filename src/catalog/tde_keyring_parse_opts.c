@@ -13,7 +13,7 @@
 #include "catalog/tde_keyring.h"
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 /*
@@ -52,9 +52,9 @@ static const char *JK_FIELD_NAMES[JK_FIELDS_TOTAL] = {
 	[JK_FIELD_UNKNOWN] = "unknownField",
 
 	/*
-	 * These values should match pg_tde_add_database_key_provider_file,
-	 * pg_tde_add_database_key_provider_openbao and
-	 * pg_tde_add_database_key_provider_kmip SQL interfaces
+	 * These values should match open_pg_tde_add_database_key_provider_file,
+	 * open_pg_tde_add_database_key_provider_openbao and
+	 * open_pg_tde_add_database_key_provider_kmip SQL interfaces
 	 */
 	[JK_FILE_PATH] = "path",
 

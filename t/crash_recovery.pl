@@ -14,21 +14,21 @@ $node->init;
 $node->append_conf(
 	'postgresql.conf', q{
 checkpoint_timeout = 1h
-shared_preload_libraries = 'pg_tde'
+shared_preload_libraries = 'open_pg_tde'
 });
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
+	CREATE EXTENSION open_pg_tde;
 
-	SELECT pg_tde_add_global_key_provider_file('global_keyring', '$keydir/global.keys');
-	SELECT pg_tde_create_key_using_global_key_provider('wal_encryption_key', 'global_keyring');
-	SELECT pg_tde_set_server_key_using_global_key_provider('wal_encryption_key', 'global_keyring');
+	SELECT open_pg_tde_add_global_key_provider_file('global_keyring', '$keydir/global.keys');
+	SELECT open_pg_tde_create_key_using_global_key_provider('wal_encryption_key', 'global_keyring');
+	SELECT open_pg_tde_set_server_key_using_global_key_provider('wal_encryption_key', 'global_keyring');
 
-	SELECT pg_tde_add_database_key_provider_file('db_keyring', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('db_key', 'db_keyring');
-	SELECT pg_tde_set_key_using_database_key_provider('db_key', 'db_keyring');
+	SELECT open_pg_tde_add_database_key_provider_file('db_keyring', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('db_key', 'db_keyring');
+	SELECT open_pg_tde_set_key_using_database_key_provider('db_key', 'db_keyring');
 
 	CREATE TABLE test_enc (x int PRIMARY KEY) USING tde_heap;
 	INSERT INTO test_enc (x) VALUES (1), (2);
@@ -36,37 +36,37 @@ $node->safe_psql(
 	CREATE TABLE test_plain (x int PRIMARY KEY) USING heap;
 	INSERT INTO test_plain (x) VALUES (3), (4);
 
-	ALTER SYSTEM SET pg_tde.wal_encrypt = 'on';
+	ALTER SYSTEM SET open_pg_tde.wal_encrypt = 'on';
 ));
 
 $node->kill9;
 
-# check that we can do a crash recovery of the pg_tde setup
+# check that we can do a crash recovery of the open_pg_tde setup
 PGTDE::poll_start($node);
 
 # rotate wal key and insert
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_create_key_using_global_key_provider('wal_encryption_key_1', 'global_keyring');
-	SELECT pg_tde_set_server_key_using_global_key_provider('wal_encryption_key_1', 'global_keyring');
-	SELECT pg_tde_create_key_using_database_key_provider('db_key_1', 'db_keyring');
-	SELECT pg_tde_set_key_using_database_key_provider('db_key_1', 'db_keyring');
+	SELECT open_pg_tde_create_key_using_global_key_provider('wal_encryption_key_1', 'global_keyring');
+	SELECT open_pg_tde_set_server_key_using_global_key_provider('wal_encryption_key_1', 'global_keyring');
+	SELECT open_pg_tde_create_key_using_database_key_provider('db_key_1', 'db_keyring');
+	SELECT open_pg_tde_set_key_using_database_key_provider('db_key_1', 'db_keyring');
 
 	INSERT INTO test_enc (x) VALUES (3), (4);
 ));
 
 $node->kill9;
 
-# check that pg_tde_save_principal_key_redo hasn't destroyed a WAL key created during the server start
+# check that open_pg_tde_save_principal_key_redo hasn't destroyed a WAL key created during the server start
 PGTDE::poll_start($node);
 
 # rotate wal key and insert
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_create_key_using_global_key_provider('wal_encryption_key_2', 'global_keyring');
-	SELECT pg_tde_set_server_key_using_global_key_provider('wal_encryption_key_2', 'global_keyring');
-	SELECT pg_tde_create_key_using_database_key_provider('db_key_2', 'db_keyring');
-	SELECT pg_tde_set_key_using_database_key_provider('db_key_2', 'db_keyring');
+	SELECT open_pg_tde_create_key_using_global_key_provider('wal_encryption_key_2', 'global_keyring');
+	SELECT open_pg_tde_set_server_key_using_global_key_provider('wal_encryption_key_2', 'global_keyring');
+	SELECT open_pg_tde_create_key_using_database_key_provider('db_key_2', 'db_keyring');
+	SELECT open_pg_tde_set_key_using_database_key_provider('db_key_2', 'db_keyring');
 
 	INSERT INTO test_enc (x) VALUES (5), (6);
 ));
@@ -93,7 +93,7 @@ $node->kill9;
 
 $node->append_conf(
 	'postgresql.conf', q{
-pg_tde.cipher = 'aes_256'
+open_pg_tde.cipher = 'aes_256'
 });
 
 # check redo when cipher was changed after the server crash
@@ -117,7 +117,7 @@ $node->safe_psql(
 
 # Sanity check to see that we are testing somthing useful
 $stdout =
-  $node->safe_psql('postgres', "SELECT pg_tde_is_encrypted('seq_unlogged');");
+  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('seq_unlogged');");
 is($stdout, 't', 'sequence is encrypted');
 
 $node->kill9;

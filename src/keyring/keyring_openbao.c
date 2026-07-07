@@ -14,10 +14,10 @@
 #include "keyring/keyring_api.h"
 #include "keyring/keyring_curl.h"
 #include "keyring/keyring_openbao.h"
-#include "pg_tde_defines.h"
+#include "open_pg_tde_defines.h"
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 #define OPENBAO_URL_MAX_LEN 512

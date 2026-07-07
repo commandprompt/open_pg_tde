@@ -18,5 +18,5 @@ cd "$SCRIPT_DIR/.."
 
 export PATH=$SCRIPT_DIR/../../postgres/src/tools/pgindent/:$INSTALL_DIR/bin/:$PATH
 
-# Check pg_tde with the fresh list extraxted from the object file
+# Check open_pg_tde with the fresh list extraxted from the object file
 pgindent --typedefs=typedefs.list --excludes=<(echo "src/libkmip") "$@" .

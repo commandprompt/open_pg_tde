@@ -10,48 +10,48 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->append_conf('postgresql.conf', "wal_level = 'logical'");
 # We don't test that it can't start: the test framework doesn't have an easy way to do this
-#$node->append_conf('postgresql.conf', "pg_tde.wal_encrypt = 1");
+#$node->append_conf('postgresql.conf', "open_pg_tde.wal_encrypt = 1");
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_global_key_provider_file('file-keyring-010', '$keydir/global.keys')
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_global_key_provider_file('file-keyring-010', '$keydir/global.keys')
 ));
 
 (undef, undef, $stderr) =
-  $node->psql('postgres', 'SELECT pg_tde_verify_server_key();');
+  $node->psql('postgres', 'SELECT open_pg_tde_verify_server_key();');
 like(
 	$stderr,
 	qr/ERROR:  principal key not configured for current database/,
 	'should not have a valid key');
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT key_name, provider_name, provider_id FROM pg_tde_server_key_info();'
+	'SELECT key_name, provider_name, provider_id FROM open_pg_tde_server_key_info();'
 );
 is($stdout, '||', 'should not show a valid key');
 
 $node->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_create_key_using_global_key_provider('server-key', 'file-keyring-010');
-	SELECT pg_tde_set_server_key_using_global_key_provider('server-key', 'file-keyring-010');
+	SELECT open_pg_tde_create_key_using_global_key_provider('server-key', 'file-keyring-010');
+	SELECT open_pg_tde_set_server_key_using_global_key_provider('server-key', 'file-keyring-010');
 ));
 
-$node->safe_psql('postgres', 'SELECT pg_tde_verify_server_key();');
+$node->safe_psql('postgres', 'SELECT open_pg_tde_verify_server_key();');
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT key_name, provider_name, provider_id FROM pg_tde_server_key_info();'
+	'SELECT key_name, provider_name, provider_id FROM open_pg_tde_server_key_info();'
 );
 is($stdout, 'server-key|file-keyring-010|-1', 'should show a valid keys');
 
-$node->safe_psql('postgres', 'ALTER SYSTEM SET pg_tde.wal_encrypt = on;');
+$node->safe_psql('postgres', 'ALTER SYSTEM SET open_pg_tde.wal_encrypt = on;');
 
 $node->restart;
 
-$stdout = $node->safe_psql('postgres', 'SHOW pg_tde.wal_encrypt;');
+$stdout = $node->safe_psql('postgres', 'SHOW open_pg_tde.wal_encrypt;');
 is($stdout, 'on', 'wal_encrypt should be enabled');
 
 $stdout = $node->safe_psql('postgres',
@@ -65,27 +65,27 @@ $node->safe_psql(
 	INSERT INTO test_wal (k) VALUES (1), (2);
 ));
 
-$node->safe_psql('postgres', 'ALTER SYSTEM SET pg_tde.wal_encrypt = off;');
+$node->safe_psql('postgres', 'ALTER SYSTEM SET open_pg_tde.wal_encrypt = off;');
 
 $node->restart;
 
-$stdout = $node->safe_psql('postgres', "SHOW pg_tde.wal_encrypt;");
+$stdout = $node->safe_psql('postgres', "SHOW open_pg_tde.wal_encrypt;");
 is($stdout, 'off', 'wal_encrypt should be disabled');
 
 $node->safe_psql('postgres', 'INSERT INTO test_wal (k) VALUES (3), (4);');
 
-$node->safe_psql('postgres', 'ALTER SYSTEM SET pg_tde.wal_encrypt = on;');
+$node->safe_psql('postgres', 'ALTER SYSTEM SET open_pg_tde.wal_encrypt = on;');
 
 $node->restart;
 
-$stdout = $node->safe_psql('postgres', "SHOW pg_tde.wal_encrypt;");
+$stdout = $node->safe_psql('postgres', "SHOW open_pg_tde.wal_encrypt;");
 is($stdout, 'on', 'wal_encrypt should be enabled');
 
 $node->safe_psql('postgres', 'INSERT INTO test_wal (k) VALUES (5), (6);');
 
 $node->restart;
 
-$stdout = $node->safe_psql('postgres', "SHOW pg_tde.wal_encrypt;");
+$stdout = $node->safe_psql('postgres', "SHOW open_pg_tde.wal_encrypt;");
 is($stdout, 'on', 'wal_encrypt should be enabled');
 
 $node->safe_psql('postgres', 'INSERT INTO test_wal (k) VALUES (7), (8);');
@@ -114,7 +114,7 @@ COMMIT), 'should have generated the expected WAL');
 
 $node->safe_psql('postgres', "SELECT pg_drop_replication_slot('tde_slot');");
 
-$node->safe_psql('postgres', 'DROP EXTENSION pg_tde;');
+$node->safe_psql('postgres', 'DROP EXTENSION open_pg_tde;');
 
 $node->stop;
 

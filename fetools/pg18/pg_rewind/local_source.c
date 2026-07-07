@@ -20,9 +20,9 @@
 #include "rewind_source.h"
 #include "tde_ops.h"
 
-#include "pg_tde.h"
-#include "common/pg_tde_utils.h"
-#include "access/pg_tde_tdemap.h"
+#include "open_pg_tde.h"
+#include "common/open_pg_tde_utils.h"
+#include "access/open_pg_tde_tdemap.h"
 
 typedef struct
 {
@@ -194,7 +194,7 @@ local_fetch_tde_keys(rewind_source *source)
 	struct stat st;
 	const char *datadir = ((local_source *) source)->datadir;
 
-	snprintf(tde_source_dir, sizeof(tde_source_dir), "%s/%s", datadir, PG_TDE_DATA_DIR);
+	snprintf(tde_source_dir, sizeof(tde_source_dir), "%s/%s", datadir, OPEN_PG_TDE_DATA_DIR);
 
 	if (stat(tde_source_dir, &st) != 0 || !S_ISDIR(st.st_mode))
 		return;

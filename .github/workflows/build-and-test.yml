@@ -50,7 +50,7 @@ jobs:
       - name: Build postgres
         run: src/ci_scripts/build-and-install-psp.sh ${{ inputs.build_type }}
 
-      - name: Build pg_tde
+      - name: Build open_pg_tde
         run: src/ci_scripts/build.sh ${{ inputs.build_type }}
 
       - name: Add build and install to artifact tar file
@@ -93,7 +93,7 @@ jobs:
         if: startsWith(inputs.os,  'macos-')
         run: src/ci_scripts/macos-deps.sh
 
-      - name: Test pg_tde
+      - name: Test open_pg_tde
         run: src/ci_scripts/test.sh
 
       - name: Report on test fail

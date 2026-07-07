@@ -1,8 +1,8 @@
 # Configure Multi-tenancy
 
-The steps below describe how to set up multi-tenancy with `pg_tde`. Multi-tenancy allows you to encrypt different databases with different keys. This provides granular control over data and enables you to introduce different security policies and access controls for each database so that only authorized users of specific databases have access to the data.
+The steps below describe how to set up multi-tenancy with `open_pg_tde`. Multi-tenancy allows you to encrypt different databases with different keys. This provides granular control over data and enables you to introduce different security policies and access controls for each database so that only authorized users of specific databases have access to the data.
 
-If you don't need multi-tenancy, use the global key provider. See the configuration steps from the [Configure pg_tde :octicons-link-external-16:](../setup.md) section.
+If you don't need multi-tenancy, use the global key provider. See the configuration steps from the [Configure open_pg_tde :octicons-link-external-16:](../setup.md) section.
 
 For how to enable WAL encryption, refer to the [Configure WAL Encryption :octicons-link-external-16:](../wal-encryption.md) section.
 
@@ -13,12 +13,12 @@ For how to enable WAL encryption, refer to the [Configure WAL Encryption :octico
 
 ## Enable extension
 
-Load the `pg_tde` at startup time. The extension requires additional shared memory; therefore, add the `pg_tde` value for the `shared_preload_libraries` parameter and restart the `postgresql` cluster.
+Load the `open_pg_tde` at startup time. The extension requires additional shared memory; therefore, add the `open_pg_tde` value for the `shared_preload_libraries` parameter and restart the `postgresql` cluster.
 
 1. Use the [ALTER SYSTEM :octicons-link-external-16:](https://www.postgresql.org/docs/current/sql-altersystem.html) command from `psql` terminal to modify the `shared_preload_libraries` parameter. This requires superuser privileges.
 
     ```sql
-    ALTER SYSTEM SET shared_preload_libraries = 'pg_tde';
+    ALTER SYSTEM SET shared_preload_libraries = 'open_pg_tde';
     ```
 
 2. Start or restart the `postgresql` cluster to apply the changes.
@@ -38,17 +38,17 @@ Load the `pg_tde` at startup time. The extension requires additional shared memo
 3. Create the extension using the [CREATE EXTENSION :octicons-link-external-16:](https://www.postgresql.org/docs/current/sql-createextension.html) command. You must have the privileges of a superuser or a database owner to use this command. Connect to `psql` as a superuser for a database and run the following command:
 
     ```sql
-    CREATE EXTENSION pg_tde;
+    CREATE EXTENSION open_pg_tde;
     ```
 
-    The `pg_tde` extension is created for the currently used database. To enable data encryption in other databases, you must explicitly run the `CREATE EXTENSION` command against them.
+    The `open_pg_tde` extension is created for the currently used database. To enable data encryption in other databases, you must explicitly run the `CREATE EXTENSION` command against them.
 
     !!! tip
 
-        You can have the `pg_tde` extension automatically enabled for every newly created database. Modify the template `template1` database as follows:
+        You can have the `open_pg_tde` extension automatically enabled for every newly created database. Modify the template `template1` database as follows:
 
         ```sh
-        psql -d template1 -c 'CREATE EXTENSION pg_tde;'
+        psql -d template1 -c 'CREATE EXTENSION open_pg_tde;'
         ```
 
 ## Key provider configuration
@@ -66,7 +66,7 @@ You must do these steps for every database where you have created the extension.
         For testing purposes, you can use the Eviden KMS server which enables you to set up required certificates. To use a real KMIP server, make sure to obtain the valid certificates issued by the key management appliance.
 
         ```sql
-        SELECT pg_tde_add_database_key_provider_kmip(
+        SELECT open_pg_tde_add_database_key_provider_kmip(
           'provider-name',
           'kmip-addr', 
           `port`, 
@@ -88,7 +88,7 @@ You must do these steps for every database where you have created the extension.
         <i warning>:material-information: Warning:</i> This example is for testing purposes only:
 
         ```sql
-        SELECT pg_tde_add_database_key_provider_kmip(
+        SELECT open_pg_tde_add_database_key_provider_kmip(
             'kmip', 
             '127.0.0.1', 
             5696, 
@@ -103,7 +103,7 @@ You must do these steps for every database where you have created the extension.
         This setup is intended for development and stores the keys unencrypted in the specified data file.
 
         ```sql
-        SELECT pg_tde_add_database_key_provider_file(
+        SELECT open_pg_tde_add_database_key_provider_file(
             'provider-name', 
             '/path/to/the/keyring/data.file'
         );
@@ -112,16 +112,16 @@ You must do these steps for every database where you have created the extension.
 	    <i warning>:material-information: Warning:</i> This example is for testing purposes only:
 
         ```sql
-        SELECT pg_tde_add_database_key_provider_file(
+        SELECT open_pg_tde_add_database_key_provider_file(
             'file-keyring', 
-            '/tmp/pg_tde_test_local_keyring.per'
+            '/tmp/open_pg_tde_test_local_keyring.per'
         );
         ```
 
 2. Create a key
 
     ```sql
-    SELECT pg_tde_create_key_using_database_key_provider(
+    SELECT open_pg_tde_create_key_using_database_key_provider(
         'name-of-the-key', 
         'provider-name'
     );
@@ -135,7 +135,7 @@ You must do these steps for every database where you have created the extension.
     <i warning>:material-information: Warning:</i> This example is for testing purposes only:
 
     ```sql
-    SELECT pg_tde_create_key_using_database_key_provider(
+    SELECT open_pg_tde_create_key_using_database_key_provider(
         'test-db-master-key', 
         'file-vault'
     );
@@ -147,7 +147,7 @@ You must do these steps for every database where you have created the extension.
 3. Use the key as principal key
 
     ```sql
-    SELECT pg_tde_set_key_using_database_key_provider(
+    SELECT open_pg_tde_set_key_using_database_key_provider(
         'name-of-the-key', 
         'provider-name'
     );
@@ -161,7 +161,7 @@ You must do these steps for every database where you have created the extension.
     <i warning>:material-information: Warning:</i> This example is for testing purposes only:
 
     ```sql
-    SELECT pg_tde_set_key_using_database_key_provider(
+    SELECT open_pg_tde_set_key_using_database_key_provider(
         'test-db-master-key',
         'file-vault'
     );

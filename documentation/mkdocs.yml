@@ -6,8 +6,8 @@ site_author: Percona LLC
 copyright: >
   <a href="https://www.percona.com/about">Percona LLC</a> and/or its affiliates © 2026 — <a href="#__consent">Cookie Consent</a>
 
-repo_name: percona/pg_tde
-repo_url: https://github.com/percona/pg_tde
+repo_name: jdatcmd/open_pg_tde
+repo_url: https://github.com/jdatcmd/open_pg_tde
 edit_uri: edit/main/documentation/docs
 
 use_directory_urls: false
@@ -151,19 +151,19 @@ nav:
   - "Features": features.md 
   - "Overview":
     - "About Transparent Data Encryption": index/about-tde.md
-    - "About pg_tde": 
-      - "Benefits of pg_tde": index/how-tde-helps.md
-      - "How pg_tde works": index/how-does-tde-work.md
-      - "Impact of pg_tde on database operations": index/what-tde-impacts.md
+    - "About open_pg_tde": 
+      - "Benefits of open_pg_tde": index/how-tde-helps.md
+      - "How open_pg_tde works": index/how-does-tde-work.md
+      - "Impact of open_pg_tde on database operations": index/what-tde-impacts.md
       - "Encrypted data scope": index/tde-encrypts.md
-      - "Table access methods and pg_tde": index/table-access-method.md
-    - "Limitations of pg_tde": index/tde-limitations.md
+      - "Table access methods and open_pg_tde": index/table-access-method.md
+    - "Limitations of open_pg_tde": index/tde-limitations.md
     - "Versions and supported PostgreSQL deployments": index/supported-versions.md
   - "Get started":
-    - "1. Install pg_tde": install.md
+    - "1. Install open_pg_tde": install.md
     - "1.1 Via apt": apt.md
     - "1.2 Via yum": yum.md
-    - "2. Configure pg_tde": setup.md
+    - "2. Configure open_pg_tde": setup.md
     - "2.1 Configure key management (KMS)": 
       - "Key management overview": global-key-provider-configuration/overview.md
       - "KMIP configuration": global-key-provider-configuration/kmip-server.md
@@ -173,11 +173,11 @@ nav:
       - "OpenBao configuration": global-key-provider-configuration/openbao.md
       - "Keyring file configuration": global-key-provider-configuration/keyring.md
     - "2.2 Default Principal Key configuration": global-key-provider-configuration/set-principal-key.md
-    - "3. Validate encryption with pg_tde": test.md
+    - "3. Validate encryption with open_pg_tde": test.md
     - "4. Configure WAL encryption": wal-encryption.md
   - "Technical reference":
     - "Overview": advanced-topics/tech-reference.md
-    - "About pg_tde architecture": 
+    - "About open_pg_tde architecture": 
       - "Architecture overview": architecture/overview.md
       - "Encryption architecture": architecture/encryption-architecture.md
       - "Key and provider management": architecture/key-provider-management.md
@@ -186,19 +186,19 @@ nav:
     - "Functions": functions.md
     - "Streaming replication with tde_heap": replication.md
   - "TDE operations":
-    - "pg_tde CLI tools":
+    - "open_pg_tde CLI tools":
       - "Overview": command-line-tools/cli-tools.md
-      - "pg_tde_change_key_provider": command-line-tools/pg-tde-change-key-provider.md
-      - "pg_tde_archive_decrypt": command-line-tools/pg-tde-archive-decrypt.md
-      - "pg_tde_restore_encrypt": command-line-tools/pg-tde-restore-encrypt.md
-      - "pg_tde_checksums": command-line-tools/pg-tde-checksums.md 
-      - "pg_tde_waldump": command-line-tools/pg-tde-waldump.md
-    - "Uninstall pg_tde": how-to/uninstall.md
+      - "open_pg_tde_change_key_provider": command-line-tools/pg-tde-change-key-provider.md
+      - "open_pg_tde_archive_decrypt": command-line-tools/pg-tde-archive-decrypt.md
+      - "open_pg_tde_restore_encrypt": command-line-tools/pg-tde-restore-encrypt.md
+      - "open_pg_tde_checksums": command-line-tools/pg-tde-checksums.md 
+      - "open_pg_tde_waldump": command-line-tools/pg-tde-waldump.md
+    - "Uninstall open_pg_tde": how-to/uninstall.md
     - "Configure multi-tenancy": how-to/multi-tenant-setup.md
     - "Encryption enforcement": how-to/enforcement.md
     - "Decrypt an encrypted table": how-to/decrypt.md
     - "Backup with WAL encryption enabled": how-to/backup-wal-enabled.md
-    - "Restore an encrypted pg_tde backup": how-to/restore-backups.md
+    - "Restore an encrypted open_pg_tde backup": how-to/restore-backups.md
   - faq.md
   - "Release notes":
     - "Release notes index": release-notes/release-notes.md

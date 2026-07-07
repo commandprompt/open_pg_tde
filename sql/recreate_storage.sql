@@ -1,25 +1,25 @@
-\! rm -f '/tmp/pg_tde_test_keyring.per'
+\! rm -f '/tmp/open_pg_tde_test_keyring.per'
 
-CREATE EXTENSION pg_tde;
+CREATE EXTENSION open_pg_tde;
 
-SELECT pg_tde_add_database_key_provider_file('file-vault','/tmp/pg_tde_test_keyring.per');
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
 
 SET default_table_access_method = "tde_heap";
 
 CREATE TABLE t1(n integer);
-SELECT pg_tde_is_encrypted('t1');
+SELECT open_pg_tde_is_encrypted('t1');
 VACUUM FULL t1;
-SELECT pg_tde_is_encrypted('t1');
+SELECT open_pg_tde_is_encrypted('t1');
 
 CREATE TABLE test_tab1 AS SELECT generate_series(1,10) a;
 CREATE INDEX test_idx1 ON test_tab1(a);
-SELECT pg_tde_is_encrypted('test_tab1');
-SELECT pg_tde_is_encrypted('test_idx1');
+SELECT open_pg_tde_is_encrypted('test_tab1');
+SELECT open_pg_tde_is_encrypted('test_idx1');
 REINDEX index CONCURRENTLY test_idx1;
-SELECT pg_tde_is_encrypted('test_tab1');
-SELECT pg_tde_is_encrypted('test_idx1');
+SELECT open_pg_tde_is_encrypted('test_tab1');
+SELECT open_pg_tde_is_encrypted('test_idx1');
 
 CREATE TABLE mvtest_t (id int NOT NULL PRIMARY KEY, type text NOT NULL, amt numeric NOT NULL);
 INSERT INTO mvtest_t VALUES
@@ -29,18 +29,18 @@ INSERT INTO mvtest_t VALUES
   (4, 'y', 7),
   (5, 'z', 11);
 CREATE MATERIALIZED VIEW mvtest_tm AS SELECT type, sum(amt) AS totamt FROM mvtest_t GROUP BY type WITH NO DATA;
-SELECT pg_tde_is_encrypted('mvtest_tm');
+SELECT open_pg_tde_is_encrypted('mvtest_tm');
 REFRESH MATERIALIZED VIEW mvtest_tm;
-SELECT pg_tde_is_encrypted('mvtest_tm');
+SELECT open_pg_tde_is_encrypted('mvtest_tm');
 
 CREATE TYPE rewritetype AS (a int);
 CREATE TABLE rewritemetoo1 OF rewritetype;
 CREATE TABLE rewritemetoo2 OF rewritetype;
-SELECT pg_tde_is_encrypted('rewritemetoo1');
-SELECT pg_tde_is_encrypted('rewritemetoo2');
+SELECT open_pg_tde_is_encrypted('rewritemetoo1');
+SELECT open_pg_tde_is_encrypted('rewritemetoo2');
 ALTER TYPE rewritetype ALTER ATTRIBUTE a TYPE text cascade;
-SELECT pg_tde_is_encrypted('rewritemetoo1');
-SELECT pg_tde_is_encrypted('rewritemetoo2');
+SELECT open_pg_tde_is_encrypted('rewritemetoo1');
+SELECT open_pg_tde_is_encrypted('rewritemetoo2');
 
 CREATE TABLE encrypted_table (
     id SERIAL,
@@ -51,13 +51,13 @@ CREATE TABLE encrypted_table (
 ) USING tde_heap;
 
 CREATE INDEX idx_date ON encrypted_table (created_at);
-SELECT pg_tde_is_encrypted('encrypted_table');
+SELECT open_pg_tde_is_encrypted('encrypted_table');
 CLUSTER encrypted_table USING idx_date;
-SELECT pg_tde_is_encrypted('encrypted_table');
+SELECT open_pg_tde_is_encrypted('encrypted_table');
 
-SELECT pg_tde_is_encrypted('encrypted_table_id_seq');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id_seq');
 ALTER SEQUENCE encrypted_table_id_seq RESTART;
-SELECT pg_tde_is_encrypted('encrypted_table_id_seq');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id_seq');
 
 CREATE TABLE plain_table (
     id2 INT
@@ -65,39 +65,39 @@ CREATE TABLE plain_table (
 
 -- Starts independent and becomes encrypted
 CREATE SEQUENCE independent_seq;
-SELECT pg_tde_is_encrypted('independent_seq');
+SELECT open_pg_tde_is_encrypted('independent_seq');
 ALTER SEQUENCE independent_seq OWNED BY encrypted_table.id2;
-SELECT pg_tde_is_encrypted('independent_seq');
+SELECT open_pg_tde_is_encrypted('independent_seq');
 
 -- Starts independent and stays plain
 CREATE SEQUENCE independent_seq2 OWNED BY NONE;
-SELECT pg_tde_is_encrypted('independent_seq2');
+SELECT open_pg_tde_is_encrypted('independent_seq2');
 ALTER SEQUENCE independent_seq2 OWNED BY plain_table.id2;
-SELECT pg_tde_is_encrypted('independent_seq2');
+SELECT open_pg_tde_is_encrypted('independent_seq2');
 
 -- Starts owned by an encrypted table and becomes owned by a plain table
 CREATE SEQUENCE encrypted_table_id2_seq OWNED BY encrypted_table.id2;
-SELECT pg_tde_is_encrypted('encrypted_table_id2_seq');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id2_seq');
 ALTER SEQUENCE encrypted_table_id2_seq OWNED BY plain_table.id2;
-SELECT pg_tde_is_encrypted('encrypted_table_id2_seq');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id2_seq');
 
 -- Starts owned by an encrypted table and becomes independent
 CREATE SEQUENCE encrypted_table_id2_seq2 OWNED BY encrypted_table.id2;
-SELECT pg_tde_is_encrypted('encrypted_table_id2_seq2');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id2_seq2');
 ALTER SEQUENCE encrypted_table_id2_seq2 OWNED BY NONE;
-SELECT pg_tde_is_encrypted('encrypted_table_id2_seq2');
+SELECT open_pg_tde_is_encrypted('encrypted_table_id2_seq2');
 
 -- Starts owned by a plain table and becomes owned by an encrypted table
 CREATE SEQUENCE plain_table_id2_seq OWNED BY plain_table.id2;
-SELECT pg_tde_is_encrypted('plain_table_id2_seq');
+SELECT open_pg_tde_is_encrypted('plain_table_id2_seq');
 ALTER SEQUENCE plain_table_id2_seq OWNED BY encrypted_table.id2;
-SELECT pg_tde_is_encrypted('plain_table_id2_seq');
+SELECT open_pg_tde_is_encrypted('plain_table_id2_seq');
 
 -- Starts owned by a plain table and becomes independent
 CREATE SEQUENCE plain_table_id2_seq2 OWNED BY plain_table.id2;
-SELECT pg_tde_is_encrypted('plain_table_id2_seq2');
+SELECT open_pg_tde_is_encrypted('plain_table_id2_seq2');
 ALTER SEQUENCE plain_table_id2_seq2 OWNED BY NONE;
-SELECT pg_tde_is_encrypted('plain_table_id2_seq2');
+SELECT open_pg_tde_is_encrypted('plain_table_id2_seq2');
 
 -- Enforce that we do not mess up encryption status for toast table
 CREATE TABLE cities (
@@ -127,11 +127,11 @@ ALTER TYPE people_type ALTER ATTRIBUTE name TYPE text CASCADE;
 ALTER TABLE other_staff SET ACCESS METHOD tde_heap;
 ALTER TYPE people_type ALTER ATTRIBUTE name TYPE text CASCADE;
 
-SELECT pg_tde_is_encrypted('pg_toast.pg_toast_' || 'sales_staff'::regclass::oid);
-SELECT pg_tde_is_encrypted('pg_toast.pg_toast_' || 'other_staff'::regclass::oid);
+SELECT open_pg_tde_is_encrypted('pg_toast.pg_toast_' || 'sales_staff'::regclass::oid);
+SELECT open_pg_tde_is_encrypted('pg_toast.pg_toast_' || 'other_staff'::regclass::oid);
 
 DROP TYPE people_type CASCADE;
 DROP TABLE cities CASCADE;
 DROP TABLE plain_table;
-DROP EXTENSION pg_tde CASCADE;
+DROP EXTENSION open_pg_tde CASCADE;
 RESET default_table_access_method;

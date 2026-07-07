@@ -1,6 +1,6 @@
 # KMIP configuration
 
-To use a Key Management Interoperability Protocol (KMIP) server with `pg_tde`, you must configure it as a global key provider. This setup enables `pg_tde` to securely fetch and manage encryption keys from a centralized key management appliance.
+To use a Key Management Interoperability Protocol (KMIP) server with `open_pg_tde`, you must configure it as a global key provider. This setup enables `open_pg_tde` to securely fetch and manage encryption keys from a centralized key management appliance.
 
 !!! note
     You need the root certificate of the KMIP server and a client key/certificate pair with permissions to create and read keys on the server.
@@ -10,7 +10,7 @@ For testing purposes, you can use a Eviden KMS server, which enables easy certif
 ## Example usage
 
 ```sql
-SELECT pg_tde_add_global_key_provider_kmip(
+SELECT open_pg_tde_add_global_key_provider_kmip(
     'provider-name',
     'kmip-IP', 
     `port`,
@@ -32,7 +32,7 @@ SELECT pg_tde_add_global_key_provider_kmip(
 The following example is for testing purposes only.
 
 ```sql
-SELECT pg_tde_add_global_key_provider_kmip(
+SELECT open_pg_tde_add_global_key_provider_kmip(
     'kmip','127.0.0.1', 
     5696, 
     '/tmp/server_certificate.pem', 
@@ -43,7 +43,7 @@ SELECT pg_tde_add_global_key_provider_kmip(
 
 For more information on related functions, see the link below:
 
-[Percona pg_tde Function Reference](../functions.md){.md-button}
+[Percona open_pg_tde Function Reference](../functions.md){.md-button}
 
 ## Next steps
 

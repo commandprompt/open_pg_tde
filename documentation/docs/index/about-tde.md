@@ -4,9 +4,9 @@ Transparent Data Encryption (TDE) protects your data at rest by ensuring that ev
 
 This process runs transparently in the background, with minimal impact on database operations.
 
-Use the links below to explore how `pg_tde` helps secure your PostgreSQL deployments:
+Use the links below to explore how `open_pg_tde` helps secure your PostgreSQL deployments:
 
-[Discover the benefits of pg_tde :material-arrow-right:](how-tde-helps.md){.md-button}
-[Understand pg_tde limitations :material-arrow-right:](tde-limitations.md){.md-button}
+[Discover the benefits of open_pg_tde :material-arrow-right:](how-tde-helps.md){.md-button}
+[Understand open_pg_tde limitations :material-arrow-right:](tde-limitations.md){.md-button}
 [View the full feature list :material-arrow-right:](../features.md){.md-button}
 [Get started with installation :material-arrow-right:](../install.md){.md-button}

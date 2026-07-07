@@ -15,7 +15,7 @@ DEPS=(
     lz4
     openssl
     zstd
-    # Build pg_tde
+    # Build open_pg_tde
     meson
     # Run pgperltidy
     perltidy

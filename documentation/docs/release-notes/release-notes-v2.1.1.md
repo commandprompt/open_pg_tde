@@ -1,6 +1,6 @@
-# pg_tde 2.1.1 ({{date.2_1_1}})
+# open_pg_tde 2.1.1 ({{date.2_1_1}})
 
-The `pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
+The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
 
 [Get Started](../install.md){.md-button}
 
@@ -8,7 +8,7 @@ The `pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (
 
 ### Integrated Hashicorp Vault namespace
 
-The namespace of Hashicorp vault is integrated with ``pg_tde`` through the  ``pg_tde_add_global_key_provider_vault_v2`` parameter.
+The namespace of Hashicorp vault is integrated with ``open_pg_tde`` through the  ``open_pg_tde_add_global_key_provider_vault_v2`` parameter.
 
 ### Documentation updates
 
@@ -16,15 +16,15 @@ Updated the [Global Principal Key configuration :octicons-link-external-16:](htt
 
 ## Known issues
 
-* Creating, changing, or rotating global key providers (or their keys) while `pg_tde_basebackup` is running may cause standbys or standalone clusters initialized from the backup to fail during WAL replay and may also lead to the corruption of encrypted data (tables, indexes, and other relations).
+* Creating, changing, or rotating global key providers (or their keys) while `open_pg_tde_basebackup` is running may cause standbys or standalone clusters initialized from the backup to fail during WAL replay and may also lead to the corruption of encrypted data (tables, indexes, and other relations).
 
     Avoid making these actions during backup windows. Run a new full backup after completing a rotation or provider update.
 
-* Using `pg_tde_basebackup` with `--wal-method=fetch` produces warnings.
+* Using `open_pg_tde_basebackup` with `--wal-method=fetch` produces warnings.
 
     This behavior is expected and will be addressed in a future release.
 
-* The default `mlock` limit on Rocky Linux 8 for ARM64-based architectures equals the memory page size and is 64 Kb. This results in the child process with `pg_tde` failing to allocate another memory page because the max memory limit is reached by the parent process.
+* The default `mlock` limit on Rocky Linux 8 for ARM64-based architectures equals the memory page size and is 64 Kb. This results in the child process with `open_pg_tde` failing to allocate another memory page because the max memory limit is reached by the parent process.
 
     To prevent this, you can change the `mlock` limit to be at least twice bigger than the memory page size:
 
@@ -37,4 +37,4 @@ Updated the [Global Principal Key configuration :octicons-link-external-16:](htt
 
 ### New Features
 
-* [PG-1959 :octicons-link-external-16:](https://perconadev.atlassian.net/browse/PG-1959) - Namespace of Hashicorp vault is integrated with `pg_tde`
+* [PG-1959 :octicons-link-external-16:](https://perconadev.atlassian.net/browse/PG-1959) - Namespace of Hashicorp vault is integrated with `open_pg_tde`

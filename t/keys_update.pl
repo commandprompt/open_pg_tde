@@ -1,6 +1,6 @@
-# Test migration older format of pg_tde/*_keys files. It starts a cluster
+# Test migration older format of open_pg_tde/*_keys files. It starts a cluster
 # from preexising PGDATA. This PGDATA is the result of:
-# - Created and run cluster with pg_tde 2.1.1 and encrypted WAL
+# - Created and run cluster with open_pg_tde 2.1.1 and encrypted WAL
 # - Created encrypted table and insert data
 # - Crashed server (kill -9)
 

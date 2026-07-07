@@ -249,34 +249,34 @@ astreamer_inject_file(astreamer *streamer, char *pathname, char *data,
 					  ASTREAMER_MEMBER_TRAILER);
 }
 
-typedef struct astreamer_pg_tde_injector
+typedef struct astreamer_open_pg_tde_injector
 {
 	astreamer	base;
 	bool		skip_file;
 	bool		encrypted_wal;
-} astreamer_pg_tde_injector;
+} astreamer_open_pg_tde_injector;
 
-static void astreamer_pg_tde_injector_content(astreamer *streamer,
+static void astreamer_open_pg_tde_injector_content(astreamer *streamer,
 											  astreamer_member *member,
 											  const char *data, int len,
 											  astreamer_archive_context context);
-static void astreamer_pg_tde_injector_finalize(astreamer *streamer);
-static void astreamer_pg_tde_injector_free(astreamer *streamer);
+static void astreamer_open_pg_tde_injector_finalize(astreamer *streamer);
+static void astreamer_open_pg_tde_injector_free(astreamer *streamer);
 
-static const astreamer_ops astreamer_pg_tde_injector_ops = {
-	.content = astreamer_pg_tde_injector_content,
-	.finalize = astreamer_pg_tde_injector_finalize,
-	.free = astreamer_pg_tde_injector_free
+static const astreamer_ops astreamer_open_pg_tde_injector_ops = {
+	.content = astreamer_open_pg_tde_injector_content,
+	.finalize = astreamer_open_pg_tde_injector_finalize,
+	.free = astreamer_open_pg_tde_injector_free
 };
 
 astreamer *
-astreamer_pg_tde_injector_new(astreamer *next, bool encrypted_wal)
+astreamer_open_pg_tde_injector_new(astreamer *next, bool encrypted_wal)
 {
-	astreamer_pg_tde_injector *streamer;
+	astreamer_open_pg_tde_injector *streamer;
 
-	streamer = palloc0(sizeof(astreamer_pg_tde_injector));
+	streamer = palloc0(sizeof(astreamer_open_pg_tde_injector));
 	*((const astreamer_ops **) &streamer->base.bbs_ops) =
-		&astreamer_pg_tde_injector_ops;
+		&astreamer_open_pg_tde_injector_ops;
 	streamer->base.bbs_next = next;
 	streamer->encrypted_wal = encrypted_wal;
 
@@ -284,14 +284,14 @@ astreamer_pg_tde_injector_new(astreamer *next, bool encrypted_wal)
 }
 
 static void
-astreamer_pg_tde_injector_content(astreamer *streamer,
+astreamer_open_pg_tde_injector_content(astreamer *streamer,
 								  astreamer_member *member,
 								  const char *data, int len,
 								  astreamer_archive_context context)
 {
-	astreamer_pg_tde_injector *mystreamer;
+	astreamer_open_pg_tde_injector *mystreamer;
 
-	mystreamer = (astreamer_pg_tde_injector *) streamer;
+	mystreamer = (astreamer_open_pg_tde_injector *) streamer;
 
 	switch (context)
 	{
@@ -301,7 +301,7 @@ astreamer_pg_tde_injector_content(astreamer *streamer,
 			 * A streamed WAL is encrypted with the newly generated WAL key,
 			 * hence we have to prevent wal_keys from rewriting.
 			 */
-			if (strcmp(member->pathname, "pg_tde/wal_keys") == 0)
+			if (strcmp(member->pathname, "open_pg_tde/wal_keys") == 0)
 			{
 				if (mystreamer->encrypted_wal)
 				{
@@ -315,8 +315,8 @@ astreamer_pg_tde_injector_content(astreamer *streamer,
 					pg_log_warning_hint("Run pg_basebackup with -E to encrypt streamed WAL.");
 				}
 			}
-			else if ((strcmp(member->pathname, "pg_tde") == 0 ||
-					  strcmp(member->pathname, "pg_tde/") == 0) &&
+			else if ((strcmp(member->pathname, "open_pg_tde") == 0 ||
+					  strcmp(member->pathname, "open_pg_tde/") == 0) &&
 					 mystreamer->encrypted_wal)
 			{
 				mystreamer->skip_file = true;
@@ -342,13 +342,13 @@ astreamer_pg_tde_injector_content(astreamer *streamer,
 }
 
 static void
-astreamer_pg_tde_injector_finalize(astreamer *streamer)
+astreamer_open_pg_tde_injector_finalize(astreamer *streamer)
 {
 	astreamer_finalize(streamer->bbs_next);
 }
 
 static void
-astreamer_pg_tde_injector_free(astreamer *streamer)
+astreamer_open_pg_tde_injector_free(astreamer *streamer)
 {
 	astreamer_free(streamer->bbs_next);
 	pfree(streamer);

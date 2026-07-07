@@ -117,7 +117,7 @@ sub run_test
 		# step.
 		command_fails(
 			[
-				'pg_tde_rewind', '--debug',
+				'open_pg_tde_rewind', '--debug',
 				'--source-pgdata', $standby_pgdata,
 				'--target-pgdata', $primary_pgdata,
 				'--no-sync'
@@ -129,7 +129,7 @@ sub run_test
 		# recovery once.
 		command_fails(
 			[
-				'pg_tde_rewind', '--debug',
+				'open_pg_tde_rewind', '--debug',
 				'--source-pgdata', $standby_pgdata,
 				'--target-pgdata', $primary_pgdata,
 				'--no-sync', '--no-ensure-shutdown'
@@ -142,7 +142,7 @@ sub run_test
 		$node_primary->stop;
 		command_fails(
 			[
-				'pg_tde_rewind', '--debug',
+				'open_pg_tde_rewind', '--debug',
 				'--source-pgdata', $standby_pgdata,
 				'--target-pgdata', $primary_pgdata,
 				'--no-sync', '--no-ensure-shutdown'
@@ -156,7 +156,7 @@ sub run_test
 		$node_standby->stop;
 		command_ok(
 			[
-				'pg_tde_rewind', '--debug',
+				'open_pg_tde_rewind', '--debug',
 				'--source-pgdata', $standby_pgdata,
 				'--target-pgdata', $primary_pgdata,
 				'--no-sync', '--dry-run'
@@ -226,7 +226,7 @@ run_test('local');
 run_test('remote');
 run_test('archive');
 
-my @conf_params = ("pg_tde.cipher = 'aes_256'");
+my @conf_params = ("open_pg_tde.cipher = 'aes_256'");
 run_test('local', "_aes_256", \@conf_params);
 
 done_testing();

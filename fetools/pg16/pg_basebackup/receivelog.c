@@ -25,8 +25,8 @@
 #include "receivelog.h"
 #include "streamutil.h"
 
-#include "pg_tde_fe.h"
-#include "access/pg_tde_xlog_smgr.h"
+#include "open_pg_tde_fe.h"
+#include "access/open_pg_tde_xlog_smgr.h"
 #include "access/xlog_smgr.h"
 #include "catalog/tde_global_space.h"
 

@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-pg_tde project follows rolling release strategy. So all security updates go to new versions.
+open_pg_tde project follows rolling release strategy. So all security updates go to new versions.
 
 ## Reporting a Vulnerability
 

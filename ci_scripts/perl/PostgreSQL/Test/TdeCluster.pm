@@ -27,19 +27,19 @@ my %smgr_skip = (
 	'src/bin/pg_amcheck/t/005_opclass_damage.pl' =>
 	  'investigate why this fails',
 	'src/bin/pg_dump/t/004_pg_dump_parallel.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_dump/t/010_dump_connstr.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_upgrade/t/002_pg_upgrade.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_upgrade/t/003_logical_slots.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_upgrade/t/004_subscription.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_upgrade/t/005_char_signedness.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/pg_upgrade/t/006_transfer_modes.pl' =>
-	  'pg_restore fail to restore _pg_tde schema on cluster which already has it',
+	  'pg_restore fail to restore _open_pg_tde schema on cluster which already has it',
 	'src/bin/scripts/t/020_createdb.pl' =>
 	  'tries to use FILE_COPY strategy for database creation with encrypted objects in the template',
 	'src/test/recovery/t/016_min_consistency.pl' =>
@@ -114,9 +114,9 @@ sub init
 	$self->SUPER::init(%params);
 
 	$self->SUPER::append_conf('postgresql.conf',
-		'shared_preload_libraries = pg_tde');
+		'shared_preload_libraries = open_pg_tde');
 
-	$self->_tde_init_pg_tde_dir($params{extra});
+	$self->_tde_init_open_pg_tde_dir($params{extra});
 
 	if ($tde_mode_smgr)
 	{
@@ -126,8 +126,8 @@ sub init
 		{
 			_tde_init_sql_command(
 				$self->data_dir, $_, q(
-				CREATE SCHEMA _pg_tde;
-				CREATE EXTENSION pg_tde WITH SCHEMA _pg_tde;
+				CREATE SCHEMA _open_pg_tde;
+				CREATE EXTENSION open_pg_tde WITH SCHEMA _open_pg_tde;
 			));
 		}
 		$self->SUPER::append_conf('postgresql.conf',
@@ -137,7 +137,7 @@ sub init
 	if ($tde_mode_wal)
 	{
 		$self->SUPER::append_conf('postgresql.conf',
-			'pg_tde.wal_encrypt = on');
+			'open_pg_tde.wal_encrypt = on');
 	}
 
 	return;
@@ -152,7 +152,7 @@ sub append_conf
 		# TODO: Will not work with shared_preload_libraries= without any
 		#       libraries, but no TAP test currently do that.
 		$str =~
-		  s/shared_preload_libraries *= *'?([^'\n]+)'?/shared_preload_libraries = 'pg_tde,$1'/;
+		  s/shared_preload_libraries *= *'?([^'\n]+)'?/shared_preload_libraries = 'open_pg_tde,$1'/;
 	}
 
 	$self->SUPER::append_conf($filename, $str);
@@ -174,7 +174,7 @@ sub backup
 			@{ $params{backup_options} })
 		{
 			PostgreSQL::Test::Utils::system_log('cp', '-R', '-P', '-p',
-				$self->pg_tde_dir, $backup_dir . '/pg_tde',);
+				$self->open_pg_tde_dir, $backup_dir . '/open_pg_tde',);
 
 			push @{ $params{backup_options} }, '--encrypt-wal';
 		}
@@ -192,7 +192,7 @@ sub enable_archiving
 	if ($tde_mode_wal)
 	{
 		$self->adjust_conf('postgresql.conf', 'archive_command',
-			qq('pg_tde_archive_decrypt %f %p "cp \\"%%p\\" \\"$path/%%f\\""')
+			qq('open_pg_tde_archive_decrypt %f %p "cp \\"%%p\\" \\"$path/%%f\\""')
 		);
 	}
 
@@ -208,54 +208,54 @@ sub enable_restoring
 	if ($tde_mode_wal)
 	{
 		$self->adjust_conf('postgresql.conf', 'restore_command',
-			qq('pg_tde_restore_encrypt %f %p "cp \\"$path/%%f\\" \\"%%p\\""')
+			qq('open_pg_tde_restore_encrypt %f %p "cp \\"$path/%%f\\" \\"%%p\\""')
 		);
 	}
 
 	return;
 }
 
-sub pg_tde_dir
+sub open_pg_tde_dir
 {
 	my ($self) = @_;
-	return $self->data_dir . '/pg_tde';
+	return $self->data_dir . '/open_pg_tde';
 }
 
-sub _tde_init_pg_tde_dir
+sub _tde_init_open_pg_tde_dir
 {
 	my ($self, $extra) = @_;
 	my $tde_source_dir;
 
 	if (defined($extra))
 	{
-		$tde_source_dir = $self->_tde_generate_pg_tde_dir($extra);
+		$tde_source_dir = $self->_tde_generate_open_pg_tde_dir($extra);
 	}
 	else
 	{
-		$tde_source_dir = $self->_tde_init_pg_tde_dir_template;
+		$tde_source_dir = $self->_tde_init_open_pg_tde_dir_template;
 	}
 
 	PostgreSQL::Test::Utils::system_log('cp', '-R', '-P', '-p',
-		$tde_source_dir . '/pg_tde',
-		$self->pg_tde_dir);
+		$tde_source_dir . '/open_pg_tde',
+		$self->open_pg_tde_dir);
 
 	# We don't want clusters sharing the KMS file as any concurrent writes will
 	# mess it up.
 	PostgreSQL::Test::Utils::system_log(
 		'cp', '-R', '-P', '-p',
-		$tde_source_dir . '/pg_tde_test_keys',
-		$self->basedir . '/pg_tde_test_keys');
+		$tde_source_dir . '/open_pg_tde_test_keys',
+		$self->basedir . '/open_pg_tde_test_keys');
 
 	PostgreSQL::Test::Utils::system_log(
-		'pg_tde_change_key_provider',
+		'open_pg_tde_change_key_provider',
 		'-D' => $self->data_dir,
 		'1664',
 		'global_test_provider',
 		'file',
-		$self->basedir . '/pg_tde_test_keys');
+		$self->basedir . '/open_pg_tde_test_keys');
 }
 
-sub _tde_init_pg_tde_dir_template
+sub _tde_init_open_pg_tde_dir_template
 {
 	my ($self) = @_;
 	my $tde_template_dir;
@@ -267,28 +267,28 @@ sub _tde_init_pg_tde_dir_template
 	else
 	{
 		$tde_template_dir =
-		  $PostgreSQL::Test::Utils::tmp_check . '/pg_tde_template';
+		  $PostgreSQL::Test::Utils::tmp_check . '/open_pg_tde_template';
 	}
 
 	unless (-e $tde_template_dir)
 	{
-		my $temp_dir = $self->_tde_generate_pg_tde_dir;
+		my $temp_dir = $self->_tde_generate_open_pg_tde_dir;
 		mkdir $tde_template_dir;
 
 		PostgreSQL::Test::Utils::system_log('cp', '-R', '-P', '-p',
-			$temp_dir . '/pg_tde',
+			$temp_dir . '/open_pg_tde',
 			$tde_template_dir);
 
 		PostgreSQL::Test::Utils::system_log(
 			'cp', '-R', '-P', '-p',
-			$temp_dir . '/pg_tde_test_keys',
-			$tde_template_dir . '/pg_tde_test_keys');
+			$temp_dir . '/open_pg_tde_test_keys',
+			$tde_template_dir . '/open_pg_tde_test_keys');
 	}
 
 	return $tde_template_dir;
 }
 
-sub _tde_generate_pg_tde_dir
+sub _tde_generate_open_pg_tde_dir
 {
 	my ($self, $extra) = @_;
 	my $temp_dir = PostgreSQL::Test::Utils::tempdir();
@@ -296,15 +296,15 @@ sub _tde_generate_pg_tde_dir
 	PostgreSQL::Test::Utils::system_log(
 		'initdb',
 		'-D' => $temp_dir,
-		'--set' => 'shared_preload_libraries=pg_tde',
+		'--set' => 'shared_preload_libraries=open_pg_tde',
 		@{$extra});
 
 	_tde_init_sql_command(
 		$temp_dir, 'postgres', qq(
-		CREATE EXTENSION pg_tde;
-		SELECT pg_tde_add_global_key_provider_file('global_test_provider', '$temp_dir/pg_tde_test_keys');
-		SELECT pg_tde_create_key_using_global_key_provider('default_test_key', 'global_test_provider');
-		SELECT pg_tde_set_default_key_using_global_key_provider('default_test_key', 'global_test_provider');
+		CREATE EXTENSION open_pg_tde;
+		SELECT open_pg_tde_add_global_key_provider_file('global_test_provider', '$temp_dir/open_pg_tde_test_keys');
+		SELECT open_pg_tde_create_key_using_global_key_provider('default_test_key', 'global_test_provider');
+		SELECT open_pg_tde_set_default_key_using_global_key_provider('default_test_key', 'global_test_provider');
 	));
 
 	return $temp_dir;

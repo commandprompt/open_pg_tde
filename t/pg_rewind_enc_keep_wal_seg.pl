@@ -31,9 +31,9 @@ sub run_test
 	push @$extra_conf, "wal_level=replica";
 	push @$extra_conf, "archive_mode=on";
 	push @$extra_conf,
-	  "archive_command='pg_tde_archive_decrypt %f %p \"cp %%p $archive_dir/%%f\"'";
+	  "archive_command='open_pg_tde_archive_decrypt %f %p \"cp %%p $archive_dir/%%f\"'";
 	push @$extra_conf,
-	  "restore_command='pg_tde_restore_encrypt %f %p \"cp $archive_dir/%%f %%p\"'";
+	  "restore_command='open_pg_tde_restore_encrypt %f %p \"cp $archive_dir/%%f %%p\"'";
 
 	RewindTest::setup_cluster($cluster_name, [], $extra_conf);
 	RewindTest::start_primary();
@@ -94,7 +94,7 @@ run_test('local');
 run_test('remote');
 run_test('archive');
 
-my @conf_params = ("pg_tde.cipher = 'aes_256'");
+my @conf_params = ("open_pg_tde.cipher = 'aes_256'");
 run_test('local', "_aes_256", \@conf_params);
 
 done_testing();

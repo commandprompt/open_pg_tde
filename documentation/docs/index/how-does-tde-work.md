@@ -1,4 +1,4 @@
-# How pg_tde works
+# How open_pg_tde works
 
 To encrypt the data, two types of keys are used:
 
@@ -12,7 +12,7 @@ The encryption process works as follows:
 
 ![image](../_images/tde-flow.png)
 
-When a user creates an encrypted table using `pg_tde`, a new random key is generated internally for that table and is encrypted using the AES-CBC cipher algorithm. This key is used to encrypt all data the user inserts in that table. Eventually the encrypted data gets stored in the underlying storage.
+When a user creates an encrypted table using `open_pg_tde`, a new random key is generated internally for that table and is encrypted using the AES-CBC cipher algorithm. This key is used to encrypt all data the user inserts in that table. Eventually the encrypted data gets stored in the underlying storage.
 
 The internal key itself is encrypted using the principal key. The principal key is stored externally in the key management store.
 

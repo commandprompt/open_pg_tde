@@ -1,6 +1,6 @@
 # Using OpenBao as a key provider
 
-You can configure `pg_tde` to use OpenBao as a global key provider for managing encryption keys. OpenBao is an Apache 2.0 licensed fork of HashiCorp Vault and uses the Key/Value version 2 (KV v2) secrets engine.
+You can configure `open_pg_tde` to use OpenBao as a global key provider for managing encryption keys. OpenBao is an Apache 2.0 licensed fork of HashiCorp Vault and uses the Key/Value version 2 (KV v2) secrets engine.
 
 !!! note
     This guide assumes that your OpenBao server is already set up and accessible. OpenBao configuration is outside the scope of this document. See the [OpenBao documentation](https://openbao.org/docs/) for more information.
@@ -10,7 +10,7 @@ You can configure `pg_tde` to use OpenBao as a global key provider for managing 
 To register an OpenBao server as a global key provider:
 
 ```sql
-SELECT pg_tde_add_global_key_provider_openbao(
+SELECT open_pg_tde_add_global_key_provider_openbao(
     'provider-name',
     'url',
     'mount',
@@ -32,7 +32,7 @@ SELECT pg_tde_add_global_key_provider_openbao(
 The following example is for testing only. Use secure tokens and TLS validation in production:
 
 ```sql
-SELECT pg_tde_add_global_key_provider_openbao(
+SELECT open_pg_tde_add_global_key_provider_openbao(
     'my-openbao-provider',
     'https://openbao.example.com:8200',
     'secret/data',
@@ -41,7 +41,7 @@ SELECT pg_tde_add_global_key_provider_openbao(
 );
 ```
 
-For the related functions, see the [pg_tde function reference](../functions.md){.md-button}.
+For the related functions, see the [open_pg_tde function reference](../functions.md){.md-button}.
 
 ## Next steps
 

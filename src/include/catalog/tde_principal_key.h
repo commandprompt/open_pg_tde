@@ -2,8 +2,8 @@
  * TDE principal key handling
  */
 
-#ifndef PG_TDE_PRINCIPAL_KEY_H
-#define PG_TDE_PRINCIPAL_KEY_H
+#ifndef OPEN_PG_TDE_PRINCIPAL_KEY_H
+#define OPEN_PG_TDE_PRINCIPAL_KEY_H
 
 #include "postgres.h"
 #include "catalog/tde_keyring.h"
@@ -43,7 +43,7 @@ extern Size PrincipalKeyShmemSize(void);
 #ifndef FRONTEND
 extern void principal_key_startup_cleanup(Oid databaseId);
 extern LWLock *tde_lwlock_enc_keys(void);
-extern bool pg_tde_principal_key_configured(Oid databaseId);
+extern bool open_pg_tde_principal_key_configured(Oid databaseId);
 extern TDEPrincipalKey *GetPrincipalKey(Oid dbOid, LWLockMode lockMode);
 #else
 extern TDEPrincipalKey *GetPrincipalKey(Oid dbOid, void *lockMode);
@@ -52,7 +52,7 @@ extern void clean_fe_server_principal_key_cache(void);
 #endif
 
 extern void xl_tde_perform_rotate_key(XLogPrincipalKeyRotate *xlrec);
-extern bool pg_tde_is_provider_used(Oid databaseOid, Oid providerId);
-extern void pg_tde_verify_provider_keys_in_use(GenericKeyring *proposed_provider);
+extern bool open_pg_tde_is_provider_used(Oid databaseOid, Oid providerId);
+extern void open_pg_tde_verify_provider_keys_in_use(GenericKeyring *proposed_provider);
 
-#endif							/* PG_TDE_PRINCIPAL_KEY_H */
+#endif							/* OPEN_PG_TDE_PRINCIPAL_KEY_H */

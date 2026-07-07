@@ -77,7 +77,7 @@
 
         script.setAttribute(
             "data-modal-example-questions",
-            "What is pg_tde?, How do I install pg_tde?, How do I use pg_tde?, How do I deploy pg_tde in production?"
+            "What is open_pg_tde?, How do I install open_pg_tde?, How do I use open_pg_tde?, How do I deploy open_pg_tde in production?"
         );
 
         script.setAttribute(

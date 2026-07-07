@@ -1,6 +1,6 @@
 # Code contributing guide
 
-Welcome to `pg_tde` - the Transparent Database Encryption for PostgreSQL!
+Welcome to `open_pg_tde` - the Transparent Database Encryption for PostgreSQL!
 
 We're glad that you would like to become a Percona community member and participate in keeping open source open.
 
@@ -15,7 +15,7 @@ By contributing, you agree to the [Percona Community code of conduct](https://gi
 
 ## Submit a bug report or a feature request
 
-All bug reports, enhancements and feature requests are tracked in [Jira issue tracker](https://jira.percona.com/projects/PG). If you would like to suggest a new feature / an improvement or you found a bug in `pg_tde`, please submit the report to the [PG project](https://jira.percona.com/projects/PG/issues).
+All bug reports, enhancements and feature requests are tracked in [Jira issue tracker](https://jira.percona.com/projects/PG). If you would like to suggest a new feature / an improvement or you found a bug in `open_pg_tde`, please submit the report to the [PG project](https://jira.percona.com/projects/PG/issues).
 
 Start by searching the open tickets for a similar report. If you find that someone else has already reported your issue, then you can upvote that report to increase its visibility.
 
@@ -62,16 +62,16 @@ If the bug hasn’t been reported / addressed, or we’ve agreed on the enhancem
 8. Open a pull request to Percona
 9. Our team will review your code and if everything is correct, will merge it. Otherwise, we will contact you for additional information or with the request to make changes.
 
-### Build pg_tde
+### Build open_pg_tde
 
-To build `pg_tde` from source code, you require the following:
+To build `open_pg_tde` from source code, you require the following:
 
 * git
 * Meson
 * gcc or clang
 * Percona Server for PostgreSQL 17 or later
 
-Refer to the [Building from source code](https://github.com/percona/pg_tde?tab=readme-ov-file#building-from-sources-for-community-postgresql) section for guidelines.
+Refer to the [Building from source code](https://github.com/jdatcmd/open_pg_tde?tab=readme-ov-file#building-from-sources-for-community-postgresql) section for guidelines.
 
 ### Run tests
 
@@ -79,9 +79,9 @@ You can find the tests in the `sql` and `t` directories.
 
 #### Run manually
 
-1. Change the directory to `pg_tde`
+1. Change the directory to `open_pg_tde`
 
-2. Build and install `pg_tde` with the following commands:
+2. Build and install `open_pg_tde` with the following commands:
 
     ```sh
     meson setup -Dpg_config=/path/to/postgresql/bin/pg_config ./build

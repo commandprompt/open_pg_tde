@@ -12,16 +12,16 @@ $node->append_conf(
 	'postgresql.conf', q[
 	full_page_writes = off
 	shared_buffers = 1MB
-	shared_preload_libraries = 'pg_tde'
+	shared_preload_libraries = 'open_pg_tde'
 ]);
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_global_key_provider_file('global-keyring', '$keydir/global.keys');
-	SELECT pg_tde_create_key_using_global_key_provider('default-key', 'global-keyring');
-	SELECT pg_tde_set_default_key_using_global_key_provider('default-key', 'global-keyring');
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_global_key_provider_file('global-keyring', '$keydir/global.keys');
+	SELECT open_pg_tde_create_key_using_global_key_provider('default-key', 'global-keyring');
+	SELECT open_pg_tde_set_default_key_using_global_key_provider('default-key', 'global-keyring');
 ));
 
 # Create a template with a table in it to ensure the relfilenodes get reused,
@@ -33,7 +33,7 @@ $node->safe_psql('postgres',
 
 $node->safe_psql(
 	'conflict_db_template', qq(
-	CREATE EXTENSION pg_tde;
+	CREATE EXTENSION open_pg_tde;
 	CREATE TABLE large(id serial primary key, dataa text, datab text) USING tde_heap;
 	INSERT INTO large(dataa, datab) SELECT g.i::text, 1 FROM generate_series(1, 4000) g(i);
 ));

@@ -38,12 +38,12 @@
 #include "receivelog.h"
 #include "streamutil.h"
 
-#include "pg_tde_fe.h"
-#include "access/pg_tde_xlog_smgr.h"
-#include "access/pg_tde_xlog_keys.h"
+#include "open_pg_tde_fe.h"
+#include "access/open_pg_tde_xlog_smgr.h"
+#include "access/open_pg_tde_xlog_keys.h"
 #include "access/xlog_smgr.h"
 #include "catalog/tde_principal_key.h"
-#include "pg_tde.h"
+#include "open_pg_tde.h"
 
 #define GLOBAL_DATA_TDE_OID 1664
 
@@ -679,18 +679,18 @@ StartLogStreamer(char *startpos, uint32 timeline, char *sysidentifier,
 		TDEPrincipalKey *principalKey;
 		int			keyLength = KEY_DATA_SIZE_128;
 
-		snprintf(tdedir, sizeof(tdedir), "%s/%s", basedir, PG_TDE_DATA_DIR);
-		pg_tde_fe_init(tdedir);
+		snprintf(tdedir, sizeof(tdedir), "%s/%s", basedir, OPEN_PG_TDE_DATA_DIR);
+		open_pg_tde_fe_init(tdedir);
 		TDEXLogSmgrInit();
 
 		principalKey = GetPrincipalKey(GLOBAL_DATA_TDE_OID, NULL);
 		if (!principalKey)
 		{
 			pg_log_error("could not find server principal key");
-			pg_log_error_hint("Copy PGDATA/pg_tde from the source to the backup destination dir.");
+			pg_log_error_hint("Copy PGDATA/open_pg_tde from the source to the backup destination dir.");
 			exit(1);
 		}
-		pg_tde_save_server_key(principalKey, false);
+		open_pg_tde_save_server_key(principalKey, false);
 
 		/*
 		 * If no cipher was specified then we try to get the key length from
@@ -827,10 +827,10 @@ verify_dir_is_empty_or_create(char *dirname, bool *created, bool *found)
 		case 4:
 
 			/*
-			 * pg_tde may exists and contain keys and providers for the WAL
+			 * open_pg_tde may exists and contain keys and providers for the WAL
 			 * encryption
 			 */
-			if (strcmp(dirname, PG_TDE_DATA_DIR))
+			if (strcmp(dirname, OPEN_PG_TDE_DATA_DIR))
 				return;
 
 			/*
@@ -1297,7 +1297,7 @@ CreateBackupStreamer(char *archive_name, char *spclocation,
 	if (inject_manifest)
 		manifest_inject_streamer = streamer;
 
-	streamer = astreamer_pg_tde_injector_new(streamer, encrypt_wal_key_len);
+	streamer = astreamer_open_pg_tde_injector_new(streamer, encrypt_wal_key_len);
 
 	/*
 	 * If this is the main tablespace and we're supposed to write recovery

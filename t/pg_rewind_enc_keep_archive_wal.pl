@@ -56,9 +56,9 @@ push @$extra_conf, "wal_keep_size=0";
 push @$extra_conf, "archive_mode=on";
 push @$extra_conf, "archive_timeout=10s";
 push @$extra_conf,
-  "archive_command='pg_tde_archive_decrypt %f %p \"cp %%p $archive_dir/%%f\"'";
+  "archive_command='open_pg_tde_archive_decrypt %f %p \"cp %%p $archive_dir/%%f\"'";
 push @$extra_conf,
-  "restore_command='pg_tde_restore_encrypt %f %p \"cp $archive_dir/%%f %%p\"'";
+  "restore_command='open_pg_tde_restore_encrypt %f %p \"cp $archive_dir/%%f %%p\"'";
 
 RewindTest::setup_cluster($cluster_name, [], $extra_conf);
 RewindTest::start_primary();
@@ -95,10 +95,10 @@ wait_for_archive($archive_dir, $node_standby);
 
 my $newkey = "key_after_promotion";
 standby_psql(
-	"SELECT pg_tde_create_key_using_global_key_provider('$newkey', 'file-keyring-wal')"
+	"SELECT open_pg_tde_create_key_using_global_key_provider('$newkey', 'file-keyring-wal')"
 );
 standby_psql(
-	"SELECT pg_tde_set_key_using_global_key_provider('$newkey', 'file-keyring-wal')"
+	"SELECT open_pg_tde_set_key_using_global_key_provider('$newkey', 'file-keyring-wal')"
 );
 standby_psql("SELECT pg_switch_wal();");
 
@@ -133,7 +133,7 @@ copy(
 $node_standby->stop;
 command_ok(
 	[
-		'pg_tde_rewind',
+		'open_pg_tde_rewind',
 		"--debug",
 		"--source-pgdata=$standby_pgdata",
 		"--target-pgdata=$primary_pgdata",

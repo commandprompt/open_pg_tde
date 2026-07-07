@@ -20,7 +20,7 @@ typedef enum CipherType
 	CIPHER_AES_128_XTS,			/* AES-128-XTS, 32-byte key; data files only */
 } CipherType;
 
-extern uint32 pg_tde_cipher_key_length(CipherType cipher);
+extern uint32 open_pg_tde_cipher_key_length(CipherType cipher);
 
 #define INTERNAL_KEY_MAX_LEN 32 /* Max size of an Internal Key */
 #define INTERNAL_KEY_IV_LEN 16
@@ -33,8 +33,8 @@ typedef struct InternalKey
 	uint8		key[INTERNAL_KEY_MAX_LEN];
 } InternalKey;
 
-extern void pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher);
-extern void pg_tde_stream_crypt(const char *iv_prefix,
+extern void open_pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher);
+extern void open_pg_tde_stream_crypt(const char *iv_prefix,
 								uint32 start_offset,
 								const char *data,
 								uint32 data_len,

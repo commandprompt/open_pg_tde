@@ -18,7 +18,7 @@
 #include "common/logging.h"
 #include "common/string.h"
 
-#include "pg_tde.h"
+#include "open_pg_tde.h"
 
 typedef struct bbstreamer_plain_writer
 {
@@ -258,7 +258,7 @@ bbstreamer_extractor_content(bbstreamer *streamer, bbstreamer_member *member,
 				 * A streamed WAL is encrypted with the newly generated WAL
 				 * key, hence we have to prevent wal_keys from rewriting.
 				 */
-				if (strcmp(member->pathname, "pg_tde/wal_keys") == 0)
+				if (strcmp(member->pathname, "open_pg_tde/wal_keys") == 0)
 				{
 					if (mystreamer->encrypted_wal)
 						break;
@@ -334,7 +334,7 @@ should_allow_existing_directory(const char *pathname)
 		strcmp(filename, "archive_status") == 0 ||
 		strcmp(filename, "summaries") == 0 ||
 		strcmp(filename, "pg_tblspc") == 0 ||
-		strcmp(filename, PG_TDE_DATA_DIR) == 0)
+		strcmp(filename, OPEN_PG_TDE_DATA_DIR) == 0)
 		return true;
 
 	if (strspn(filename, "0123456789") == strlen(filename))

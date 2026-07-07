@@ -1,6 +1,6 @@
 # Encrypted data scope
 
-`pg_tde` encrypts the following components:
+`open_pg_tde` encrypts the following components:
 
 * **User data** in tables using the extension, including associated TOAST data. The table metadata (column names, data types, etc.) is not encrypted.
 * **Temporary tables** created during the query execution, for data tables created using the extension.

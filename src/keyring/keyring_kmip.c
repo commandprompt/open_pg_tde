@@ -12,7 +12,7 @@
 #include "keyring/keyring_kmip_impl.h"
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 #define MAX_LOCATE_LEN 128
@@ -100,7 +100,7 @@ set_key_by_name(GenericKeyring *keyring, KeyInfo *key)
 
 	kmipSslConnect(&ctx, kmip_keyring, true);
 
-	result = pg_tde_kmip_set_by_name(ctx.bio, key->name, key->data.data, key->data.len);
+	result = open_pg_tde_kmip_set_by_name(ctx.bio, key->name, key->data.data, key->data.len);
 
 	BIO_free_all(ctx.bio);
 	SSL_CTX_free(ctx.ssl);
@@ -130,7 +130,7 @@ get_key_by_name(GenericKeyring *keyring, const char *key_name, KeyringReturnCode
 		int			result;
 		size_t		ids_found;
 
-		result = pg_tde_kmip_locate_key(ctx.bio, key_name, &ids_found, id);
+		result = open_pg_tde_kmip_locate_key(ctx.bio, key_name, &ids_found, id);
 
 		if (result != 0)
 		{
@@ -163,7 +163,7 @@ get_key_by_name(GenericKeyring *keyring, const char *key_name, KeyringReturnCode
 
 	{
 		char	   *keyp = NULL;
-		int			result = pg_tde_kmip_get_key(ctx.bio, id, &keyp, (int *) &key->data.len);
+		int			result = open_pg_tde_kmip_get_key(ctx.bio, id, &keyp, (int *) &key->data.len);
 
 		if (result != 0)
 		{

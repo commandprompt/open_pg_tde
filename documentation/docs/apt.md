@@ -1,14 +1,14 @@
-# Install pg_tde on Debian or Ubuntu
+# Install open_pg_tde on Debian or Ubuntu
 
-This page explains how to install `pg_tde` for [Percona Distribution for PostgreSQL :octicons-link-external-16:](https://docs.percona.com/postgresql/latest/index.html).
+This page explains how to install `open_pg_tde` for [Percona Distribution for PostgreSQL :octicons-link-external-16:](https://docs.percona.com/postgresql/latest/index.html).
 
 !!! tip
     Check the [list of supported platforms :octicons-link-external-16:](https://www.percona.com/services/policies/percona-software-support-lifecycle) before continuing.
 
 ## Preconditions {.power-number}
 
-1. Remove any upstream PostgreSQL packages (postgresql-*) that may already be installed on Debian or other apt-based systems. These packages conflict with Percona Server for PostgreSQL and with the standalone `pg_tde` package.
-2. Ensure you enable the Percona APT repository using the repository management tool `percona-release`. This ensures the correct Percona Server for PostgreSQL and pg_tde packages are available for installation.
+1. Remove any upstream PostgreSQL packages (postgresql-*) that may already be installed on Debian or other apt-based systems. These packages conflict with Percona Server for PostgreSQL and with the standalone `open_pg_tde` package.
+2. Ensure you enable the Percona APT repository using the repository management tool `percona-release`. This ensures the correct Percona Server for PostgreSQL and open_pg_tde packages are available for installation.
 
 ## Install percona-release {.power-number}
 
@@ -49,9 +49,9 @@ This page explains how to install `pg_tde` for [Percona Distribution for Postgre
     sudo apt-get update
     ```
 
-## Install pg_tde {.power-number}  
+## Install open_pg_tde {.power-number}  
 
-After all [preconditions](#preconditions) are met, install the `pg_tde` package:
+After all [preconditions](#preconditions) are met, install the `open_pg_tde` package:
 
 ```{.bash data-prompt="$"}
 sudo apt-get install -y percona-pg-tde(pg-version)
@@ -65,4 +65,4 @@ sudo apt-get install -y percona-pg-tde{{pgversion17}}
 
 ## Next steps
 
-[Configure pg_tde :material-arrow-right:](setup.md){.md-button}
+[Configure open_pg_tde :material-arrow-right:](setup.md){.md-button}

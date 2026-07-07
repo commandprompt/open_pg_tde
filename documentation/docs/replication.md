@@ -1,8 +1,8 @@
 # Streaming Replication with tde_heap
 
-This section outlines how to set up PostgreSQL streaming replication when the `pg_tde` extension, specifically the [`tde_heap`](index/table-access-method.md) access method, is enabled on the primary server.
+This section outlines how to set up PostgreSQL streaming replication when the `open_pg_tde` extension, specifically the [`tde_heap`](index/table-access-method.md) access method, is enabled on the primary server.
 
-Before you begin, ensure you have followed the [`pg_tde` setup instructions](setup.md).
+Before you begin, ensure you have followed the [`open_pg_tde` setup instructions](setup.md).
 
 !!! note
     You do **not** need to run `CREATE EXTENSION` on the standby. It will be replicated automatically.
@@ -11,7 +11,7 @@ Before you begin, ensure you have followed the [`pg_tde` setup instructions](set
 
 ### Create a principal key
 
-Use the [`pg_tde_set_server_key_using_global_key_provider`](functions.md#pg_tde_set_server_key_using_global_key_provider) function to create a principal key.
+Use the [`open_pg_tde_set_server_key_using_global_key_provider`](functions.md#open_pg_tde_set_server_key_using_global_key_provider) function to create a principal key.
 
 ### Create the replication role
 
@@ -43,7 +43,7 @@ Run the base backup from your standby machine to pull the encrypted base backup:
 
 ```bash
 export PGPASSWORD='example_password'
-pg_tde_basebackup \
+open_pg_tde_basebackup \
   -h primary_ip \
   -D /var/lib/pgsql/data \
   -U example_replicator \
@@ -59,7 +59,7 @@ pg_tde_basebackup \
 After the base backup completes, add the following line to the standby's `postgresql.conf` file:
 
 ```ini
-shared_preload_libraries = 'pg_tde'
+shared_preload_libraries = 'open_pg_tde'
 ```
 
 ## 3. Start and validate replication
@@ -98,5 +98,5 @@ SELECT
     Want to verify that everything is working? After creating an encrypted table on the primary, run the following command on the standby to confirm that the encryption is active and the keys are resolved:
 
     ```sql
-    SELECT pg_tde_is_encrypted('your_encrypted_table');
+    SELECT open_pg_tde_is_encrypted('your_encrypted_table');
     ```

@@ -36,7 +36,7 @@ sub gen_certs
 		'openssl', 'req', '-x509', '-newkey',
 		'rsa:2048', '-nodes', '-days', '1',
 		'-keyout', "$dir/ca.key", '-out', "$dir/ca.pem",
-		'-subj', '/CN=pg_tde-test-ca');
+		'-subj', '/CN=open_pg_tde-test-ca');
 
 	# Server CSR + signed cert
 	system_or_bail(
@@ -67,7 +67,7 @@ sub gen_certs
 	system_or_bail(
 		'openssl', 'req', '-newkey', 'rsa:2048',
 		'-nodes', '-keyout', "$dir/client.key", '-out',
-		"$dir/client.csr", '-subj', '/CN=pg_tde-client');
+		"$dir/client.csr", '-subj', '/CN=open_pg_tde-client');
 	system_or_bail(
 		'openssl', 'x509',
 		'-req', '-in',

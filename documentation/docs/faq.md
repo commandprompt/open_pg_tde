@@ -27,15 +27,15 @@ Using TDE helps you avoid the following risks:
 
 If to translate sensitive data to files stored in your database, these are user data in tables, temporary files, WAL files. TDE has you covered encrypting all these files.
 
-`pg_tde` does not encrypt system catalogs yet. This means that statistics data and database metadata are not encrypted.
+`open_pg_tde` does not encrypt system catalogs yet. This means that statistics data and database metadata are not encrypted.
 
-## Will logical replication work with pg_tde?
+## Will logical replication work with open_pg_tde?
 
 Yes, logical replication works with the encrypted tables.
 
 ## Does logical replication keep data encrypted on subscribers?
 
-Logical replication **does not** preserve encryption state. If the publisher uses `pg_tde` but the subscriber does not, the replicated data will be stored **in plain text** on the subscriber.
+Logical replication **does not** preserve encryption state. If the publisher uses `open_pg_tde` but the subscriber does not, the replicated data will be stored **in plain text** on the subscriber.
 
 Encryption is not propagated to the data-block level due to how logical replication operates.
 
@@ -58,9 +58,9 @@ Another point to consider is PCI DSS compliance for Personal Account Numbers (PA
 
    Note that PCI DSS 3.4.1 is retiring on March 31, 2025. Therefore, consider switching to PCI DSS 4.0.
 
-* **PCI DSS 4.0** standards consider using only disk and partition-level encryption not enough to ensure PAN protection. It requires an additional layer of security that `pg_tde` can provide.
+* **PCI DSS 4.0** standards consider using only disk and partition-level encryption not enough to ensure PAN protection. It requires an additional layer of security that `open_pg_tde` can provide.
 
-`pg_tde` focuses specifically on data files and offers more granular control over encrypted data. The data remains encrypted on disk during runtime and when you move it to another directory, another system or storage. An example of such data is backups. They remain encrypted when moved to the backup storage.
+`open_pg_tde` focuses specifically on data files and offers more granular control over encrypted data. The data remains encrypted on disk during runtime and when you move it to another directory, another system or storage. An example of such data is backups. They remain encrypted when moved to the backup storage.
 
 Thus, to protect your sensitive data, consider using TDE to encrypt it at the table level. Then use disk-level encryption to encrypt a specific volume where this data is stored, or the entire disk.
 
@@ -74,17 +74,17 @@ Thus, to protect your sensitive data, consider using TDE to encrypt it at the ta
 * Regular monitoring and auditing
 * Additional data protection for sensitive fields (e.g., application-layer encryption)
 
-## How does pg_tde make my data safe?
+## How does open_pg_tde make my data safe?
 
-`pg_tde` uses two keys to encrypt data:
+`open_pg_tde` uses two keys to encrypt data:
 
-* Internal encryption keys to encrypt the data. These keys are stored internally in an encrypted format, in a single `$PGDATA/pg_tde` directory.
+* Internal encryption keys to encrypt the data. These keys are stored internally in an encrypted format, in a single `$PGDATA/open_pg_tde` directory.
 * Principal keys to encrypt internal encryption keys. These keys are stored externally, in the Key Management System (KMS).
 
 You can use the following KMSs:
 
 * KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management. For more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
-* [OpenBao](https://openbao.org/), an Apache 2.0 licensed fork of HashiCorp Vault. `pg_tde` uses its Key/Value version 2 secrets engine. For more information see [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
+* [OpenBao](https://openbao.org/), an Apache 2.0 licensed fork of HashiCorp Vault. `open_pg_tde` uses its Key/Value version 2 secrets engine. For more information see [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
 
 For development and testing, keys can also be stored in a local keyring file instead of an external KMS.
 
@@ -102,7 +102,7 @@ The principal key is used to encrypt the internal keys. The principal key is sto
 
 WAL encryption is done globally for the entire database cluster. All modifications to any database within a PostgreSQL cluster are written to the same WAL to maintain data consistency and integrity and ensure that PostgreSQL cluster can be restored to a consistent state. Therefore, WAL is encrypted globally.
 
-When you turn on WAL encryption, `pg_tde` encrypts entire WAL files starting from the first WAL write after the server was started with the encryption turned on.
+When you turn on WAL encryption, `open_pg_tde` encrypts entire WAL files starting from the first WAL write after the server was started with the encryption turned on.
 
 The same 2-key approach is used with WAL as with the table data: WAL pages are first encrypted with the internal key. Then the internal key is encrypted with the global principal key.
 
@@ -118,9 +118,9 @@ Consider encrypting only tables that store sensitive data. You can decide what t
 
 We advise encrypting the whole database only if all your data is sensitive, like PII, or if there is no other way to comply with data safety requirements.
 
-## What cipher mechanisms are used by pg_tde?
+## What cipher mechanisms are used by open_pg_tde?
 
-`pg_tde` currently uses the following encryption algorithms:
+`open_pg_tde` currently uses the following encryption algorithms:
 
 * `AES-128-CBC`, `AES-256-CBC` for encrypting database files; encrypted with internal keys
 * `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
@@ -144,20 +144,20 @@ Since the `SET ACCESS METHOD` command drops hint bits and this may affect the pe
 
 You must restart the database in the following cases to apply the changes:
 
-* after you enabled the `pg_tde` extension
+* after you enabled the `open_pg_tde` extension
 * when enabling WAL encryption
 
-After that, no database restart is required. When you create or alter the table using the `tde_heap` access method, the files are marked as those that require encryption. The encryption happens at the storage manager level, before a transaction is written to disk. Read more about [how tde_heap works](index/table-access-method.md#how-tde_heap-works-with-pg_tde).
+After that, no database restart is required. When you create or alter the table using the `tde_heap` access method, the files are marked as those that require encryption. The encryption happens at the storage manager level, before a transaction is written to disk. Read more about [how tde_heap works](index/table-access-method.md#how-tde_heap-works-with-open_pg_tde).
 
 ## What happens to my data if I lose a principal key?
 
 If you lose encryption keys, especially, the principal key, the data is lost. That's why it's critical to back up your encryption keys securely and use the Key Management service for key management.
 
-## Can I use pg_tde in a multi-tenant setup?
+## Can I use open_pg_tde in a multi-tenant setup?
 
 Multi-tenancy is the type of architecture where multiple users, or tenants, share the same resource. It can be a database, a schema or an entire cluster.
 
-In `pg_tde`, multi-tenancy is supported via a separate principal key per database. This means that a database owner can decide what tables to encrypt within a database. The same database can have both encrypted and non-encrypted tables.
+In `open_pg_tde`, multi-tenancy is supported via a separate principal key per database. This means that a database owner can decide what tables to encrypt within a database. The same database can have both encrypted and non-encrypted tables.
 
 To control user access to the databases, you can use role-based access control (RBAC).
 
@@ -165,22 +165,22 @@ To control user access to the databases, you can use role-based access control (
 
 ## Are my backups safe? Can I restore from them?
 
-`pg_tde` encrypts data at rest. This means that data is stored on disk in an encrypted form. During a backup, already encrypted data files are copied from disk onto the storage. This ensures the data safety in backups.
+`open_pg_tde` encrypts data at rest. This means that data is stored on disk in an encrypted form. During a backup, already encrypted data files are copied from disk onto the storage. This ensures the data safety in backups.
 
 Since the encryption happens on the database level, it makes no difference for your tools and applications. They work with the data in the same way.
 
 To restore from an encrypted backup, you must have the same principal encryption key, which was used to encrypt files in your backup.  
 
-## I'm using OpenSSL in FIPS mode and need to use pg_tde. Does pg_tde comply with FIPS requirements? Can I use my own FIPS-mode OpenSSL library with pg_tde?
+## I'm using OpenSSL in FIPS mode and need to use open_pg_tde. Does open_pg_tde comply with FIPS requirements? Can I use my own FIPS-mode OpenSSL library with open_pg_tde?
 
-Yes. `pg_tde` works with the FIPS-compliant version of OpenSSL, whether it is provided by your operating system or if you use your own OpenSSL libraries. If you use your own libraries, make sure they are FIPS certified.
+Yes. `open_pg_tde` works with the FIPS-compliant version of OpenSSL, whether it is provided by your operating system or if you use your own OpenSSL libraries. If you use your own libraries, make sure they are FIPS certified.
 
-## How do I rotate internal encryption keys in pg_tde?
+## How do I rotate internal encryption keys in open_pg_tde?
 
 We don't have a dedicated function to rotate internal keys, because a key is effectively rotated any time a table's data file is completely rewritten. Operations like `VACUUM FULL`, `TRUNCATE`, or some but not all `ALTER TABLE` commands automatically generate a new internal key.
 
 If you're concerned about internal keys being leaked, the best way to address it is by vacuuming the database. This operation rewrites the table's data and, in the process, creates a new internal key.
 
-## What tools are supported with `pg_tde` WAL encryption?
+## What tools are supported with `open_pg_tde` WAL encryption?
 
-For a comprehensive list of supported `pg_tde` WAL encryption tools see [Limitations of pg_tde](index/tde-limitations.md).
+For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](index/tde-limitations.md).

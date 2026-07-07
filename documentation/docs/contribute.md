@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Welcome to `pg_tde` - the Transparent Data Encryption extension for PostgreSQL!
+Welcome to `open_pg_tde` - the Transparent Data Encryption extension for PostgreSQL!
 
 We're glad that you would like to become a community member and contribute to this project.
 
@@ -62,7 +62,7 @@ You can run tests on your local machine with whatever operating system you have.
 
 ## Contribute to documentation
 
-`pg_tde` documentation is written in Markdown language, so you can [write the docs for your code changes](#write-the-docs) or
+`open_pg_tde` documentation is written in Markdown language, so you can [write the docs for your code changes](#write-the-docs) or
 [edit the existing documentation online via GitHub](#edit-documentation-online-via-github). If you wish to have more control over the doc process, jump to how to [edit documentation locally](#edit-documentation-locally). 
 
 Before you start, learn what [Markdown] is and how to write it. For your convenience, there's also a [Markdown cheat sheet] to help you with the syntax. 
@@ -109,7 +109,7 @@ The steps are the following:
 git clone --recursive git@github.com:<your-name>/postgres.git
 ```
 
-3. Change the directory to `contrib/pg_tde` and add the remote upstream repository:
+3. Change the directory to `contrib/open_pg_tde` and add the remote upstream repository:
 
 ```sh
 git remote add upstream git@github.com:percona/postgres.git
@@ -144,7 +144,7 @@ To verify how your changes look, generate the static site with the documentation
 2. We use [our Docker image](https://hub.docker.com/repository/docker/perconalab/pmm-doc-md) to build documentation. Run the following command:
 
 ```sh
-cd contrib/pg_tde/documentation
+cd contrib/open_pg_tde/documentation
 docker run --rm -v $(pwd):/docs perconalab/pmm-doc-md mkdocs build
 ```
    If Docker can't find the image locally, it first downloads the image, and then runs it to build the documentation.
@@ -154,7 +154,7 @@ docker run --rm -v $(pwd):/docs perconalab/pmm-doc-md mkdocs build
 If you want to see the changes as you edit the docs, use this command instead:
 
 ```sh
-cd contrib/pg_tde/documentation
+cd contrib/open_pg_tde/documentation
 docker run --rm -v $(pwd):/docs -p 8000:8000 perconalab/pmm-doc-md mkdocs serve --dev-addr=0.0.0.0:8000
 ```
 
@@ -173,7 +173,7 @@ Wait until you see `INFO    -  Start detecting changes`, then enter `0.0.0.0:800
 3. Build the site:
 
     ```sh
-    cd contrib/pg_tde/documentation
+    cd contrib/open_pg_tde/documentation
     mkdocs build
     ```
 
@@ -182,7 +182,7 @@ Wait until you see `INFO    -  Start detecting changes`, then enter `0.0.0.0:800
 Or, to run the built-in web server:
 
 ```sh
-cd contrib/pg_tde/documentation
+cd contrib/open_pg_tde/documentation
 mkdocs serve
 ```
 

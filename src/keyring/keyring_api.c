@@ -7,11 +7,11 @@
 #include "utils/memutils.h"
 
 #include "keyring/keyring_api.h"
-#include "pg_tde_guc.h"
+#include "open_pg_tde_guc.h"
 
 #ifdef FRONTEND
 #include "fe_utils/simple_list.h"
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 typedef struct RegisteredKeyProviderType

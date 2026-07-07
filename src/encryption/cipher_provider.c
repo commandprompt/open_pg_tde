@@ -1,5 +1,5 @@
 /*
- * Pluggable cipher provider registry for pg_tde.
+ * Pluggable cipher provider registry for open_pg_tde.
  *
  * See cipher_provider.h for the rationale. The built-in suites simply point at
  * the OpenSSL-backed primitives in enc_aes.c, so this layer is a dispatch seam
@@ -13,7 +13,7 @@
 #include "encryption/enc_tde.h"		/* CipherType ids */
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 #define MAX_TDE_CIPHERS 8
@@ -94,7 +94,7 @@ TdeCipherByKeyLen(int key_len)
 
 	ereport(ERROR,
 			errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("no pg_tde keystream cipher registered for key length %d", key_len));
+			errmsg("no open_pg_tde keystream cipher registered for key length %d", key_len));
 
 	return NULL;				/* keep the compiler happy */
 }
@@ -110,7 +110,7 @@ TdeCipherById(uint32_t id)
 
 	ereport(ERROR,
 			errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("no pg_tde cipher registered for id %u", id));
+			errmsg("no open_pg_tde cipher registered for id %u", id));
 
 	return NULL;				/* keep the compiler happy */
 }

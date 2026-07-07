@@ -17,7 +17,7 @@ SELECT count(*) FROM mytable;
 Check that the table is not encrypted:
 
 ```sql
-SELECT pg_tde_is_encrypted('mytable');
+SELECT open_pg_tde_is_encrypted('mytable');
 ```
 
 The output returns `f` meaning that the table is no longer encrypted.

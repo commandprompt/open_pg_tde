@@ -1,6 +1,6 @@
 # Tests the scenario when only changed blocks of the encrypted relation are
 # copied from the source, hence mixes data encrypted with different keys. So
-# we check if pg_tde_rewind handles that properly, and the data is re-encrypted
+# we check if open_pg_tde_rewind handles that properly, and the data is re-encrypted
 # correctly.
 #
 use strict;
@@ -78,7 +78,7 @@ run_test('local');
 run_test('remote');
 run_test('archive');
 
-my @conf_params = ("pg_tde.cipher = 'aes_256'");
+my @conf_params = ("open_pg_tde.cipher = 'aes_256'");
 run_test('local', "_aes_256", \@conf_params);
 
 done_testing();

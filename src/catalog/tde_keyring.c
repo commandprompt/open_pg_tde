@@ -17,12 +17,12 @@
 #include "utils/memutils.h"
 #include "utils/snapmgr.h"
 
-#include "access/pg_tde_xlog.h"
+#include "access/open_pg_tde_xlog.h"
 #include "catalog/tde_global_space.h"
 #include "catalog/tde_keyring.h"
 #include "catalog/tde_principal_key.h"
-#include "common/pg_tde_utils.h"
-#include "pg_tde.h"
+#include "common/open_pg_tde_utils.h"
+#include "open_pg_tde.h"
 
 #ifndef FRONTEND
 #include "access/heapam.h"
@@ -37,7 +37,7 @@
 #include "storage/shmem.h"
 #else
 #include "fe_utils/simple_list.h"
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif							/* !FRONTEND */
 
 typedef enum ProviderScanType
@@ -47,7 +47,7 @@ typedef enum ProviderScanType
 	PROVIDER_SCAN_ALL
 } ProviderScanType;
 
-#define PG_TDE_KEYRING_FILENAME "%d_providers"
+#define OPEN_PG_TDE_KEYRING_FILENAME "%d_providers"
 
 #define FILE_KEYRING_TYPE "file"
 #define KMIP_KEYRING_TYPE "kmip"
@@ -70,28 +70,28 @@ static void simple_list_free(SimplePtrList *list);
 
 #else
 
-PG_FUNCTION_INFO_V1(pg_tde_add_database_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_add_global_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_change_database_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_change_global_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_delete_database_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_delete_global_key_provider);
-PG_FUNCTION_INFO_V1(pg_tde_list_all_database_key_providers);
-PG_FUNCTION_INFO_V1(pg_tde_list_all_global_key_providers);
+PG_FUNCTION_INFO_V1(open_pg_tde_add_database_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_add_global_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_change_database_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_change_global_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_delete_database_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_delete_global_key_provider);
+PG_FUNCTION_INFO_V1(open_pg_tde_list_all_database_key_providers);
+PG_FUNCTION_INFO_V1(open_pg_tde_list_all_global_key_providers);
 
 static const char *get_keyring_provider_typename(ProviderType p_type);
 static List *GetAllKeyringProviders(Oid dbOid);
-static Datum pg_tde_add_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
-static Datum pg_tde_change_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
-static Datum pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
-static Datum pg_tde_list_all_key_providers_internal(PG_FUNCTION_ARGS, const char *fname, Oid dbOid);
+static Datum open_pg_tde_add_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
+static Datum open_pg_tde_change_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
+static Datum open_pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid);
+static Datum open_pg_tde_list_all_key_providers_internal(PG_FUNCTION_ARGS, const char *fname, Oid dbOid);
 static List *scan_key_provider_file(ProviderScanType scanType, void *scanKey, Oid dbOid);
 static void save_new_key_provider_info(KeyringProviderRecord *provider, Oid databaseId);
 static void modify_key_provider_info(KeyringProviderRecord *provider, Oid databaseId);
 static void delete_key_provider_info(char *provider_name, Oid databaseId);
 static void check_provider_record(KeyringProviderRecord *provider_record);
 
-#define PG_TDE_LIST_PROVIDERS_COLS 4
+#define OPEN_PG_TDE_LIST_PROVIDERS_COLS 4
 
 /*
  * GetNamedLWLockTranche() reads a static set only in the shmem_request_hook.
@@ -123,7 +123,7 @@ KeyProviderShmemInit(void)
 {
 	bool		found;
 
-	keyProviderShared = ShmemInitStruct("pg_tde_key_provider",
+	keyProviderShared = ShmemInitStruct("open_pg_tde_key_provider",
 										sizeof(KeyProviderSharedState),
 										&found);
 	if (!found)
@@ -181,19 +181,19 @@ required_text_argument(NullableDatum arg, const char *name)
 }
 
 Datum
-pg_tde_change_database_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_change_database_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_change_key_provider_internal(fcinfo, MyDatabaseId);
+	return open_pg_tde_change_key_provider_internal(fcinfo, MyDatabaseId);
 }
 
 Datum
-pg_tde_change_global_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_change_global_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_change_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
+	return open_pg_tde_change_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
 }
 
 static Datum
-pg_tde_change_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
+open_pg_tde_change_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
 {
 	char	   *provider_type;
 	char	   *provider_name;
@@ -235,19 +235,19 @@ pg_tde_change_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
 }
 
 Datum
-pg_tde_add_database_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_add_database_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_add_key_provider_internal(fcinfo, MyDatabaseId);
+	return open_pg_tde_add_key_provider_internal(fcinfo, MyDatabaseId);
 }
 
 Datum
-pg_tde_add_global_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_add_global_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_add_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
+	return open_pg_tde_add_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
 }
 
 static Datum
-pg_tde_add_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
+open_pg_tde_add_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
 {
 	char	   *provider_type;
 	char	   *provider_name;
@@ -294,19 +294,19 @@ pg_tde_add_key_provider_internal(PG_FUNCTION_ARGS, Oid dbOid)
 }
 
 Datum
-pg_tde_delete_database_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_delete_database_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_delete_key_provider_internal(fcinfo, MyDatabaseId);
+	return open_pg_tde_delete_key_provider_internal(fcinfo, MyDatabaseId);
 }
 
 Datum
-pg_tde_delete_global_key_provider(PG_FUNCTION_ARGS)
+open_pg_tde_delete_global_key_provider(PG_FUNCTION_ARGS)
 {
-	return pg_tde_delete_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
+	return open_pg_tde_delete_key_provider_internal(fcinfo, GLOBAL_DATA_TDE_OID);
 }
 
 static Datum
-pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid db_oid)
+open_pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid db_oid)
 {
 	char	   *provider_name;
 	GenericKeyring *provider;
@@ -327,7 +327,7 @@ pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid db_oid)
 	}
 
 	provider_id = provider->keyring_id;
-	provider_used = pg_tde_is_provider_used(db_oid, provider_id);
+	provider_used = open_pg_tde_is_provider_used(db_oid, provider_id);
 
 	pfree(provider);
 
@@ -344,19 +344,19 @@ pg_tde_delete_key_provider_internal(PG_FUNCTION_ARGS, Oid db_oid)
 }
 
 Datum
-pg_tde_list_all_database_key_providers(PG_FUNCTION_ARGS)
+open_pg_tde_list_all_database_key_providers(PG_FUNCTION_ARGS)
 {
-	return pg_tde_list_all_key_providers_internal(fcinfo, "pg_tde_list_all_database_key_providers_database", MyDatabaseId);
+	return open_pg_tde_list_all_key_providers_internal(fcinfo, "open_pg_tde_list_all_database_key_providers_database", MyDatabaseId);
 }
 
 Datum
-pg_tde_list_all_global_key_providers(PG_FUNCTION_ARGS)
+open_pg_tde_list_all_global_key_providers(PG_FUNCTION_ARGS)
 {
-	return pg_tde_list_all_key_providers_internal(fcinfo, "pg_tde_list_all_database_key_providers_global", GLOBAL_DATA_TDE_OID);
+	return open_pg_tde_list_all_key_providers_internal(fcinfo, "open_pg_tde_list_all_database_key_providers_global", GLOBAL_DATA_TDE_OID);
 }
 
 static Datum
-pg_tde_list_all_key_providers_internal(PG_FUNCTION_ARGS, const char *fname, Oid dbOid)
+open_pg_tde_list_all_key_providers_internal(PG_FUNCTION_ARGS, const char *fname, Oid dbOid)
 {
 	List	   *all_providers = GetAllKeyringProviders(dbOid);
 	ListCell   *lc;
@@ -393,8 +393,8 @@ pg_tde_list_all_key_providers_internal(PG_FUNCTION_ARGS, const char *fname, Oid 
 
 	foreach(lc, all_providers)
 	{
-		Datum		values[PG_TDE_LIST_PROVIDERS_COLS] = {0};
-		bool		nulls[PG_TDE_LIST_PROVIDERS_COLS] = {0};
+		Datum		values[OPEN_PG_TDE_LIST_PROVIDERS_COLS] = {0};
+		bool		nulls[OPEN_PG_TDE_LIST_PROVIDERS_COLS] = {0};
 		GenericKeyring *keyring = (GenericKeyring *) lfirst(lc);
 		int			i = 0;
 
@@ -573,7 +573,7 @@ check_provider_record(KeyringProviderRecord *provider_record)
 		 * If we are modifying an existing provider, verify that all of the
 		 * keys already in use are the same.
 		 */
-		pg_tde_verify_provider_keys_in_use(provider);
+		open_pg_tde_verify_provider_keys_in_use(provider);
 	}
 
 	pfree(provider);
@@ -1007,9 +1007,9 @@ debug_print_kerying(GenericKeyring *keyring)
 static inline void
 get_keyring_infofile_path(char *resPath, Oid dbOid)
 {
-	char	   *fname = psprintf(PG_TDE_KEYRING_FILENAME, dbOid);
+	char	   *fname = psprintf(OPEN_PG_TDE_KEYRING_FILENAME, dbOid);
 
-	join_path_components(resPath, pg_tde_get_data_dir(), fname);
+	join_path_components(resPath, open_pg_tde_get_data_dir(), fname);
 	pfree(fname);
 }
 

@@ -38,24 +38,24 @@ $node->append_conf(
 wal_level = 'replica'
 max_wal_senders = 4
 
-shared_preload_libraries = 'pg_tde'
+shared_preload_libraries = 'open_pg_tde'
 });
 $node->start;
 
-$node->safe_psql('postgres', "CREATE EXTENSION pg_tde;");
+$node->safe_psql('postgres', "CREATE EXTENSION open_pg_tde;");
 $node->safe_psql('postgres',
-	"SELECT pg_tde_add_global_key_provider_file('file-keyring-wal', '$keydir/global.keys');"
+	"SELECT open_pg_tde_add_global_key_provider_file('file-keyring-wal', '$keydir/global.keys');"
 );
 $node->safe_psql('postgres',
-	"SELECT pg_tde_create_key_using_global_key_provider('server-key', 'file-keyring-wal');"
+	"SELECT open_pg_tde_create_key_using_global_key_provider('server-key', 'file-keyring-wal');"
 );
 $node->safe_psql('postgres',
-	"SELECT pg_tde_set_server_key_using_global_key_provider('server-key', 'file-keyring-wal');"
+	"SELECT open_pg_tde_set_server_key_using_global_key_provider('server-key', 'file-keyring-wal');"
 );
 
 $node->append_conf(
 	'postgresql.conf', q{
-pg_tde.wal_encrypt = on
+open_pg_tde.wal_encrypt = on
 });
 $node->restart;
 
@@ -92,8 +92,8 @@ ok(-f $walfile, "Got a WAL file");
 
 $node->command_ok(
 	[
-		'pg_tde_waldump', '--quiet',
-		'-k', $node->data_dir . '/pg_tde',
+		'open_pg_tde_waldump', '--quiet',
+		'-k', $node->data_dir . '/open_pg_tde',
 		'--save-fullpage', "$tmp_folder/raw",
 		'--relation', $relation,
 		$walfile

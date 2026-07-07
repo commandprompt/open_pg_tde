@@ -8,7 +8,7 @@
 #include "encryption/cipher_provider.h"
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 #define AES_BLOCK_SIZE 		        16
@@ -29,7 +29,7 @@ iv_prefix_debug(const char *iv_prefix, char *out_hex)
 #endif
 
 uint32
-pg_tde_cipher_key_length(CipherType cipher)
+open_pg_tde_cipher_key_length(CipherType cipher)
 {
 	switch (cipher)
 	{
@@ -47,9 +47,9 @@ pg_tde_cipher_key_length(CipherType cipher)
 }
 
 void
-pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher)
+open_pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher)
 {
-	int			key_len = pg_tde_cipher_key_length(cipher);
+	int			key_len = open_pg_tde_cipher_key_length(cipher);
 
 	Assert(key_len == 16 || key_len == 32);
 
@@ -104,7 +104,7 @@ tde_xor_stream_distinct(char *restrict out, const char *restrict data,
  * start_offset: is the absolute location of start of data in the file.
  */
 void
-pg_tde_stream_crypt(const char *iv_prefix,
+open_pg_tde_stream_crypt(const char *iv_prefix,
 					uint32 start_offset,
 					const char *data,
 					uint32 data_len,
@@ -142,7 +142,7 @@ pg_tde_stream_crypt(const char *iv_prefix,
 
 			iv_prefix_debug(iv_prefix, ivp_debug);
 			ereport(LOG,
-					errmsg("pg_tde_stream_crypt batch_no: %d start_offset: %lu data_len: %u, batch_start_block: %lu, batch_end_block: %lu, iv_prefix: %s",
+					errmsg("open_pg_tde_stream_crypt batch_no: %d start_offset: %lu data_len: %u, batch_start_block: %lu, batch_end_block: %lu, iv_prefix: %s",
 						   batch_no, start_offset, data_len, batch_start_block, batch_end_block, ivp_debug));
 		}
 #endif

@@ -1,10 +1,10 @@
 # Key management overview
 
-In production environments, storing encryption keys locally on the PostgreSQL server can introduce security risks. To enhance security, `pg_tde` supports integration with external Key Management Systems (KMS) through a Global Key Provider interface.
+In production environments, storing encryption keys locally on the PostgreSQL server can introduce security risks. To enhance security, `open_pg_tde` supports integration with external Key Management Systems (KMS) through a Global Key Provider interface.
 
-This section describes how you can configure `pg_tde` to use the local and external key providers.
+This section describes how you can configure `open_pg_tde` to use the local and external key providers.
 
-To use an external KMS with `pg_tde`:
+To use an external KMS with `open_pg_tde`:
 
 1. Configure a Key Provider
 2. Set the [Global Principal Key](set-principal-key.md)
@@ -17,9 +17,9 @@ To use an external KMS with `pg_tde`:
 
     Schedule key rotations outside backup windows. After rotating keys, take a new full backup.
 
-    For more details, see [Limitations of pg_tde](../index/tde-limitations.md#limitations-when-using-pg_tde).
+    For more details, see [Limitations of open_pg_tde](../index/tde-limitations.md#limitations-when-using-open_pg_tde).
 
-`pg_tde` has been tested with the following key providers:
+`open_pg_tde` has been tested with the following key providers:
 
 | KMS Provider       | Description                                           | Documentation |
 |--------------------|-------------------------------------------------------|---------------|

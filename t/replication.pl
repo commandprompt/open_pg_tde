@@ -14,7 +14,7 @@ $primary->init(allows_streaming => 1);
 $primary->append_conf(
 	'postgresql.conf', q{
 checkpoint_timeout = 1h
-shared_preload_libraries = 'pg_tde'
+shared_preload_libraries = 'open_pg_tde'
 });
 $primary->start;
 
@@ -26,10 +26,10 @@ $replica->start;
 
 $primary->safe_psql(
 	'postgres', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('test-key', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('test-key', 'file-vault');
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('test-key', 'file-vault');
+	SELECT open_pg_tde_set_key_using_database_key_provider('test-key', 'file-vault');
 
 	CREATE TABLE test_enc (x int PRIMARY KEY) USING tde_heap;
 	INSERT INTO test_enc (x) VALUES (1), (2);
@@ -41,20 +41,20 @@ $primary->safe_psql(
 $primary->wait_for_catchup('replica');
 
 $stdout =
-  $replica->safe_psql('postgres', "SELECT pg_tde_is_encrypted('test_enc');");
+  $replica->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'test_enc is encrypted on the replica');
 $stdout = $replica->safe_psql('postgres',
-	"SELECT pg_tde_is_encrypted('test_enc_pkey');");
+	"SELECT open_pg_tde_is_encrypted('test_enc_pkey');");
 is($stdout, 't', 'test_enc_pkey is encrypted on the replica');
 $stdout =
   $replica->safe_psql('postgres', 'SELECT * FROM test_enc ORDER BY x;');
 is($stdout, "1\n2", 'can read from test_enc on the replica');
 
 $stdout = $replica->safe_psql('postgres',
-	"SELECT pg_tde_is_encrypted('test_plain');");
+	"SELECT open_pg_tde_is_encrypted('test_plain');");
 is($stdout, 'f', 'test_plain is not encrypted on the replica');
 $stdout = $replica->safe_psql('postgres',
-	"SELECT pg_tde_is_encrypted('test_plain_pkey');");
+	"SELECT open_pg_tde_is_encrypted('test_plain_pkey');");
 is($stdout, 'f', 'test_plain_pkey is not encrypted on the replica');
 $stdout =
   $replica->safe_psql('postgres', 'SELECT * FROM test_plain ORDER BY x;');
@@ -65,14 +65,14 @@ is($stdout, "3\n4", 'can read from test_plain on the replica');
 # TODO: This does not seem to actually test WAL encryption
 $primary->safe_psql(
 	'postgres', qq(
-	SELECT pg_tde_add_global_key_provider_file('file-vault', '$keydir/global.key');
-	SELECT pg_tde_create_key_using_global_key_provider('test-global-key', 'file-vault');
-	SELECT pg_tde_set_server_key_using_global_key_provider('test-global-key', 'file-vault');
+	SELECT open_pg_tde_add_global_key_provider_file('file-vault', '$keydir/global.key');
+	SELECT open_pg_tde_create_key_using_global_key_provider('test-global-key', 'file-vault');
+	SELECT open_pg_tde_set_server_key_using_global_key_provider('test-global-key', 'file-vault');
 
 	CREATE TABLE test_enc2 (x int PRIMARY KEY) USING tde_heap;
 	INSERT INTO test_enc2 (x) VALUES (1), (2);
 
-	ALTER SYSTEM SET pg_tde.wal_encrypt = 'on';
+	ALTER SYSTEM SET open_pg_tde.wal_encrypt = 'on';
 ));
 
 $primary->kill9;

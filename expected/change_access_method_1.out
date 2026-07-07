@@ -1,19 +1,19 @@
-\! rm -f '/tmp/pg_tde_test_keyring.per'
-CREATE EXTENSION pg_tde;
-SELECT pg_tde_add_database_key_provider_file('file-vault', '/tmp/pg_tde_test_keyring.per');
- pg_tde_add_database_key_provider_file 
+\! rm -f '/tmp/open_pg_tde_test_keyring.per'
+CREATE EXTENSION open_pg_tde;
+SELECT open_pg_tde_add_database_key_provider_file('file-vault', '/tmp/open_pg_tde_test_keyring.per');
+ open_pg_tde_add_database_key_provider_file 
 ---------------------------------------
  
 (1 row)
 
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
- pg_tde_create_key_using_database_key_provider 
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
+ open_pg_tde_create_key_using_database_key_provider 
 -----------------------------------------------
  
 (1 row)
 
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
- pg_tde_set_key_using_database_key_provider 
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+ open_pg_tde_set_key_using_database_key_provider 
 --------------------------------------------
  
 (1 row)
@@ -35,20 +35,20 @@ SELECT * FROM country_table;
           3 | USA          | North America
 (3 rows)
 
-SELECT pg_tde_is_encrypted('country_table');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_country_id_seq');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_pkey');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_pkey');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
@@ -71,20 +71,20 @@ SELECT * FROM country_table;
           6 | Canada       | North America
 (6 rows)
 
-SELECT pg_tde_is_encrypted('country_table');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table');
+ open_pg_tde_is_encrypted 
 ---------------------
  f
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_country_id_seq');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
+ open_pg_tde_is_encrypted 
 ---------------------
  f
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_pkey');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_pkey');
+ open_pg_tde_is_encrypted 
 ---------------------
  f
 (1 row)
@@ -109,20 +109,20 @@ SELECT * FROM country_table;
           9 | Australia    | Oceania
 (9 rows)
 
-SELECT pg_tde_is_encrypted('country_table');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_country_id_seq');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
 
-SELECT pg_tde_is_encrypted('country_table_pkey');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table_pkey');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
@@ -133,8 +133,8 @@ ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
 ERROR:  syntax error at or near "DEFAULT"
 LINE 1: ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
                                                     ^
-SELECT pg_tde_is_encrypted('country_table');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
@@ -144,16 +144,16 @@ ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
 ERROR:  syntax error at or near "DEFAULT"
 LINE 1: ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
                                                     ^
-SELECT pg_tde_is_encrypted('country_table');
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('country_table');
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
 
 RESET default_table_access_method;
 ALTER TABLE country_table ADD y text;
-SELECT pg_tde_is_encrypted('pg_toast.pg_toast_' || 'country_table'::regclass::oid);
- pg_tde_is_encrypted 
+SELECT open_pg_tde_is_encrypted('pg_toast.pg_toast_' || 'country_table'::regclass::oid);
+ open_pg_tde_is_encrypted 
 ---------------------
  t
 (1 row)
@@ -163,15 +163,15 @@ CREATE TABLE country_table2 (
      country_name text unique not null,
      continent    text not null
 );
-SET pg_tde.enforce_encryption = on;
+SET open_pg_tde.enforce_encryption = on;
 CREATE TABLE country_table3 (
      country_id   serial primary key,
      country_name text unique not null,
      continent    text not null
 ) USING heap;
-ERROR:  pg_tde.enforce_encryption is ON, only the tde_heap access method is allowed.
+ERROR:  open_pg_tde.enforce_encryption is ON, only the tde_heap access method is allowed.
 ALTER TABLE country_table SET ACCESS METHOD heap;
-ERROR:  pg_tde.enforce_encryption is ON, only the tde_heap access method is allowed.
+ERROR:  open_pg_tde.enforce_encryption is ON, only the tde_heap access method is allowed.
 ALTER TABLE country_table2 SET ACCESS METHOD tde_heap;
 CREATE TABLE country_table3 (
      country_id   serial primary key,
@@ -181,5 +181,5 @@ CREATE TABLE country_table3 (
 DROP TABLE country_table;
 DROP TABLE country_table2;
 DROP TABLE country_table3;
-SET pg_tde.enforce_encryption = off;
-DROP EXTENSION pg_tde;
+SET open_pg_tde.enforce_encryption = off;
+DROP EXTENSION open_pg_tde;

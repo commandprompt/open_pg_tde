@@ -5,7 +5,7 @@
 #include "postgres.h"
 
 #include "keyring/keyring_curl.h"
-#include "pg_tde_defines.h"
+#include "open_pg_tde_defines.h"
 
 CURL	   *keyringCurl = NULL;
 

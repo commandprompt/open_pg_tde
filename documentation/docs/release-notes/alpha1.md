@@ -1,6 +1,6 @@
-# pg_tde Alpha 1 (2024-03-28)
+# open_pg_tde Alpha 1 (2024-03-28)
 
-`pg_tde` extension brings in [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
+`open_pg_tde` extension brings in [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
 
 [Get started](../install.md){.md-button}
 
@@ -28,7 +28,7 @@ The Alpha1 version of the extension introduces the following key features:
 
 ## Improvements
 
-* Renamed the repository and Docker image from `postgres-tde-ext` to `pg_tde`. The extension name remains unchanged
+* Renamed the repository and Docker image from `postgres-tde-ext` to `open_pg_tde`. The extension name remains unchanged
 * Changed the Initialization Vector (IV) calculation of both the data and internal keys
 
 ## Bugs fixed
@@ -36,6 +36,6 @@ The Alpha1 version of the extension introduces the following key features:
 * Fixed toast related crashes
 * Fixed a crash with the DELETE statement
 * Fixed performance-related issues
-* Fixed a bug where `pg_tde` sent many 404 requests to the Vault server
+* Fixed a bug where `open_pg_tde` sent many 404 requests to the Vault server
 * Fixed сompatibility issues with old OpenSSL versions
 * Fixed сompatibility with old Curl versions

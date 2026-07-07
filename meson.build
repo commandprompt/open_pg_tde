@@ -1,4 +1,4 @@
-project('pg_tde',
+project('open_pg_tde',
   ['c'],
   version: '2.2.0',
   meson_version: '>=0.56',
@@ -51,11 +51,11 @@ add_project_arguments(cc.get_supported_arguments([
 ]), language: ['c'])
 
 # On Linux EXEC_BACKEND comes from CFLAGS, not headers. Match the server: read
-# it from pg_config and apply to every pg_tde target.
+# it from pg_config and apply to every open_pg_tde target.
 pg_cflags = run_command(pg_config, '--cflags', check: true).stdout().split()
 pg_cppflags = run_command(pg_config, '--cppflags', check: true).stdout().split()
 if '-DEXEC_BACKEND' in pg_cflags or '-DEXEC_BACKEND' in pg_cppflags
-  message('PostgreSQL was built with EXEC_BACKEND; enabling it for pg_tde')
+  message('PostgreSQL was built with EXEC_BACKEND; enabling it for open_pg_tde')
   add_project_arguments('-DEXEC_BACKEND', language: ['c'])
 endif
 
@@ -93,11 +93,11 @@ if host_machine.system() == 'darwin'
 endif
 
 install_data(
-  'pg_tde.control',
-  'pg_tde--1.0.sql',
-  'pg_tde--1.0--2.0.sql',
-  'pg_tde--2.0--2.1.sql',
-  'pg_tde--2.1--2.2.sql',
+  'open_pg_tde.control',
+  'open_pg_tde--1.0.sql',
+  'open_pg_tde--1.0--2.0.sql',
+  'open_pg_tde--2.0--2.1.sql',
+  'open_pg_tde--2.1--2.2.sql',
   install_dir: sharedir / 'extension',
 )
 
@@ -112,16 +112,16 @@ kmip = static_library('kmip',
   include_directories: incdirs,
 )
 
-shared_module('pg_tde',
+shared_module('open_pg_tde',
   files(
-    'src/access/pg_tde_tdemap.c',
-    'src/access/pg_tde_xlog.c',
-    'src/access/pg_tde_xlog_keys.c',
-    'src/access/pg_tde_xlog_smgr.c',
+    'src/access/open_pg_tde_tdemap.c',
+    'src/access/open_pg_tde_xlog.c',
+    'src/access/open_pg_tde_xlog_keys.c',
+    'src/access/open_pg_tde_xlog_smgr.c',
     'src/catalog/tde_keyring.c',
     'src/catalog/tde_keyring_parse_opts.c',
     'src/catalog/tde_principal_key.c',
-    'src/common/pg_tde_utils.c',
+    'src/common/open_pg_tde_utils.c',
     'src/encryption/cipher_provider.c',
     'src/encryption/enc_aes.c',
     'src/encryption/enc_tde.c',
@@ -131,10 +131,10 @@ shared_module('pg_tde',
     'src/keyring/keyring_kmip.c',
     'src/keyring/keyring_kmip_impl.c',
     'src/keyring/keyring_openbao.c',
-    'src/pg_tde.c',
-    'src/pg_tde_event_capture.c',
-    'src/pg_tde_guc.c',
-    'src/smgr/pg_tde_smgr.c',
+    'src/open_pg_tde.c',
+    'src/open_pg_tde_event_capture.c',
+    'src/open_pg_tde_guc.c',
+    'src/smgr/open_pg_tde_smgr.c',
   ),
   include_directories: incdirs,
   install: true,
@@ -145,15 +145,15 @@ shared_module('pg_tde',
   link_args: backend_link_args,
 )
 
-pg_tde_frontend = static_library('pg_tde_frontend',
+open_pg_tde_frontend = static_library('open_pg_tde_frontend',
   files(
-    'src/pg_tde_fe.c',
-    'src/access/pg_tde_tdemap.c',
-    'src/access/pg_tde_xlog_keys.c',
+    'src/open_pg_tde_fe.c',
+    'src/access/open_pg_tde_tdemap.c',
+    'src/access/open_pg_tde_xlog_keys.c',
     'src/catalog/tde_keyring.c',
     'src/catalog/tde_keyring_parse_opts.c',
     'src/catalog/tde_principal_key.c',
-    'src/common/pg_tde_utils.c',
+    'src/common/open_pg_tde_utils.c',
     'src/encryption/cipher_provider.c',
     'src/encryption/enc_aes.c',
     'src/encryption/enc_tde.c',
@@ -170,9 +170,9 @@ pg_tde_frontend = static_library('pg_tde_frontend',
   link_with: [kmip],
 )
 
-pg_tde_frontend_xlog = static_library('pg_tde_frontend_xlog',
+open_pg_tde_frontend_xlog = static_library('open_pg_tde_frontend_xlog',
   files(
-    'src/access/pg_tde_xlog_smgr.c',
+    'src/access/open_pg_tde_xlog_smgr.c',
     fetools / 'xlogreader.c',
   ),
   dependencies: [lz4, zstd],
@@ -181,35 +181,35 @@ pg_tde_frontend_xlog = static_library('pg_tde_frontend_xlog',
   link_with: [kmip],
 )
 
-executable('pg_tde_change_key_provider',
-  files('src/bin/pg_tde_change_key_provider.c'),
+executable('open_pg_tde_change_key_provider',
+  files('src/bin/open_pg_tde_change_key_provider.c'),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
-  link_with: [pg_tde_frontend],
+  link_with: [open_pg_tde_frontend],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_archive_decrypt',
-  files('src/bin/pg_tde_archive_decrypt.c'),
+executable('open_pg_tde_archive_decrypt',
+  files('src/bin/open_pg_tde_archive_decrypt.c'),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_restore_encrypt',
-  files('src/bin/pg_tde_restore_encrypt.c'),
+executable('open_pg_tde_restore_encrypt',
+  files('src/bin/open_pg_tde_restore_encrypt.c'),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_upgrade',
-  files('src/bin/pg_tde_upgrade.c'),
+executable('open_pg_tde_upgrade',
+  files('src/bin/open_pg_tde_upgrade.c'),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
@@ -240,39 +240,39 @@ else
   )
 endif
 
-executable('pg_tde_basebackup',
+executable('open_pg_tde_basebackup',
   bb_sources,
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
   dependencies: [pq, z],
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_checksums',
+executable('open_pg_tde_checksums',
   files(
     fetools / 'pg_checksums/pg_checksums.c',
   ),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
-  link_with: [pg_tde_frontend],
+  link_with: [open_pg_tde_frontend],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_resetwal',
+executable('open_pg_tde_resetwal',
   files(
     fetools / 'pg_resetwal/pg_resetwal.c',
   ),
   include_directories: incdirs,
   install: true,
   install_dir: bindir,
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_rewind',
+executable('open_pg_tde_rewind',
   files(
     fetools / 'pg_rewind/datapagemap.c',
     fetools / 'pg_rewind/file_ops.c',
@@ -288,11 +288,11 @@ executable('pg_tde_rewind',
   install: true,
   install_dir: bindir,
   dependencies: [pq],
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
-executable('pg_tde_waldump',
+executable('open_pg_tde_waldump',
   files(
     fetools / 'pg_waldump/compat.c',
     fetools / 'pg_waldump/pg_waldump.c',
@@ -325,7 +325,7 @@ executable('pg_tde_waldump',
   install: true,
   install_dir: bindir,
   c_args: ['-DFRONTEND'],
-  link_with: [pg_tde_frontend, pg_tde_frontend_xlog],
+  link_with: [open_pg_tde_frontend, open_pg_tde_frontend_xlog],
   link_args: frontend_link_args,
 )
 
@@ -356,9 +356,9 @@ tap_tests = [
   't/pg_rewind_options.pl',
   't/pg_rewind_pg_xlog_symlink.pl',
   't/pg_rewind_same_timeline.pl',
-  't/pg_tde_change_key_provider.pl',
-  't/pg_tde_checksums.pl',
-  't/pg_tde_upgrade.pl',
+  't/open_pg_tde_change_key_provider.pl',
+  't/open_pg_tde_checksums.pl',
+  't/open_pg_tde_upgrade.pl',
   't/pg_waldump_basic.pl',
   't/pg_waldump_fullpage.pl',
   't/regress.pl',

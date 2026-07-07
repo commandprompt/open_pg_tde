@@ -10,7 +10,7 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
+$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(
@@ -22,10 +22,10 @@ $node->safe_psql(
 
 $node->safe_psql(
 	'tbc', qq(
-	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+	CREATE EXTENSION open_pg_tde;
+	SELECT open_pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
+	SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
+	SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
 
 	CREATE TABLE country_table (
 	     country_id   serial primary key,
@@ -46,8 +46,8 @@ is( $stdout,
 
 $node->safe_psql(
 	'tbc', qq(
-	SELECT pg_tde_create_key_using_database_key_provider('new-k', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('new-k', 'file-vault');
+	SELECT open_pg_tde_create_key_using_database_key_provider('new-k', 'file-vault');
+	SELECT open_pg_tde_set_key_using_database_key_provider('new-k', 'file-vault');
 ));
 
 $node->restart;
@@ -57,7 +57,7 @@ is( $stdout,
 	"1|Japan|Asia\n2|UK|Europe\n3|USA|North America",
 	'can still read table');
 
-$node->safe_psql('tbc', 'DROP EXTENSION pg_tde CASCADE;');
+$node->safe_psql('tbc', 'DROP EXTENSION open_pg_tde CASCADE;');
 
 $node->safe_psql(
 	'postgres', qq(

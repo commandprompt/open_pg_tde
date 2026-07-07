@@ -7,7 +7,7 @@
 #include "encryption/cipher_provider.h"
 
 #ifdef FRONTEND
-#include "pg_tde_fe.h"
+#include "open_pg_tde_fe.h"
 #endif
 
 /* Implementation notes

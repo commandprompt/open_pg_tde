@@ -32,9 +32,9 @@
 #include "storage/checksum.h"
 #include "storage/checksum_impl.h"
 
-#include "pg_tde.h"
-#include "pg_tde_fe.h"
-#include "access/pg_tde_tdemap.h"
+#include "open_pg_tde.h"
+#include "open_pg_tde_fe.h"
+#include "access/open_pg_tde_tdemap.h"
 
 
 static int64 files_scanned = 0;
@@ -122,13 +122,13 @@ static const struct exclude_list_item skip[] = {
 
 /* Support for skipping encrypted files */
 static void
-pg_tde_init(const char *datadir)
+open_pg_tde_init(const char *datadir)
 {
 	char		tdedir[MAXPGPATH];
 
-	snprintf(tdedir, sizeof(tdedir), "%s/%s", datadir, PG_TDE_DATA_DIR);
+	snprintf(tdedir, sizeof(tdedir), "%s/%s", datadir, OPEN_PG_TDE_DATA_DIR);
 
-	pg_tde_fe_init(tdedir);
+	open_pg_tde_fe_init(tdedir);
 }
 
 /*
@@ -212,7 +212,7 @@ scan_file(const char *fn, Oid spcOid, Oid dbOid, RelFileNumber relNumber, ForkNu
 
 	/* Unknown fork type so assume it is not encrypted */
 	if (forknum != InvalidForkNumber)
-		key = pg_tde_get_smgr_key(locator);
+		key = open_pg_tde_get_smgr_key(locator);
 
 	for (blockno = 0;; blockno++)
 	{
@@ -620,7 +620,7 @@ main(int argc, char *argv[])
 		mode == PG_MODE_ENABLE)
 		pg_fatal("data checksums are already enabled in cluster");
 
-	pg_tde_init(DataDir);
+	open_pg_tde_init(DataDir);
 
 	/* Operate on all files if checking or enabling checksums */
 	if (mode == PG_MODE_CHECK || mode == PG_MODE_ENABLE)

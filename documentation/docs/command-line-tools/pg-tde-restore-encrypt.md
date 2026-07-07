@@ -1,10 +1,10 @@
-# pg_tde_restore_encrypt
+# open_pg_tde_restore_encrypt
 
-The `pg_tde_restore_encrypt` tool wraps a normal restore command from the WAL archive and writes them to disk in a format compatible with `pg_tde`.
+The `open_pg_tde_restore_encrypt` tool wraps a normal restore command from the WAL archive and writes them to disk in a format compatible with `open_pg_tde`.
 
 !!! note
 
-    This command is often use together with [pg_tde_archive_decrypt](./pg-tde-archive-decrypt.md).
+    This command is often use together with [open_pg_tde_archive_decrypt](./pg-tde-archive-decrypt.md).
 
 ## How it works
 
@@ -15,8 +15,8 @@ The `pg_tde_restore_encrypt` tool wraps a normal restore command from the WAL ar
 ## Usage
 
 ```bash
-pg_tde_restore_encrypt [OPTION]
-pg_tde_restore_encrypt SOURCE-NAME DEST-PATH RESTORE-COMMAND
+open_pg_tde_restore_encrypt [OPTION]
+open_pg_tde_restore_encrypt SOURCE-NAME DEST-PATH RESTORE-COMMAND
 ```
 
 ## Parameter descriptions
@@ -39,13 +39,13 @@ pg_tde_restore_encrypt SOURCE-NAME DEST-PATH RESTORE-COMMAND
 ### Using `cp`
 
 ```ini
-restore_command='pg_tde_restore_encrypt %f %p "cp /mnt/server/archivedir/%%f %%p"'
+restore_command='open_pg_tde_restore_encrypt %f %p "cp /mnt/server/archivedir/%%f %%p"'
 ```
 
 ### Using `PgBackRest`
 
 ```ini
-restore_command='pg_tde_restore_encrypt %f %p "pgbackrest --stanza=your_stanza archive-get %%f \"%%p\""'
+restore_command='open_pg_tde_restore_encrypt %f %p "pgbackrest --stanza=your_stanza archive-get %%f \"%%p\""'
 ```
 
 !!! warning

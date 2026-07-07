@@ -1,13 +1,13 @@
 # Functions
 
-The `pg_tde` extension provides functions for managing different aspects of its operation:
+The `open_pg_tde` extension provides functions for managing different aspects of its operation:
 
 !!! note
     If no error is reported when running the commands below, the operation completed successfully.
 
 ## Key provider management
 
-A key provider is a system or service responsible for managing encryption keys. For more information on the key providers `pg_tde` supports see the [Key management overview](global-key-provider-configuration/overview.md).
+A key provider is a system or service responsible for managing encryption keys. For more information on the key providers `open_pg_tde` supports see the [Key management overview](global-key-provider-configuration/overview.md).
 
 Key provider management includes the following operations:
 
@@ -22,8 +22,8 @@ You can add a new key provider using the provided functions, which are implement
 
 There are two functions to add a key provider: one function adds it for the current database and another one - for the global scope.
 
-* `pg_tde_add_database_key_provider_<type>('provider-name', <provider specific parameters>)`
-* `pg_tde_add_global_key_provider_<type>('provider-name', <provider specific parameters>)`
+* `open_pg_tde_add_database_key_provider_<type>('provider-name', <provider specific parameters>)`
+* `open_pg_tde_add_global_key_provider_<type>('provider-name', <provider specific parameters>)`
 
 When you add a new provider, the provider name must be unique in the scope. But a local database provider and a global provider can have the same name.
 
@@ -33,8 +33,8 @@ You can change an existing key provider using the provided functions, which are 
 
 There are two functions to change existing providers: one to change a provider in the current database, and another one to change a provider in the global scope.
 
-* `pg_tde_change_database_key_provider_<type>('provider-name', <provider specific parameters>)`
-* `pg_tde_change_global_key_provider_<type>('provider-name', <provider specific parameters>)`
+* `open_pg_tde_change_database_key_provider_<type>('provider-name', <provider specific parameters>)`
+* `open_pg_tde_change_global_key_provider_<type>('provider-name', <provider specific parameters>)`
 
 When you change a provider, the referred name must exist in the database local or a global scope.
 
@@ -53,7 +53,7 @@ The KMIP provider uses a remote KMIP server.
 Use these functions to add a KMIP provider:
 
 ```sql
-SELECT pg_tde_add_database_key_provider_kmip(
+SELECT open_pg_tde_add_database_key_provider_kmip(
   'provider-name',
   'kmip-addr',
   port,
@@ -62,7 +62,7 @@ SELECT pg_tde_add_database_key_provider_kmip(
   '/path_to/server_certificate.pem'
 );
 
-SELECT pg_tde_add_global_key_provider_kmip(
+SELECT open_pg_tde_add_global_key_provider_kmip(
   'provider-name',
   'kmip-addr',
   port,
@@ -75,7 +75,7 @@ SELECT pg_tde_add_global_key_provider_kmip(
 These functions change the KMIP provider:
 
 ```sql
-SELECT pg_tde_change_database_key_provider_kmip(
+SELECT open_pg_tde_change_database_key_provider_kmip(
   'provider-name',
   'kmip-addr',
   port,
@@ -84,7 +84,7 @@ SELECT pg_tde_change_database_key_provider_kmip(
   '/path_to/server_certificate.pem'
 );
 
-SELECT pg_tde_change_global_key_provider_kmip(
+SELECT open_pg_tde_change_global_key_provider_kmip(
   'provider-name',
   'kmip-addr',
   port,
@@ -114,7 +114,7 @@ The OpenBao provider uses the Key/Value version 2 (KV v2) secrets engine of an O
 Use these functions to add an OpenBao provider:
 
 ```sql
-SELECT pg_tde_add_database_key_provider_openbao(
+SELECT open_pg_tde_add_database_key_provider_openbao(
   'provider-name',
   'url',
   'mount',
@@ -122,7 +122,7 @@ SELECT pg_tde_add_database_key_provider_openbao(
   'ca_path'
 );
 
-SELECT pg_tde_add_global_key_provider_openbao(
+SELECT open_pg_tde_add_global_key_provider_openbao(
   'provider-name',
   'url',
   'mount',
@@ -134,7 +134,7 @@ SELECT pg_tde_add_global_key_provider_openbao(
 These functions change the OpenBao provider:
 
 ```sql
-SELECT pg_tde_change_database_key_provider_openbao(
+SELECT open_pg_tde_change_database_key_provider_openbao(
   'provider-name',
   'url',
   'mount',
@@ -142,7 +142,7 @@ SELECT pg_tde_change_database_key_provider_openbao(
   'ca_path'
 );
 
-SELECT pg_tde_change_global_key_provider_openbao(
+SELECT open_pg_tde_change_global_key_provider_openbao(
   'provider-name',
   'url',
   'mount',
@@ -173,12 +173,12 @@ This function is intended for development or quick testing, and stores the keys 
 Add a local key file provider:
 
 ```sql
-SELECT pg_tde_add_database_key_provider_file(
+SELECT open_pg_tde_add_database_key_provider_file(
   'provider-name',
   '/path/to/the/key/provider/data.file'
 );
 
-SELECT pg_tde_add_global_key_provider_file(
+SELECT open_pg_tde_add_global_key_provider_file(
   'provider-name',
   '/path/to/the/key/provider/data.file'
 );
@@ -187,12 +187,12 @@ SELECT pg_tde_add_global_key_provider_file(
 Change a local key file provider:
 
 ```sql
-SELECT pg_tde_change_database_key_provider_file(
+SELECT open_pg_tde_change_database_key_provider_file(
   'provider-name',
   '/path/to/the/key/provider/data.file'
 );
 
-SELECT pg_tde_change_global_key_provider_file(
+SELECT open_pg_tde_change_global_key_provider_file(
   'provider-name',
   '/path/to/the/key/provider/data.file'
 );
@@ -207,19 +207,19 @@ where:
 
 These functions delete an existing provider in the current database or in the global scope:
 
-* `pg_tde_delete_database_key_provider('provider-name)`
-* `pg_tde_delete_global_key_provider('provider-name)`
+* `open_pg_tde_delete_database_key_provider('provider-name)`
+* `open_pg_tde_delete_global_key_provider('provider-name)`
 
 You can only delete key providers that are not currently in use. An error is returned if the current principal key is using the provider you are trying to delete.
 
-If the use of global key providers is enabled via the `pg_tde.inherit_global` GUC, you can delete a global key provider only if it isn't used anywhere, including any databases. If it is used in any database, an error is returned instead.
+If the use of global key providers is enabled via the `open_pg_tde.inherit_global` GUC, you can delete a global key provider only if it isn't used anywhere, including any databases. If it is used in any database, an error is returned instead.
 
 ### List key providers
 
 These functions list the details of all key providers for the current database or for the global scope, including all configuration values:
 
-* `pg_tde_list_all_database_key_providers()`
-* `pg_tde_list_all_global_key_providers()`
+* `open_pg_tde_list_all_database_key_providers()`
+* `open_pg_tde_list_all_global_key_providers()`
 
 ## Principal key management
 
@@ -227,104 +227,104 @@ Use these functions to create a new principal key at a given keyprover, and to u
 
 Principal keys are stored on key providers by the name specified in this function - for example, when using the KMIP provider, after creating a key named "foo", a key named "foo" will be visible on the KMIP server.
 
-### pg_tde_create_key_using_database_key_provider
+### open_pg_tde_create_key_using_database_key_provider
 
-Creates a principal key using the database-local key provider with the specified name. Use this key later with [`pg_tde_set_key_using_database_key_provider()`](#pg_tde_set_key_using_database_key_provider).
+Creates a principal key using the database-local key provider with the specified name. Use this key later with [`open_pg_tde_set_key_using_database_key_provider()`](#open_pg_tde_set_key_using_database_key_provider).
 
 ```sql
-SELECT pg_tde_create_key_using_database_key_provider(
+SELECT open_pg_tde_create_key_using_database_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_create_key_using_global_key_provider
+### open_pg_tde_create_key_using_global_key_provider
 
-Creates a principal key at a global key provider with the given name. Use this key later with the `pg_tde_set_*` series of functions.
+Creates a principal key at a global key provider with the given name. Use this key later with the `open_pg_tde_set_*` series of functions.
 
 ```sql
-SELECT pg_tde_create_key_using_global_key_provider(
+SELECT open_pg_tde_create_key_using_global_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_set_key_using_database_key_provider
+### open_pg_tde_set_key_using_database_key_provider
 
 Sets the principal key for the **current** database, using the specified local key provider. It also rotates internal encryption keys to use the specified principal key.
 
 This function is typically used when working with per-database encryption through a local key provider.
 
 ```sql
-SELECT pg_tde_set_key_using_database_key_provider(
+SELECT open_pg_tde_set_key_using_database_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_set_key_using_global_key_provider
+### open_pg_tde_set_key_using_global_key_provider
 
 Sets or rotates the global principal key using the specified global key provider and the key name. This key is used for global settings like WAL encryption.
 
 ```sql
-SELECT pg_tde_set_key_using_global_key_provider(
+SELECT open_pg_tde_set_key_using_global_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_set_server_key_using_global_key_provider
+### open_pg_tde_set_server_key_using_global_key_provider
 
 Sets or rotates the server principal key using the specified global key provider. Use this function to set a principal key for WAL encryption.
 
 ```sql
-SELECT pg_tde_set_server_key_using_global_key_provider(
+SELECT open_pg_tde_set_server_key_using_global_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_set_default_key_using_global_key_provider
+### open_pg_tde_set_default_key_using_global_key_provider
 
 Sets or rotates the default principal key for the server using the specified global key provider.
 
 The default key is automatically used as a principal key by any database that doesn't have an individual key provider and key configuration.
 
 ```sql
-SELECT pg_tde_set_default_key_using_global_key_provider(
+SELECT open_pg_tde_set_default_key_using_global_key_provider(
   'key-name',
   'provider-name'
 );
 ```
 
-### pg_tde_delete_key
+### open_pg_tde_delete_key
 
 Unsets the principal key for the current database. If the current database has any encrypted tables, and there isn’t a default principal key configured, it reports an error instead. If there are encrypted tables, but there’s also a default principal key, internal keys will be encrypted with the default key.
 
 ```sql
-SELECT pg_tde_delete_key();
+SELECT open_pg_tde_delete_key();
 ```
 
-### pg_tde_delete_default_key
+### open_pg_tde_delete_default_key
 
 Unsets default principal key. It's possible only if no database uses default principal key.
 
 ```sql
-SELECT pg_tde_delete_default_key();
+SELECT open_pg_tde_delete_default_key();
 ```
 
 ## Encryption status check
 
-### pg_tde_is_encrypted
+### open_pg_tde_is_encrypted
 
-Tells if a relation is encrypted using the `pg_tde` extension or not. Returns
+Tells if a relation is encrypted using the `open_pg_tde` extension or not. Returns
 `NULL` if a relation lacks storage like views, foreign tables, and partitioned
 tables and indexes.
 
 To verify that a table is encrypted, run the following statement:
 
 ```sql
-SELECT pg_tde_is_encrypted(
+SELECT open_pg_tde_is_encrypted(
   'table_name'
 );
 ```
@@ -332,38 +332,38 @@ SELECT pg_tde_is_encrypted(
 You can also verify if the table in a custom schema is encrypted. Pass the schema name for the function as follows:
 
 ```sql
-SELECT pg_tde_is_encrypted(
+SELECT open_pg_tde_is_encrypted(
   'schema.table_name'
 );
 ```
 
 This can additionally be used to verify that indexes and sequences are encrypted.
 
-### pg_tde_key_info
+### open_pg_tde_key_info
 
 Displays information about the principal key for the current database, if it exists.
 
 ```sql
-SELECT pg_tde_key_info();
+SELECT open_pg_tde_key_info();
 ```
 
-### pg_tde_server_key_info
+### open_pg_tde_server_key_info
 
 Displays information about the principal key for the server scope, if exists.
 
 ```sql
-SELECT pg_tde_server_key_info();
+SELECT open_pg_tde_server_key_info();
 ```
 
-### pg_tde_default_key_info
+### open_pg_tde_default_key_info
 
 Displays the information about the default principal key, if it exists.
 
 ```sql
-SELECT pg_tde_default_key_info();
+SELECT open_pg_tde_default_key_info();
 ```
 
-### pg_tde_verify_key
+### open_pg_tde_verify_key
 
 This function checks that the current database has a properly functional encryption setup, which means:
 
@@ -376,10 +376,10 @@ This function checks that the current database has a properly functional encrypt
 If any of the above checks fail, the function reports an error.
 
 ```sql
-SELECT pg_tde_verify_key();
+SELECT open_pg_tde_verify_key();
 ```
 
-### pg_tde_verify_server_key
+### open_pg_tde_verify_server_key
 
 This function checks that the server scope has a properly functional encryption setup, which means:
 
@@ -392,10 +392,10 @@ This function checks that the server scope has a properly functional encryption 
 If any of the above checks fail, the function reports an error.
 
 ```sql
-SELECT pg_tde_verify_server_key();
+SELECT open_pg_tde_verify_server_key();
 ```
 
-### pg_tde_verify_default_key
+### open_pg_tde_verify_default_key
 
 This function checks that the default key is properly configured, which means:
 
@@ -408,5 +408,5 @@ This function checks that the default key is properly configured, which means:
 If any of the above checks fail, the function reports an error.
 
 ```sql
-SELECT pg_tde_verify_default_key();
+SELECT open_pg_tde_verify_default_key();
 ```

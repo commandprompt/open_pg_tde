@@ -1,10 +1,10 @@
-# Validate Encryption with pg_tde
+# Validate Encryption with open_pg_tde
 
-After enabling the `pg_tde` extension for a database, you can begin encrypting data using the `tde_heap` table access method.
+After enabling the `open_pg_tde` extension for a database, you can begin encrypting data using the `tde_heap` table access method.
 
 ## Encrypt data in a new table
 
-1. Create a table in the database for which you have [enabled `pg_tde`](setup.md) using the `tde_heap` access method as follows:
+1. Create a table in the database for which you have [enabled `open_pg_tde`](setup.md) using the `tde_heap` access method as follows:
 
     ```sql
     CREATE TABLE <table_name> (<field> <datatype>) USING tde_heap;
@@ -26,7 +26,7 @@ After enabling the `pg_tde` extension for a database, you can begin encrypting d
 2. To check if the data is encrypted, run the following function:
 
     ```sql
-    SELECT pg_tde_is_encrypted('table_name');
+    SELECT open_pg_tde_is_encrypted('table_name');
     ```
 
     The function returns `true` or `false`.

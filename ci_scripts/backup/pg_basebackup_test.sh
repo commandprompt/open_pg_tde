@@ -16,7 +16,7 @@ BACKUP_DIR="/var/lib/postgresql/backups"
 FULL_BACKUP_DIR="${BACKUP_DIR}/full_backup"
 INCREMENTAL_BACKUP_DIR="${BACKUP_DIR}/incremental_backup"
 RESTORE_DIR="${BACKUP_DIR}/restore"
-KEYLOCATION="${BASE_DIR}/pg_tde_test_keyring.per"
+KEYLOCATION="${BASE_DIR}/open_pg_tde_test_keyring.per"
 PG_HBA="${CONF_DIR}/pg_hba.conf"
 RESTORE_PG_HBA="$RESTORE_DIR/pg_hba.conf"
 PG_PORT="5433"
@@ -46,14 +46,14 @@ log_message() {
 setup_percona_repo(){
     #          RH derivatives      and          Amazon Linux
     if [[ -f /etc/redhat-release ]] || [[ -f /etc/system-release ]]; then
-        # These are the same installation steps as you will find them here: https://percona.github.io/pg_tde/main/yum.html
+        # These are the same installation steps as you will find them here: https://percona.github.io/open_pg_tde/main/yum.html
         sudo dnf module disable postgresql llvm-toolset
         sudo yum -y install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
         sudo percona-release enable ppg-${REPO_VERSION} ${REPO_TYPE} -y
         sudo dnf config-manager --set-enabled ol9_codeready_builder
         sudo yum update -y
     elif [[ -f /etc/debian_version ]]; then
-        # These are the same installation steps as you will find them here: https://percona.github.io/pg_tde/main/apt.html
+        # These are the same installation steps as you will find them here: https://percona.github.io/open_pg_tde/main/apt.html
         sudo apt-get install -y wget gnupg2 curl lsb-release
         sudo wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
         sudo dpkg -i percona-release_latest.generic_all.deb
@@ -84,17 +84,17 @@ fi
 # Step 3: Setup PostgreSQL and Create Sample Data
 setup_postgresql() {
     echo "Setting up PostgreSQL , enable tde_heap and creating sample data..."
-    sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET shared_preload_libraries ='pg_tde';"
+    sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET shared_preload_libraries ='open_pg_tde';"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET summarize_wal = 'on';"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET wal_level = 'replica';"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET wal_log_hints = 'on';"
-    #sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET pg_tde.wal_encrypt = on;"
+    #sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER SYSTEM SET open_pg_tde.wal_encrypt = on;"
     if [[ -f /etc/debian_version ]]; then
         restart_server "$PG_DATA"
-        KEYLOCATION="/var/lib/postgresql/pg_tde_test_keyring.per"
+        KEYLOCATION="/var/lib/postgresql/open_pg_tde_test_keyring.per"
     else
         restart_server "$PG_DATA"
-        KEYLOCATION="/var/lib/pgsql/pg_tde_test_keyring.per"
+        KEYLOCATION="/var/lib/pgsql/open_pg_tde_test_keyring.per"
     fi
 }
 
@@ -104,9 +104,9 @@ setup_tde_heap(){
     echo "Create a sample database"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "DROP DATABASE IF EXISTS $DB_NAME;"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "CREATE DATABASE $DB_NAME;"
-    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "CREATE EXTENSION IF NOT EXISTS pg_tde;"
-    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "SELECT pg_tde_add_database_key_provider_file('file-vault','$KEYLOCATION');"
-    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "SELECT pg_tde_set_key_using_database_key_provider('test-db-master-key','file-vault');"
+    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "CREATE EXTENSION IF NOT EXISTS open_pg_tde;"
+    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "SELECT open_pg_tde_add_database_key_provider_file('file-vault','$KEYLOCATION');"
+    sudo -u "$PG_USER" psql -d "$DB_NAME" -p "$PG_PORT" -c "SELECT open_pg_tde_set_key_using_database_key_provider('test-db-master-key','file-vault');"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "ALTER DATABASE $DB_NAME SET default_table_access_method='tde_heap';"
     sudo -u "$PG_USER" psql -p $PG_PORT -c "SELECT pg_reload_conf();"
 }
@@ -366,13 +366,13 @@ verify_encrypted_data_at_rest() {
     fi
 }
 
-# Verify PGDATA/pg_tde folder exists
+# Verify PGDATA/open_pg_tde folder exists
 verify_tde_folder() {
-    log_message "Verifying PGDATA/pg_tde folder exists..."
+    log_message "Verifying PGDATA/open_pg_tde folder exists..."
     # Get PGDATA directory
     PGDATA=$(sudo -u "$PG_USER" psql -p $PG_PORT -d "$DB_NAME" -t -c "SHOW data_directory;" | xargs)
     # Define the TDE directory path
-    TDE_DIR="$PGDATA/pg_tde"
+    TDE_DIR="$PGDATA/open_pg_tde"
     sudo -u "$PG_USER" ls "$TDE_DIR" &>/dev/null
     if [[ $? -eq 0 ]]; then
         log_message "$TDE_DIR folder exists. ✅ "
@@ -393,11 +393,11 @@ verify_tde_files(){
     DB_OID=$(sudo echo "$REL_FILE_PATH" | awk -F'/' '{print $2}')
 
     # Define the TDE directory path
-    TDE_DIR="$PGDATA/pg_tde"
+    TDE_DIR="$PGDATA/open_pg_tde"
     # Define expected files
-    KEYRING_FILE="$TDE_DIR/pg_tde_${DB_OID}_keyring"
-    DAT_FILE="$TDE_DIR/pg_tde_${DB_OID}_dat"
-    MAP_FILE="$TDE_DIR/pg_tde_${DB_OID}_map"
+    KEYRING_FILE="$TDE_DIR/open_pg_tde_${DB_OID}_keyring"
+    DAT_FILE="$TDE_DIR/open_pg_tde_${DB_OID}_dat"
+    MAP_FILE="$TDE_DIR/open_pg_tde_${DB_OID}_map"
 
     # Verify required TDE files
     log_message "Checking required TDE files for database OID $DB_OID..."
@@ -457,7 +457,7 @@ test_scenarios() {
     # Scenario 2: Simulate backup integrity verification
     verify_backup_integrity "$backup_dir"
 
-    # Scenario 3: Verify that the pg_tde directory exists
+    # Scenario 3: Verify that the open_pg_tde directory exists
     verify_tde_folder
 
     # Scenario 4: Verify that the required TDE files exist

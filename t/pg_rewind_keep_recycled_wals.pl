@@ -48,7 +48,7 @@ $node_primary->stop();
 
 my ($stdout, $stderr) = run_command(
 	[
-		'pg_tde_rewind', '--debug',
+		'open_pg_tde_rewind', '--debug',
 		'--source-pgdata', $node_standby->data_dir,
 		'--target-pgdata', $node_primary->data_dir,
 		'--no-sync',

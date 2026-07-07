@@ -1,20 +1,20 @@
-\! rm -f '/tmp/pg_tde_test_keyring.per'
-CREATE EXTENSION pg_tde;
-SELECT pg_tde_add_database_key_provider_file('file-vault','/tmp/pg_tde_test_keyring.per');
- pg_tde_add_database_key_provider_file 
----------------------------------------
- 
-(1 row)
-
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
- pg_tde_create_key_using_database_key_provider 
------------------------------------------------
- 
-(1 row)
-
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
- pg_tde_set_key_using_database_key_provider 
+\! rm -f '/tmp/open_pg_tde_test_keyring.per'
+CREATE EXTENSION open_pg_tde;
+SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
+ open_pg_tde_add_database_key_provider_file 
 --------------------------------------------
+ 
+(1 row)
+
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
+ open_pg_tde_create_key_using_database_key_provider 
+----------------------------------------------------
+ 
+(1 row)
+
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
+ open_pg_tde_set_key_using_database_key_provider 
+-------------------------------------------------
  
 (1 row)
 
@@ -27,4 +27,4 @@ SELECT * FROM src;
 (1 row)
 
 DROP TABLE src;
-DROP EXTENSION pg_tde;
+DROP EXTENSION open_pg_tde;

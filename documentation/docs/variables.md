@@ -1,8 +1,8 @@
 # GUC Variables
 
-The `pg_tde` extension provides GUC variables to configure the behaviour of the extension:
+The `open_pg_tde` extension provides GUC variables to configure the behaviour of the extension:
 
-## pg_tde.wal_encrypt
+## open_pg_tde.wal_encrypt
 
 **Type** - boolean <br>
 **Default** - off
@@ -15,11 +15,11 @@ WAL encryption is controlled globally. If enabled, all WAL writes are encrypted 
 
 This variable only controls new writes to the WAL, it doesn't affect existing WAL records.
 
-`pg_tde` is always capable of reading existing encrypted WAL records, as long as the keys used for the encryption are still available.
+`open_pg_tde` is always capable of reading existing encrypted WAL records, as long as the keys used for the encryption are still available.
 
 Enabling WAL encryption requires a configured global principal key. Refer to the [WAL encryption configuration](wal-encryption.md) topic for more information.
 
-## pg_tde.enforce_encryption
+## open_pg_tde.enforce_encryption
 
 **Type** - boolean <br>
 **Default** - off
@@ -41,7 +41,7 @@ You can set this variable at the following levels:
 
 Setting or changing the value requires superuser permissions. For examples, see the [Encryption Enforcement](how-to/enforcement.md) topic.
 
-## pg_tde.inherit_global_providers
+## open_pg_tde.inherit_global_providers
 
 **Type** - boolean <br>
 **Default** - on
@@ -62,7 +62,7 @@ You can set this variable at the following levels:
 !!! note
     Setting this variable doesn't affect existing uses of global keys. It only prevents the creation of new principal keys using global providers.
 
-## pg_tde.cipher
+## open_pg_tde.cipher
 
 **Type** - string <br>
 **Default** - aes_128
@@ -71,7 +71,7 @@ A `string` variable that selects the cipher (encryption algorithm). Currently, t
 
 The setting applies only to objects created after the value is set, including principal keys, internal keys, and data encrypted by those keys. Existing objects are not re-encrypted.
 
-## pg_tde.data_cipher
+## open_pg_tde.data_cipher
 
 **Type** - enum <br>
 **Default** - aes_xts
@@ -81,8 +81,8 @@ Selects the cipher used to encrypt the data files of **new** encrypted tables (`
 * `aes_xts` - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.
 * `aes_256` - AES-256-CBC.
 * `aes_128` - AES-128-CBC.
-* `inherit` - follow the [`pg_tde.cipher`](#pg_tdecipher) setting.
+* `inherit` - follow the [`open_pg_tde.cipher`](#open_pg_tdecipher) setting.
 
-The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `pg_tde.data_cipher` therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
+The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `open_pg_tde.data_cipher` therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
 
 This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format. WAL is always encrypted with AES-CTR and is not affected by this setting.

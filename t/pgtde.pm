@@ -40,12 +40,12 @@ sub backup
 
 	mkdir $backup_dir or die "mkdir($backup_dir) failed: $!";
 
-	PostgreSQL::Test::RecursiveCopy::copypath($node->data_dir . '/pg_tde',
-		$backup_dir . '/pg_tde');
+	PostgreSQL::Test::RecursiveCopy::copypath($node->data_dir . '/open_pg_tde',
+		$backup_dir . '/open_pg_tde');
 
 	print "# Taking pg_basebackup $backup_name from node \"$name\"\n";
 	PostgreSQL::Test::Utils::system_or_bail(
-		'pg_tde_basebackup', '-D',
+		'open_pg_tde_basebackup', '-D',
 		$backup_dir, '-h',
 		$node->host, '-p',
 		$node->port, '--checkpoint',

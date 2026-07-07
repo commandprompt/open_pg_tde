@@ -40,9 +40,9 @@ DEPS=(
     xsltproc
     zlib1g-dev
     zstd
-    # pg_tde dependencies
+    # open_pg_tde dependencies
     meson
-    # pg_tde test dependencies
+    # open_pg_tde test dependencies
     lcov
     perltidy
 )

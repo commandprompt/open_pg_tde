@@ -1,10 +1,10 @@
-\! rm -f '/tmp/pg_tde_test_keyring.per'
+\! rm -f '/tmp/open_pg_tde_test_keyring.per'
 
-CREATE EXTENSION pg_tde;
+CREATE EXTENSION open_pg_tde;
 
-SELECT pg_tde_add_database_key_provider_file('file-vault','/tmp/pg_tde_test_keyring.per');
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
 
 CREATE TABLE test(num1 bigint, num2 double precision, t text) USING tde_heap;
 INSERT INTO test(num1, num2, t)
@@ -35,10 +35,10 @@ CREATE DATABASE move_test;
 
 \c move_test
 
-CREATE EXTENSION pg_tde;
-SELECT pg_tde_add_database_key_provider_file('file-vault','/tmp/pg_tde_test_keyring.per');
-SELECT pg_tde_create_key_using_database_key_provider('test-db-key2','file-vault');
-SELECT pg_tde_set_key_using_database_key_provider('test-db-key2','file-vault');
+CREATE EXTENSION open_pg_tde;
+SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
+SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key2','file-vault');
+SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key2','file-vault');
 CREATE TABLE test2 (x int) USING tde_heap TABLESPACE test_tblspace2;
 
 \c :regress_database
@@ -57,4 +57,4 @@ DROP DATABASE move_test;
 DROP TABLE test;
 DROP TABLESPACE test_tblspace;
 DROP TABLESPACE test_tblspace2;
-DROP EXTENSION pg_tde;
+DROP EXTENSION open_pg_tde;

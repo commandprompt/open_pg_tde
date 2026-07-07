@@ -1,6 +1,6 @@
-# pg_tde Beta 2 (2024-12-16)
+# open_pg_tde Beta 2 (2024-12-16)
 
-`pg_tde` extension brings in [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
+`open_pg_tde` extension brings in [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
 
 [Get started](../install.md){.md-button}
 
@@ -13,7 +13,7 @@
 
 ## Release Highlights
 
-With this release, `pg_tde` extension offers two database specific versions:
+With this release, `open_pg_tde` extension offers two database specific versions:
 
 *  PostgreSQL Community version provides only the `tde_heap_basic` access method using which you can introduce table encryption and WAL encryption for data in the encrypted tables. Index data remains unencrypted.
 * Version for Percona Server for PostgreSQL provides the `tde_heap`access method. using this method you can encrypt index data in encrypted tables thus increasing the safety of your sensitive data. For backward compatibility, the `tde_heap_basic` method is available in this version too. 
@@ -41,9 +41,9 @@ The Beta 2 version introduces the following features and improvements:
     * Improved keyring provider management across databases and the global space.
     * Keyring configuration now uses common JSON API. This simplifies code handling and enables frontend tools like `pg_waldump` to read the code thus improving debugging.
 
-* The `pg_tde_is_encrypted` function now supports custom schemas in the format of `pg_tde_is_encrypted('schema.table');`
-* Changed the location of internal TDE files: instead of the database directory, now all files are stored in ` $PGDATA/pg_tde`
-* Improved error reporting when `pg_tde` is not added to the `shared_preload_libraries`
+* The `open_pg_tde_is_encrypted` function now supports custom schemas in the format of `open_pg_tde_is_encrypted('schema.table');`
+* Changed the location of internal TDE files: instead of the database directory, now all files are stored in ` $PGDATA/open_pg_tde`
+* Improved error reporting when `open_pg_tde` is not added to the `shared_preload_libraries`
 * Improved memory usage of `tde_heap_basic `during sequential reads
 * Improved `tde_heap_basic` for select statements
 * Added encryption support for (some) command line utilities
