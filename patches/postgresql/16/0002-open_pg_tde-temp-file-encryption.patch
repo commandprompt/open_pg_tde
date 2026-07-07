@@ -1,0 +1,191 @@
+--- a/src/backend/storage/file/buffile.c
++++ b/src/backend/storage/file/buffile.c
+@@ -52,6 +52,9 @@
+ #include "storage/buf_internals.h"
+ #include "storage/buffile.h"
+ #include "storage/fd.h"
++#ifdef USE_TDE_HOOKS
++#include "storage/tempfile_crypt.h"
++#endif
+ #include "utils/resowner.h"
+ 
+ /*
+@@ -479,6 +482,17 @@
+ 
+ 	/* we choose not to advance curOffset here */
+ 
++#ifdef USE_TDE_HOOKS
++	/* Decrypt in place, using the same block position used to write it. */
++	if (encrypt_temp_files && temp_file_decrypt_hook && file->nbytes > 0)
++	{
++		int64		blocknum = (int64) file->curFile * BUFFILE_SEG_SIZE +
++			file->curOffset / BLCKSZ;
++
++		temp_file_decrypt_hook(file->buffer.data, file->nbytes, blocknum);
++	}
++#endif
++
+ 	if (file->nbytes > 0)
+ 		pgBufferUsage.temp_blks_read++;
+ }
+@@ -496,6 +510,26 @@
+ 	int			wpos = 0;
+ 	int			bytestowrite;
+ 	File		thisfile;
++#ifdef USE_TDE_HOOKS
++	char	   *srcdata = file->buffer.data;
++
++	/*
++	 * If temporary file encryption is enabled, encrypt the buffer into a
++	 * scratch area and write the ciphertext, leaving the plaintext buffer
++	 * intact. The IV is derived from the buffer's logical block position,
++	 * captured here before the loop advances curOffset.
++	 */
++	if (encrypt_temp_files && temp_file_encrypt_hook && file->nbytes > 0)
++	{
++		static PGAlignedBlock cryptbuf;
++		int64		blocknum = (int64) file->curFile * BUFFILE_SEG_SIZE +
++			file->curOffset / BLCKSZ;
++
++		memcpy(cryptbuf.data, file->buffer.data, file->nbytes);
++		temp_file_encrypt_hook(cryptbuf.data, file->nbytes, blocknum);
++		srcdata = cryptbuf.data;
++	}
++#endif
+ 
+ 	/*
+ 	 * Unlike BufFileLoadBuffer, we must dump the whole buffer even if it
+@@ -535,7 +569,11 @@
+ 			INSTR_TIME_SET_ZERO(io_start);
+ 
+ 		bytestowrite = FileWrite(thisfile,
++#ifdef USE_TDE_HOOKS
++								 srcdata + wpos,
++#else
+ 								 file->buffer.data + wpos,
++#endif
+ 								 bytestowrite,
+ 								 file->curOffset,
+ 								 WAIT_EVENT_BUFFILE_WRITE);
+--- a/src/backend/utils/misc/guc_tables.c
++++ b/src/backend/utils/misc/guc_tables.c
+@@ -65,6 +65,9 @@
+ #include "replication/logicallauncher.h"
+ #include "replication/slot.h"
+ #include "replication/syncrep.h"
++#ifdef USE_TDE_HOOKS
++#include "storage/tempfile_crypt.h"
++#endif
+ #include "storage/bufmgr.h"
+ #include "storage/fd.h"
+ #include "storage/large_object.h"
+@@ -1998,6 +2001,17 @@
+ 		NULL, NULL, NULL
+ 	},
+ 
++#ifdef USE_TDE_HOOKS
++	{
++		{"encrypt_temp_files", PGC_POSTMASTER, RESOURCES_DISK,
++			gettext_noop("Encrypts temporary files written to disk during query execution."),
++		},
++		&encrypt_temp_files,
++		false,
++		NULL, NULL, NULL
++	},
++#endif
++
+ 	{
+ 		{"wal_receiver_create_temp_slot", PGC_SIGHUP, REPLICATION_STANDBY,
+ 			gettext_noop("Sets whether a WAL receiver should create a temporary replication slot if no permanent slot is configured."),
+--- a/src/backend/storage/file/Makefile
++++ b/src/backend/storage/file/Makefile
+@@ -18,6 +18,7 @@
+ 	fd.o \
+ 	fileset.o \
+ 	reinit.o \
+-	sharedfileset.o
++	sharedfileset.o \
++	tempfile_crypt.o
+ 
+ include $(top_srcdir)/src/backend/common.mk
+--- a/src/backend/storage/file/meson.build
++++ b/src/backend/storage/file/meson.build
+@@ -7,4 +7,5 @@
+   'fileset.c',
+   'reinit.c',
+   'sharedfileset.c',
++  'tempfile_crypt.c',
+ )
+--- a/src/backend/storage/file/tempfile_crypt.c
++++ b/src/backend/storage/file/tempfile_crypt.c
+@@ -0,0 +1,27 @@
++/*-------------------------------------------------------------------------
++ *
++ * tempfile_crypt.c
++ *	  Hook points for temporary (query-spill) file encryption.
++ *
++ * Core provides only the switch and the hook pointers. An extension loaded
++ * via shared_preload_libraries installs temp_file_encrypt_hook and
++ * temp_file_decrypt_hook and supplies the cipher and key. See
++ * tempfile_crypt.h.
++ *
++ * The whole file compiles to nothing unless the tree is built with the
++ * open_pg_tde hooks enabled.
++ *
++ *-------------------------------------------------------------------------
++ */
++#include "postgres.h"
++
++#ifdef USE_TDE_HOOKS
++
++#include "storage/tempfile_crypt.h"
++
++bool		encrypt_temp_files = false;
++
++TempFileCryptHook temp_file_encrypt_hook = NULL;
++TempFileCryptHook temp_file_decrypt_hook = NULL;
++
++#endif							/* USE_TDE_HOOKS */
+--- a/src/include/storage/tempfile_crypt.h
++++ b/src/include/storage/tempfile_crypt.h
+@@ -0,0 +1,40 @@
++/*-------------------------------------------------------------------------
++ *
++ * tempfile_crypt.h
++ *	  Hook interface for encrypting temporary (query-spill) files.
++ *
++ * Core does not implement any cipher. When encrypt_temp_files is on and an
++ * extension has installed the hooks below, each temporary-file buffer is
++ * passed through them before being written and after being read. The
++ * extension owns the cipher and the key, so key management (for example a
++ * principal key from a key management system wrapping an internal key) lives
++ * entirely outside core.
++ *
++ * This interface is only present when the tree is built with the open_pg_tde
++ * hooks enabled (--enable-tde-hooks / -Dtde_hooks).
++ *
++ *-------------------------------------------------------------------------
++ */
++#ifndef TEMPFILE_CRYPT_H
++#define TEMPFILE_CRYPT_H
++
++#ifdef USE_TDE_HOOKS
++
++#include "c.h"
++
++/* GUC: master switch for temporary file encryption (default off). */
++extern PGDLLIMPORT bool encrypt_temp_files;
++
++/*
++ * Encrypt or decrypt one temporary-file buffer in place. blocknum is the
++ * logical block position of the buffer within the BufFile; an implementation
++ * uses it to derive a per-block IV. The transformation must preserve length.
++ */
++typedef void (*TempFileCryptHook) (char *data, int nbytes, int64 blocknum);
++
++extern PGDLLIMPORT TempFileCryptHook temp_file_encrypt_hook;
++extern PGDLLIMPORT TempFileCryptHook temp_file_decrypt_hook;
++
++#endif							/* USE_TDE_HOOKS */
++
++#endif							/* TEMPFILE_CRYPT_H */

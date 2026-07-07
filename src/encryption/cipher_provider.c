@@ -62,6 +62,7 @@ TdeCipherRegistryInit(void)
 	 * it is never selected for the WAL/stream path (see TdeCipherByKeyLen).
 	 */
 	register_cipher(CIPHER_AES_128_XTS, "aes-128-xts", 32, AesXtsEncrypt, AesXtsDecrypt, NULL);
+	register_cipher(CIPHER_AES_256_XTS, "aes-256-xts", 64, AesXtsEncrypt, AesXtsDecrypt, NULL);
 
 	tde_cipher_registry_initialized = true;
 }

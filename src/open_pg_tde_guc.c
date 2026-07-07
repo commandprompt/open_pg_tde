@@ -38,6 +38,7 @@ static const struct config_enum_entry data_cipher_options[] = {
 	{"aes_128", CIPHER_AES_128, false},
 	{"aes_256", CIPHER_AES_256, false},
 	{"aes_xts", CIPHER_AES_128_XTS, false},
+	{"aes_256_xts", CIPHER_AES_256_XTS, false},
 	{NULL, 0, false}
 };
 

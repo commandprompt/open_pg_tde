@@ -19,6 +19,17 @@ This variable only controls new writes to the WAL, it doesn't affect existing WA
 
 Enabling WAL encryption requires a configured global principal key. Refer to the [WAL encryption configuration](wal-encryption.md) topic for more information.
 
+## encrypt_temp_files
+
+**Type** - boolean <br>
+**Default** - off
+
+A `boolean` variable that controls whether temporary files written to disk during query execution are encrypted. Temporary files hold query-spill data, for example external sorts and hash joins that exceed `work_mem`.
+
+This variable is defined by the patched PostgreSQL server, so it is not prefixed with `open_pg_tde`. It requires a server restart and can only be set at the server level.
+
+`open_pg_tde` encrypts temporary files with AES-128-CBC using a key generated at server startup and held only in memory. Because temporary files never outlive the cluster, the key is never written to disk, and the data cannot be recovered once the server stops.
+
 ## open_pg_tde.enforce_encryption
 
 **Type** - boolean <br>
@@ -79,6 +90,7 @@ The setting applies only to objects created after the value is set, including pr
 Selects the cipher used to encrypt the data files of **new** encrypted tables (`tde_heap`). Supported values:
 
 * `aes_xts` - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.
+* `aes_256_xts` - AES-256-XTS. AES-256 key strength with the XTS storage mode. Intended for deployments that require AES-256 keys; for others, `aes_xts` remains the recommended default.
 * `aes_256` - AES-256-CBC.
 * `aes_128` - AES-128-CBC.
 * `inherit` - follow the [`open_pg_tde.cipher`](#open_pg_tdecipher) setting.
