@@ -1,8 +1,6 @@
-diff --git a/configure.ac b/configure.ac
-index 636ba54..6c06950 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -792,6 +792,13 @@ PGAC_ARG_BOOL(enable, cassert, no, [enable assertion checks (for debugging)],
+@@ -792,6 +792,13 @@
                [AC_DEFINE([USE_ASSERT_CHECKING], 1,
                           [Define to 1 to build with assertion checks. (--enable-cassert)])])
  
@@ -16,11 +14,9 @@ index 636ba54..6c06950 100644
  
  #
  # Include directories
-diff --git a/meson.build b/meson.build
-index 2c94236..0e87b07 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -437,6 +437,7 @@ meson_bin = find_program(meson_binpath, native: true)
+@@ -437,6 +437,7 @@
  ###############################################################
  
  cdata.set('USE_ASSERT_CHECKING', get_option('cassert') ? 1 : false)
@@ -28,11 +24,9 @@ index 2c94236..0e87b07 100644
  cdata.set('USE_INJECTION_POINTS', get_option('injection_points') ? 1 : false)
  
  blocksize = get_option('blocksize').to_int() * 1024
-diff --git a/meson_options.txt b/meson_options.txt
-index 06bf562..31d6a18 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -40,6 +40,9 @@ option('pgport', type: 'integer', value: 5432,
+@@ -40,6 +40,9 @@
  option('cassert', type: 'boolean', value: false,
    description: 'Enable assertion checks (for debugging)')
  
@@ -42,71 +36,68 @@ index 06bf562..31d6a18 100644
  option('tap_tests', type: 'feature', value: 'auto',
    description: 'Enable TAP tests')
  
-diff --git a/src/backend/access/heap/heapam_handler.c b/src/backend/access/heap/heapam_handler.c
-index cb4bc35..95eb6d7 100644
 --- a/src/backend/access/heap/heapam_handler.c
 +++ b/src/backend/access/heap/heapam_handler.c
-@@ -588,6 +588,10 @@ heapam_relation_set_new_filelocator(Relation rel,
+@@ -588,6 +588,11 @@
  {
  	SMgrRelation srel;
  
 +#ifdef USE_TDE_HOOKS
 +	RelFileLocator oldlocator = rel->rd_locator;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
++
  	/*
  	 * Initialize to the minimum XID that could put tuples in the table. We
  	 * know that no xacts older than RecentXmin are still running, so that
-@@ -605,7 +609,11 @@ heapam_relation_set_new_filelocator(Relation rel,
+@@ -605,7 +610,11 @@
  	 */
  	*minmulti = GetOldestMultiXactId();
  
 +#ifndef USE_TDE_HOOKS
  	srel = RelationCreateStorage(*newrlocator, persistence, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	srel = RelationCreateStoragePercona(oldlocator, *newrlocator, persistence, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * If required, set up an init fork for an unlogged table so that it can
-@@ -615,7 +623,11 @@ heapam_relation_set_new_filelocator(Relation rel,
+@@ -615,7 +624,11 @@
  	{
  		Assert(rel->rd_rel->relkind == RELKIND_RELATION ||
  			   rel->rd_rel->relkind == RELKIND_TOASTVALUE);
 +#ifndef USE_TDE_HOOKS
  		smgrcreate(srel, INIT_FORKNUM, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		smgrcreate_percona(oldlocator, srel, INIT_FORKNUM, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		log_smgrcreate(newrlocator, INIT_FORKNUM);
  	}
  
-@@ -648,7 +660,11 @@ heapam_relation_copy_data(Relation rel, const RelFileLocator *newrlocator)
+@@ -648,7 +661,11 @@
  	 * NOTE: any conflict in relfilenumber value will be caught in
  	 * RelationCreateStorage().
  	 */
 +#ifndef USE_TDE_HOOKS
  	dstrel = RelationCreateStorage(*newrlocator, rel->rd_rel->relpersistence, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	dstrel = RelationCreateStoragePercona(rel->rd_locator, *newrlocator, rel->rd_rel->relpersistence, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* copy main fork */
  	RelationCopyStorage(RelationGetSmgr(rel), dstrel, MAIN_FORKNUM,
-@@ -660,7 +676,11 @@ heapam_relation_copy_data(Relation rel, const RelFileLocator *newrlocator)
+@@ -660,7 +677,11 @@
  	{
  		if (smgrexists(RelationGetSmgr(rel), forkNum))
  		{
 +#ifndef USE_TDE_HOOKS
  			smgrcreate(dstrel, forkNum, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			smgrcreate_percona(rel->rd_locator, dstrel, forkNum, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  			/*
  			 * WAL log creation if the relation is persistent, or this is the
-diff --git a/src/backend/access/transam/xlog.c b/src/backend/access/transam/xlog.c
-index e07cb91..14dfc99 100644
 --- a/src/backend/access/transam/xlog.c
 +++ b/src/backend/access/transam/xlog.c
 @@ -61,6 +61,9 @@
@@ -115,30 +106,30 @@ index e07cb91..14dfc99 100644
  #include "access/xlogrecovery.h"
 +#ifdef USE_TDE_HOOKS
 +#include "access/xlog_smgr.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #include "access/xlogutils.h"
  #include "backup/basebackup.h"
  #include "catalog/catversion.h"
-@@ -2431,9 +2434,18 @@ XLogWrite(XLogwrtRqst WriteRqst, TimeLineID tli, bool flexible)
+@@ -2431,9 +2434,18 @@
  				start = pgstat_prepare_io_time(track_wal_io_timing);
  
  				pgstat_report_wait_start(WAIT_EVENT_WAL_WRITE);
 +#ifndef USE_TDE_HOOKS
  				written = pg_pwrite(openLogFile, from, nleft, startoffset);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +				written = xlog_smgr->seg_write(openLogFile, from, nleft, startoffset, tli, openLogSegNo, wal_segment_size);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  				pgstat_report_wait_end();
  
 +#ifdef USE_TDE_HOOKS
 +				pgstat_count_io_op_time(IOOBJECT_WAL, IOCONTEXT_NORMAL,
 +										IOOP_WRITE, start, 1, written);
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  				if (written <= 0)
  				{
  					char		xlogfname[MAXFNAMELEN];
-@@ -2451,9 +2463,11 @@ XLogWrite(XLogwrtRqst WriteRqst, TimeLineID tli, bool flexible)
+@@ -2451,9 +2463,11 @@
  							 errmsg("could not write to log file \"%s\" at offset %u, length %zu: %m",
  									xlogfname, startoffset, nleft)));
  				}
@@ -146,15 +137,16 @@ index e07cb91..14dfc99 100644
  
  				pgstat_count_io_op_time(IOOBJECT_WAL, IOCONTEXT_NORMAL,
  										IOOP_WRITE, start, 1, written);
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  				nleft -= written;
  				from += written;
  				startoffset += written;
-@@ -3276,6 +3290,16 @@ XLogFileInitInternal(XLogSegNo logsegno, TimeLineID logtli,
+@@ -3276,6 +3290,17 @@
  	}
  	pgstat_report_wait_end();
  
 +#ifdef USE_TDE_HOOKS
++
 +	/*
 +	 * A full segment worth of data is written when using wal_init_zero. One
 +	 * byte is written when not using it.
@@ -163,84 +155,83 @@ index e07cb91..14dfc99 100644
 +							io_start, 1,
 +							wal_init_zero ? wal_segment_size : 1);
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	if (save_errno)
  	{
  		/*
-@@ -3292,6 +3316,7 @@ XLogFileInitInternal(XLogSegNo logsegno, TimeLineID logtli,
+@@ -3292,6 +3317,8 @@
  				 errmsg("could not write to file \"%s\": %m", tmppath)));
  	}
  
 +#ifndef USE_TDE_HOOKS
++
  	/*
  	 * A full segment worth of data is written when using wal_init_zero. One
  	 * byte is written when not using it.
-@@ -3300,6 +3325,7 @@ XLogFileInitInternal(XLogSegNo logsegno, TimeLineID logtli,
+@@ -3300,6 +3327,7 @@
  							io_start, 1,
  							wal_init_zero ? wal_segment_size : 1);
  
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  	/* Measure I/O timing when flushing segment */
  	io_start = pgstat_prepare_io_time(track_wal_io_timing);
  
-@@ -3421,6 +3447,9 @@ XLogFileCopy(TimeLineID destTLI, XLogSegNo destsegno,
+@@ -3421,6 +3449,9 @@
  	int			srcfd;
  	int			fd;
  	int			nbytes;
 +#ifdef USE_TDE_HOOKS
 +	off_t		offset = 0;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * Open the source file
-@@ -3469,7 +3498,12 @@ XLogFileCopy(TimeLineID destTLI, XLogSegNo destsegno,
+@@ -3469,7 +3500,12 @@
  			if (nread > sizeof(buffer))
  				nread = sizeof(buffer);
  			pgstat_report_wait_start(WAIT_EVENT_WAL_COPY_READ);
 +#ifndef USE_TDE_HOOKS
  			r = read(srcfd, buffer.data, nread);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			r = xlog_smgr->seg_read(srcfd, buffer.data, nread, offset,
-+ 					srcTLI, srcsegno, wal_segment_size);
-+#endif /* USE_TDE_HOOKS */
++									srcTLI, srcsegno, wal_segment_size);
++#endif							/* USE_TDE_HOOKS */
  			if (r != nread)
  			{
  				if (r < 0)
-@@ -3487,7 +3521,11 @@ XLogFileCopy(TimeLineID destTLI, XLogSegNo destsegno,
+@@ -3487,7 +3523,11 @@
  		}
  		errno = 0;
  		pgstat_report_wait_start(WAIT_EVENT_WAL_COPY_WRITE);
 +#ifndef USE_TDE_HOOKS
  		if ((int) write(fd, buffer.data, sizeof(buffer)) != (int) sizeof(buffer))
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		if ((int) xlog_smgr->seg_write(fd, buffer.data, sizeof(buffer), offset, destTLI, destsegno, wal_segment_size) != (int) sizeof(buffer))
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		{
  			int			save_errno = errno;
  
-@@ -3503,6 +3541,9 @@ XLogFileCopy(TimeLineID destTLI, XLogSegNo destsegno,
+@@ -3503,6 +3543,9 @@
  					 errmsg("could not write to file \"%s\": %m", tmppath)));
  		}
  		pgstat_report_wait_end();
 +#ifdef USE_TDE_HOOKS
 +		offset += sizeof(buffer);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	}
  
  	pgstat_report_wait_start(WAIT_EVENT_WAL_COPY_SYNC);
-@@ -6179,8 +6220,10 @@ StartupXLOG(void)
+@@ -6179,8 +6222,10 @@
  	/* If this is archive recovery, perform post-recovery cleanup actions. */
  	if (ArchiveRecoveryRequested)
  		CleanupAfterArchiveRecovery(EndOfLogTLI, EndOfLog, newTLI);
 +#ifndef USE_TDE_HOOKS
  
  	INJECTION_POINT("promotion-after-wal-segment-cleanup", NULL);
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  
  	/*
  	 * Local WAL inserts enabled, so it's time to finish initialization of
-diff --git a/src/backend/access/transam/xlogreader.c b/src/backend/access/transam/xlogreader.c
-index 29d4df7..7cad63d 100644
 --- a/src/backend/access/transam/xlogreader.c
 +++ b/src/backend/access/transam/xlogreader.c
 @@ -29,6 +29,9 @@
@@ -249,11 +240,11 @@ index 29d4df7..7cad63d 100644
  #include "access/xlogrecord.h"
 +#ifdef USE_TDE_HOOKS
 +#include "access/xlog_smgr.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #include "catalog/pg_control.h"
  #include "common/pg_lzcompress.h"
  #include "replication/origin.h"
-@@ -64,6 +67,23 @@ static void WALOpenSegmentInit(WALOpenSegment *seg, WALSegmentContext *segcxt,
+@@ -64,6 +67,23 @@
   */
  #define DEFAULT_DECODE_BUFFER_SIZE (64 * 1024)
  
@@ -273,21 +264,21 @@ index 29d4df7..7cad63d 100644
 +	xlog_smgr = xlsmgr;
 +}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  /*
   * Construct a string in state->errormsg_buf explaining what's wrong with
   * the current record being read.
-@@ -1574,10 +1594,21 @@ WALRead(XLogReaderState *state,
+@@ -1574,10 +1594,21 @@
  
  		/* Reset errno first; eases reporting non-errno-affecting errors */
  		errno = 0;
 +#ifndef USE_TDE_HOOKS
  		readbytes = pg_pread(state->seg.ws_file, p, segbytes, (off_t) startoff);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		readbytes = xlog_smgr->seg_read(state->seg.ws_file, p, segbytes,
 +										(off_t) startoff, state->seg.ws_tli,
 +										state->seg.ws_segno, state->segcxt.ws_segsize);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  #ifndef FRONTEND
  		pgstat_report_wait_end();
@@ -295,11 +286,11 @@ index 29d4df7..7cad63d 100644
 +
 +		pgstat_count_io_op_time(IOOBJECT_WAL, IOCONTEXT_NORMAL, IOOP_READ,
 +								io_start, 1, readbytes);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #endif
  
  		if (readbytes <= 0)
-@@ -1589,11 +1620,13 @@ WALRead(XLogReaderState *state,
+@@ -1589,11 +1620,13 @@
  			errinfo->wre_seg = state->seg;
  			return false;
  		}
@@ -309,12 +300,10 @@ index 29d4df7..7cad63d 100644
  		pgstat_count_io_op_time(IOOBJECT_WAL, IOCONTEXT_NORMAL, IOOP_READ,
  								io_start, 1, readbytes);
  #endif
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  
  		/* Update state for read */
  		recptr += readbytes;
-diff --git a/src/backend/access/transam/xlogrecovery.c b/src/backend/access/transam/xlogrecovery.c
-index 4761871..0ba2f0c 100644
 --- a/src/backend/access/transam/xlogrecovery.c
 +++ b/src/backend/access/transam/xlogrecovery.c
 @@ -40,6 +40,9 @@
@@ -327,7 +316,7 @@ index 4761871..0ba2f0c 100644
  #include "backup/basebackup.h"
  #include "catalog/pg_control.h"
  #include "commands/tablespace.h"
-@@ -3423,7 +3426,12 @@ retry:
+@@ -3423,7 +3426,12 @@
  	io_start = pgstat_prepare_io_time(track_wal_io_timing);
  
  	pgstat_report_wait_start(WAIT_EVENT_WAL_READ);
@@ -340,11 +329,9 @@ index 4761871..0ba2f0c 100644
  	if (r != XLOG_BLCKSZ)
  	{
  		char		fname[MAXFNAMELEN];
-diff --git a/src/backend/access/transam/xlogutils.c b/src/backend/access/transam/xlogutils.c
-index 0d67f25..cfc1748 100644
 --- a/src/backend/access/transam/xlogutils.c
 +++ b/src/backend/access/transam/xlogutils.c
-@@ -511,7 +511,11 @@ XLogReadBufferExtended(RelFileLocator rlocator, ForkNumber forknum,
+@@ -511,7 +511,11 @@
  	 * filesystem loses an inode during a crash.  Better to write the data
  	 * until we are actually told to delete the file.)
  	 */
@@ -356,11 +343,9 @@ index 0d67f25..cfc1748 100644
  
  	lastblock = smgrnblocks(smgr, forknum);
  
-diff --git a/src/backend/bootstrap/bootparse.y b/src/backend/bootstrap/bootparse.y
-index 9833f52..050a997 100644
 --- a/src/backend/bootstrap/bootparse.y
 +++ b/src/backend/bootstrap/bootparse.y
-@@ -217,7 +217,11 @@ Boot_CreateStmt:
+@@ -217,7 +217,11 @@
  												   true,
  												   &relfrozenxid,
  												   &relminmxid,
@@ -373,24 +358,51 @@ index 9833f52..050a997 100644
  						elog(DEBUG4, "bootstrap relation created");
  					}
  					else
-diff --git a/src/backend/catalog/heap.c b/src/backend/catalog/heap.c
-index 5df95dd..32368da 100644
 --- a/src/backend/catalog/heap.c
 +++ b/src/backend/catalog/heap.c
-@@ -296,7 +296,12 @@ heap_create(const char *relname,
- 			bool allow_system_table_mods,
- 			TransactionId *relfrozenxid,
- 			MultiXactId *relminmxid,
+@@ -282,21 +282,26 @@
+  * ----------------------------------------------------------------
+  */
+ Relation
+-heap_create(const char *relname,
+-			Oid relnamespace,
+-			Oid reltablespace,
+-			Oid relid,
+-			RelFileNumber relfilenumber,
+-			Oid accessmtd,
+-			TupleDesc tupDesc,
+-			char relkind,
+-			char relpersistence,
+-			bool shared_relation,
+-			bool mapped_relation,
+-			bool allow_system_table_mods,
+-			TransactionId *relfrozenxid,
+-			MultiXactId *relminmxid,
+-			bool create_storage)
++			heap_create(const char *relname,
++						Oid relnamespace,
++						Oid reltablespace,
++						Oid relid,
++						RelFileNumber relfilenumber,
++						Oid accessmtd,
++						TupleDesc tupDesc,
++						char relkind,
++						char relpersistence,
++						bool shared_relation,
++						bool mapped_relation,
++						bool allow_system_table_mods,
++						TransactionId *relfrozenxid,
++						MultiXactId *relminmxid,
 +#ifndef USE_TDE_HOOKS
- 			bool create_storage)
-+#else /* USE_TDE_HOOKS */
-+			bool create_storage,
-+			RelFileLocator *old_rlocator)
-+#endif /* USE_TDE_HOOKS */
++						bool create_storage)
++#else							/* USE_TDE_HOOKS */
++						bool create_storage,
++						RelFileLocator *old_rlocator)
++#endif							/* USE_TDE_HOOKS */
  {
  	Relation	rel;
  
-@@ -381,14 +386,43 @@ heap_create(const char *relname,
+@@ -381,14 +386,43 @@
  	 */
  	if (create_storage)
  	{
@@ -409,32 +421,32 @@ index 5df95dd..32368da 100644
 +			rel->rd_locator = prev_rlocator;
 +		}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		if (RELKIND_HAS_TABLE_AM(rel->rd_rel->relkind))
 +#ifndef USE_TDE_HOOKS
  			table_relation_set_new_filelocator(rel, &rel->rd_locator,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			table_relation_set_new_filelocator(rel, &new_rlocator,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  											   relpersistence,
  											   relfrozenxid, relminmxid);
  		else if (RELKIND_HAS_STORAGE(rel->rd_rel->relkind))
 +#ifndef USE_TDE_HOOKS
  			RelationCreateStorage(rel->rd_locator, relpersistence, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			RelationCreateStoragePercona(prev_rlocator, new_rlocator, relpersistence, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		else
  			Assert(false);
 +#ifdef USE_TDE_HOOKS
 +
 +		/* restore the orginal rel's locator */
 +		rel->rd_locator = new_rlocator;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	}
  
  	/*
-@@ -869,9 +903,11 @@ AddNewAttributeTuples(Oid new_rel_oid,
+@@ -869,9 +903,11 @@
  	{
  		Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
  
@@ -442,22 +454,22 @@ index 5df95dd..32368da 100644
  		if (attr->attisdropped)
  			continue;
  
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  		/* Add dependency info */
  		ObjectAddressSubSet(myself, RelationRelationId, new_rel_oid, i + 1);
  		ObjectAddressSet(referenced, TypeRelationId, attr->atttypid);
-@@ -1164,6 +1200,10 @@ heap_create_with_catalog(const char *relname,
+@@ -1164,6 +1200,10 @@
  	Oid			existing_relid;
  	Oid			old_type_oid;
  	Oid			new_type_oid;
 +#ifdef USE_TDE_HOOKS
 +	RelFileLocator *old_rlocator = NULL;
 +	Relation	old_rel;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* By default set to InvalidOid unless overridden by binary-upgrade */
  	RelFileNumber relfilenumber = InvalidRelFileNumber;
-@@ -1318,6 +1358,14 @@ heap_create_with_catalog(const char *relname,
+@@ -1318,6 +1358,15 @@
  	else
  		relacl = NULL;
  
@@ -468,31 +480,30 @@ index 5df95dd..32368da 100644
 +		old_rlocator = &old_rel->rd_locator;
 +	}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
++
  	/*
  	 * Create the relcache entry (mostly dummy at this point) and the physical
  	 * disk file.  (If we fail further down, it's the smgr's responsibility to
-@@ -1341,7 +1389,15 @@ heap_create_with_catalog(const char *relname,
+@@ -1341,7 +1390,15 @@
  							   allow_system_table_mods,
  							   &relfrozenxid,
  							   &relminmxid,
 +#ifndef USE_TDE_HOOKS
  							   true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +							   true,
 +							   old_rlocator);
 +
 +	if (relrewrite != InvalidOid)
 +		table_close(old_rel, AccessShareLock);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	Assert(relid == RelationGetRelid(new_rel_desc));
  
-diff --git a/src/backend/catalog/index.c b/src/backend/catalog/index.c
-index aa21668..0d0bce7 100644
 --- a/src/backend/catalog/index.c
 +++ b/src/backend/catalog/index.c
-@@ -674,6 +674,41 @@ UpdateIndexRelation(Oid indexoid,
+@@ -674,6 +674,41 @@
  	heap_freetuple(tuple);
  }
  
@@ -530,11 +541,11 @@ index aa21668..0d0bce7 100644
 +								stattargets, reloptions, flags, constr_flags,
 +								allow_system_table_mods, is_internal, constraintId, NULL);
 +}
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  /*
   * index_create
-@@ -723,6 +758,7 @@ UpdateIndexRelation(Oid indexoid,
+@@ -723,6 +758,7 @@
   * Returns the OID of the created index.
   */
  Oid
@@ -542,11 +553,11 @@ index aa21668..0d0bce7 100644
  index_create(Relation heapRelation,
  			 const char *indexRelationName,
  			 Oid indexRelationId,
-@@ -744,6 +780,30 @@ index_create(Relation heapRelation,
+@@ -744,6 +780,30 @@
  			 bool allow_system_table_mods,
  			 bool is_internal,
  			 Oid *constraintId)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +index_create_percona(Relation heapRelation,
 +					 const char *indexRelationName,
 +					 Oid indexRelationId,
@@ -569,24 +580,24 @@ index aa21668..0d0bce7 100644
 +					 bool is_internal,
 +					 Oid *constraintId,
 +					 RelFileLocator *old_rlocator)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	Oid			heapRelationId = RelationGetRelid(heapRelation);
  	Relation	pg_class;
-@@ -987,7 +1047,12 @@ index_create(Relation heapRelation,
+@@ -987,7 +1047,12 @@
  								allow_system_table_mods,
  								&relfrozenxid,
  								&relminmxid,
 +#ifndef USE_TDE_HOOKS
  								create_storage);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +								create_storage,
 +								old_rlocator);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	Assert(relfrozenxid == InvalidTransactionId);
  	Assert(relminmxid == InvalidMultiXactId);
-@@ -1442,6 +1507,7 @@ index_concurrently_create_copy(Relation heapRelation, Oid oldIndexId,
+@@ -1442,6 +1507,7 @@
  	 * ensure a consistent state at all times.  That is why parentIndexRelid
  	 * is not set here.
  	 */
@@ -594,11 +605,11 @@ index aa21668..0d0bce7 100644
  	newIndexId = index_create(heapRelation,
  							  newName,
  							  InvalidOid,	/* indexRelationId */
-@@ -1463,6 +1529,31 @@ index_concurrently_create_copy(Relation heapRelation, Oid oldIndexId,
+@@ -1463,6 +1529,31 @@
  							  true, /* allow table to be a system catalog? */
  							  false,	/* is_internal? */
  							  NULL);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	newIndexId = index_create_percona(heapRelation,
 +									  newName,
 +									  InvalidOid,	/* indexRelationId */
@@ -622,27 +633,25 @@ index aa21668..0d0bce7 100644
 +									  false,	/* is_internal? */
 +									  NULL,
 +									  &indexRelation->rd_locator);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* Close the relations used and clean up */
  	index_close(indexRelation, NoLock);
-@@ -3089,7 +3180,11 @@ index_build(Relation heapRelation,
+@@ -3089,7 +3180,11 @@
  	if (indexRelation->rd_rel->relpersistence == RELPERSISTENCE_UNLOGGED &&
  		!smgrexists(RelationGetSmgr(indexRelation), INIT_FORKNUM))
  	{
 +#ifndef USE_TDE_HOOKS
  		smgrcreate(RelationGetSmgr(indexRelation), INIT_FORKNUM, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		smgrcreate_percona(indexRelation->rd_locator, RelationGetSmgr(indexRelation), INIT_FORKNUM, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		log_smgrcreate(&indexRelation->rd_locator, INIT_FORKNUM);
  		indexRelation->rd_indam->ambuildempty(indexRelation);
  	}
-diff --git a/src/backend/catalog/storage.c b/src/backend/catalog/storage.c
-index 85d1219..65bdb57 100644
 --- a/src/backend/catalog/storage.c
 +++ b/src/backend/catalog/storage.c
-@@ -105,6 +105,19 @@ AddPendingSync(const RelFileLocator *rlocator)
+@@ -105,6 +105,19 @@
  	pending->is_truncated = false;
  }
  
@@ -658,65 +667,63 @@ index 85d1219..65bdb57 100644
 +	return RelationCreateStoragePercona(rlocator, rlocator, relpersistence, register_delete);
 +}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  /*
   * RelationCreateStorage
   *		Create physical storage for a relation.
-@@ -119,8 +132,13 @@ AddPendingSync(const RelFileLocator *rlocator)
+@@ -119,8 +132,13 @@
   * pass register_delete = false.
   */
  SMgrRelation
 +#ifndef USE_TDE_HOOKS
  RelationCreateStorage(RelFileLocator rlocator, char relpersistence,
  					  bool register_delete)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +RelationCreateStoragePercona(RelFileLocator oldlocator, RelFileLocator rlocator, char relpersistence,
 +							 bool register_delete)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	SMgrRelation srel;
  	ProcNumber	procNumber;
-@@ -148,7 +166,11 @@ RelationCreateStorage(RelFileLocator rlocator, char relpersistence,
+@@ -148,7 +166,11 @@
  	}
  
  	srel = smgropen(rlocator, procNumber);
 +#ifndef USE_TDE_HOOKS
  	smgrcreate(srel, MAIN_FORKNUM, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	smgrcreate_percona(oldlocator, srel, MAIN_FORKNUM, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	if (needs_wal)
  		log_smgrcreate(&srel->smgr_rlocator.locator, MAIN_FORKNUM);
-@@ -992,7 +1014,11 @@ smgr_redo(XLogReaderState *record)
+@@ -992,7 +1014,11 @@
  		SMgrRelation reln;
  
  		reln = smgropen(xlrec->rlocator, INVALID_PROC_NUMBER);
 +#ifndef USE_TDE_HOOKS
  		smgrcreate(reln, xlrec->forkNum, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		smgrcreate_percona(xlrec->rlocator, reln, xlrec->forkNum, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	}
  	else if (info == XLOG_SMGR_TRUNCATE)
  	{
-@@ -1013,7 +1039,11 @@ smgr_redo(XLogReaderState *record)
+@@ -1013,7 +1039,11 @@
  		 * XLogReadBufferForRedo, we prefer to recreate the rel and replay the
  		 * log as best we can until the drop is seen.
  		 */
 +#ifndef USE_TDE_HOOKS
  		smgrcreate(reln, MAIN_FORKNUM, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		smgrcreate_percona(xlrec->rlocator, reln, MAIN_FORKNUM, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		/*
  		 * Before we perform the truncation, update minimum recovery point to
-diff --git a/src/backend/catalog/toasting.c b/src/backend/catalog/toasting.c
-index 874a8fc..4d24aa5 100644
 --- a/src/backend/catalog/toasting.c
 +++ b/src/backend/catalog/toasting.c
-@@ -318,6 +318,7 @@ create_toast_table(Relation rel, Oid toastOid, Oid toastIndexOid,
+@@ -318,6 +318,7 @@
  	coloptions[0] = 0;
  	coloptions[1] = 0;
  
@@ -724,11 +731,11 @@ index 874a8fc..4d24aa5 100644
  	index_create(toast_rel, toast_idxname, toastIndexOid, InvalidOid,
  				 InvalidOid, InvalidOid,
  				 indexInfo,
-@@ -326,6 +327,16 @@ create_toast_table(Relation rel, Oid toastOid, Oid toastIndexOid,
+@@ -326,6 +327,16 @@
  				 rel->rd_rel->reltablespace,
  				 collationIds, opclassIds, NULL, coloptions, NULL, (Datum) 0,
  				 INDEX_CREATE_IS_PRIMARY, 0, true, true, NULL);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	index_create_percona(toast_rel, toast_idxname, toastIndexOid, InvalidOid,
 +						 InvalidOid, InvalidOid,
 +						 indexInfo,
@@ -737,15 +744,13 @@ index 874a8fc..4d24aa5 100644
 +						 rel->rd_rel->reltablespace,
 +						 collationIds, opclassIds, NULL, coloptions, NULL, (Datum) 0,
 +						 INDEX_CREATE_IS_PRIMARY, 0, true, true, NULL, NULL);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	table_close(toast_rel, NoLock);
  
-diff --git a/src/backend/commands/indexcmds.c b/src/backend/commands/indexcmds.c
-index fd083e5..2d76d2f 100644
 --- a/src/backend/commands/indexcmds.c
 +++ b/src/backend/commands/indexcmds.c
-@@ -1245,6 +1245,7 @@ DefineIndex(Oid tableId,
+@@ -1245,6 +1245,7 @@
  		constr_flags |= INDEX_CONSTR_CREATE_WITHOUT_OVERLAPS;
  
  	indexRelationId =
@@ -753,11 +758,11 @@ index fd083e5..2d76d2f 100644
  		index_create(rel, indexRelationName, indexRelationId, parentIndexId,
  					 parentConstraintId,
  					 stmt->oldNumber, indexInfo, indexColNames,
-@@ -1254,6 +1255,17 @@ DefineIndex(Oid tableId,
+@@ -1254,6 +1255,17 @@
  					 flags, constr_flags,
  					 allowSystemTableMods, !check_rights,
  					 &createdConstraintId);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		index_create_percona(rel, indexRelationName, indexRelationId, parentIndexId,
 +							 parentConstraintId,
 +							 stmt->oldNumber, indexInfo, indexColNames,
@@ -767,41 +772,37 @@ index fd083e5..2d76d2f 100644
 +							 flags, constr_flags,
 +							 allowSystemTableMods, !check_rights,
 +							 &createdConstraintId, NULL);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	ObjectAddressSet(address, RelationRelationId, indexRelationId);
  
-diff --git a/src/backend/commands/sequence.c b/src/backend/commands/sequence.c
-index c1ad656..0f24ed8 100644
 --- a/src/backend/commands/sequence.c
 +++ b/src/backend/commands/sequence.c
-@@ -344,7 +344,11 @@ fill_seq_with_data(Relation rel, HeapTuple tuple)
+@@ -344,7 +344,11 @@
  		SMgrRelation srel;
  
  		srel = smgropen(rel->rd_locator, INVALID_PROC_NUMBER);
 +#ifndef USE_TDE_HOOKS
  		smgrcreate(srel, INIT_FORKNUM, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		smgrcreate_percona(rel->rd_locator, srel, INIT_FORKNUM, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		log_smgrcreate(&rel->rd_locator, INIT_FORKNUM);
  		fill_seq_fork_with_data(rel, tuple, INIT_FORKNUM);
  		FlushRelationBuffers(rel);
-@@ -1933,7 +1937,9 @@ seq_redo(XLogReaderState *record)
+@@ -1933,7 +1937,9 @@
  
  	memcpy(page, localpage, BufferGetPageSize(buffer));
  	MarkBufferDirty(buffer);
 +#ifndef USE_TDE_HOOKS
  	XLogFlushBufferForRedoIfInit(record, 0, buffer);
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  	UnlockReleaseBuffer(buffer);
  
  	pfree(localpage);
-diff --git a/src/backend/commands/tablecmds.c b/src/backend/commands/tablecmds.c
-index 5abe026..7a57ad7 100644
 --- a/src/backend/commands/tablecmds.c
 +++ b/src/backend/commands/tablecmds.c
-@@ -12262,12 +12262,14 @@ ATExecAlterConstraint(List **wqueue, Relation rel, ATAlterConstraint *cmdcon,
+@@ -12262,12 +12262,14 @@
  				errcode(ERRCODE_WRONG_OBJECT_TYPE),
  				errmsg("constraint \"%s\" of relation \"%s\" is not a not-null constraint",
  					   cmdcon->conname, RelationGetRelationName(rel)));
@@ -812,11 +813,11 @@ index 5abe026..7a57ad7 100644
  				errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
  				errmsg("not-null constraint \"%s\" on partitioned table \"%s\" cannot be NO INHERIT",
  					   cmdcon->conname, RelationGetRelationName(rel)));
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  
  	/* Refuse to modify inheritability of inherited constraints */
  	if (cmdcon->alterInheritability &&
-@@ -13011,9 +13013,11 @@ QueueFKConstraintValidation(List **wqueue, Relation conrel, Relation fkrel,
+@@ -13011,9 +13013,11 @@
  	HeapTuple	copyTuple;
  	Form_pg_constraint copy_con;
  
@@ -824,48 +825,74 @@ index 5abe026..7a57ad7 100644
  	/* since this function recurses, it could be driven to stack overflow */
  	check_stack_depth();
  
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  	con = (Form_pg_constraint) GETSTRUCT(contuple);
  	Assert(con->contype == CONSTRAINT_FOREIGN);
  	Assert(!con->convalidated);
-@@ -17174,7 +17178,11 @@ index_copy_data(Relation rel, RelFileLocator newrlocator)
+@@ -17174,7 +17178,11 @@
  	 * NOTE: any conflict in relfilenumber value will be caught in
  	 * RelationCreateStorage().
  	 */
 +#ifndef USE_TDE_HOOKS
  	dstrel = RelationCreateStorage(newrlocator, rel->rd_rel->relpersistence, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	dstrel = RelationCreateStoragePercona(rel->rd_locator, newrlocator, rel->rd_rel->relpersistence, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* copy main fork */
  	RelationCopyStorage(RelationGetSmgr(rel), dstrel, MAIN_FORKNUM,
-@@ -17186,7 +17194,11 @@ index_copy_data(Relation rel, RelFileLocator newrlocator)
+@@ -17186,7 +17194,11 @@
  	{
  		if (smgrexists(RelationGetSmgr(rel), forkNum))
  		{
 +#ifndef USE_TDE_HOOKS
  			smgrcreate(dstrel, forkNum, false);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			smgrcreate_percona(rel->rd_locator, dstrel, forkNum, false);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  			/*
  			 * WAL log creation if the relation is persistent, or this is the
-diff --git a/src/backend/postmaster/launch_backend.c b/src/backend/postmaster/launch_backend.c
-index ae94cc9..0c18861 100644
 --- a/src/backend/postmaster/launch_backend.c
 +++ b/src/backend/postmaster/launch_backend.c
-@@ -695,6 +695,16 @@ SubPostmasterMain(int argc, char *argv[])
+@@ -78,7 +78,7 @@
+ 	SOCKET		origsocket;		/* Original socket value, or PGINVALID_SOCKET
+ 								 * if not a socket */
+ 	WSAPROTOCOL_INFO wsainfo;
+-} InheritableSocket;
++}			InheritableSocket;
+ #else
+ typedef int InheritableSocket;
+ #endif
+@@ -146,14 +146,14 @@
+ 	 */
+ 	size_t		startup_data_len;
+ 	char		startup_data[FLEXIBLE_ARRAY_MEMBER];
+-} BackendParameters;
++}			BackendParameters;
+ 
+ #define SizeOfBackendParameters(startup_data_len) (offsetof(BackendParameters, startup_data) + startup_data_len)
+ 
+ static void read_backend_variables(char *id, void **startup_data, size_t *startup_data_len);
+-static void restore_backend_variables(BackendParameters *param);
++static void restore_backend_variables(BackendParameters * param);
+ 
+-static bool save_backend_variables(BackendParameters *param, int child_slot,
++static bool save_backend_variables(BackendParameters * param, int child_slot,
+ 								   ClientSocket *client_sock,
+ #ifdef WIN32
+ 								   HANDLE childProcess, pid_t childPid,
+@@ -695,6 +695,17 @@
  	 */
  	LocalProcessControlFile(false);
  
 +#ifdef USE_TDE_HOOKS
++
 +	/*
 +	 * Re-register built-in dynamic managers (e.g. md smgr). Under
 +	 * EXEC_BACKEND the child starts with an empty smgr table, so we must
-+	 * re-run registration before shared_preload_libraries so extensions
-+	 * can still register their own smgrs from _PG_init().
++	 * re-run registration before shared_preload_libraries so extensions can
++	 * still register their own smgrs from _PG_init().
 +	 */
 +	register_builtin_dynamic_managers();
 +#endif
@@ -873,15 +900,80 @@ index ae94cc9..0c18861 100644
  	/*
  	 * Reload any libraries that were preloaded by the postmaster.  Since we
  	 * exec'd this process, those libraries didn't come along with us; but we
-diff --git a/src/backend/postmaster/postmaster.c b/src/backend/postmaster/postmaster.c
-index 5124d39..be389d9 100644
+@@ -718,16 +729,16 @@
+ #define write_inheritable_socket(dest, src, childpid) ((*(dest) = (src)), true)
+ #define read_inheritable_socket(dest, src) (*(dest) = *(src))
+ #else
+-static bool write_duplicated_handle(HANDLE *dest, HANDLE src, HANDLE child);
+-static bool write_inheritable_socket(InheritableSocket *dest, SOCKET src,
++static bool write_duplicated_handle(HANDLE * dest, HANDLE src, HANDLE child);
++static bool write_inheritable_socket(InheritableSocket * dest, SOCKET src,
+ 									 pid_t childPid);
+-static void read_inheritable_socket(SOCKET *dest, InheritableSocket *src);
++static void read_inheritable_socket(SOCKET * dest, InheritableSocket * src);
+ #endif
+ 
+ 
+ /* Save critical backend variables into the BackendParameters struct */
+ static bool
+-save_backend_variables(BackendParameters *param,
++save_backend_variables(BackendParameters * param,
+ 					   int child_slot, ClientSocket *client_sock,
+ #ifdef WIN32
+ 					   HANDLE childProcess, pid_t childPid,
+@@ -812,7 +823,7 @@
+  * process instance of the handle to the parameter file.
+  */
+ static bool
+-write_duplicated_handle(HANDLE *dest, HANDLE src, HANDLE childProcess)
++write_duplicated_handle(HANDLE * dest, HANDLE src, HANDLE childProcess)
+ {
+ 	HANDLE		hChild = INVALID_HANDLE_VALUE;
+ 
+@@ -842,7 +853,7 @@
+  * straight socket inheritance.
+  */
+ static bool
+-write_inheritable_socket(InheritableSocket *dest, SOCKET src, pid_t childpid)
++write_inheritable_socket(InheritableSocket * dest, SOCKET src, pid_t childpid)
+ {
+ 	dest->origsocket = src;
+ 	if (src != 0 && src != PGINVALID_SOCKET)
+@@ -863,7 +874,7 @@
+  * Read a duplicate socket structure back, and get the socket descriptor.
+  */
+ static void
+-read_inheritable_socket(SOCKET *dest, InheritableSocket *src)
++read_inheritable_socket(SOCKET * dest, InheritableSocket * src)
+ {
+ 	SOCKET		s;
+ 
+@@ -994,7 +1005,7 @@
+ 
+ /* Restore critical backend variables from the BackendParameters struct */
+ static void
+-restore_backend_variables(BackendParameters *param)
++restore_backend_variables(BackendParameters * param)
+ {
+ 	if (param->client_sock.sock != PGINVALID_SOCKET)
+ 	{
 --- a/src/backend/postmaster/postmaster.c
 +++ b/src/backend/postmaster/postmaster.c
-@@ -927,6 +927,13 @@ PostmasterMain(int argc, char *argv[])
+@@ -468,7 +468,7 @@
+ 	HANDLE		waitHandle;
+ 	HANDLE		procHandle;
+ 	DWORD		procId;
+-} win32_deadchild_waitinfo;
++}			win32_deadchild_waitinfo;
+ #endif							/* WIN32 */
+ 
+ /* Macros to check exit status of a child process */
+@@ -927,6 +927,14 @@
  	 */
  	ApplyLauncherRegister();
  
 +#ifdef USE_TDE_HOOKS
++
 +	/*
 +	 * Register built-in managers that are not part of static arrays
 +	 */
@@ -891,8 +983,6 @@ index 5124d39..be389d9 100644
  	/*
  	 * process any libraries that should be preloaded at postmaster start
  	 */
-diff --git a/src/backend/replication/walreceiver.c b/src/backend/replication/walreceiver.c
-index 6df19f8..fc241b5 100644
 --- a/src/backend/replication/walreceiver.c
 +++ b/src/backend/replication/walreceiver.c
 @@ -57,6 +57,9 @@
@@ -905,7 +995,7 @@ index 6df19f8..fc241b5 100644
  #include "catalog/pg_authid.h"
  #include "funcapi.h"
  #include "libpq/pqformat.h"
-@@ -928,7 +931,13 @@ XLogWalRcvWrite(char *buf, Size nbytes, XLogRecPtr recptr, TimeLineID tli)
+@@ -928,7 +931,13 @@
  		start = pgstat_prepare_io_time(track_wal_io_timing);
  
  		pgstat_report_wait_start(WAIT_EVENT_WAL_WRITE);
@@ -919,44 +1009,42 @@ index 6df19f8..fc241b5 100644
  		pgstat_report_wait_end();
  
  		if (byteswritten <= 0)
-diff --git a/src/backend/storage/aio/aio_callback.c b/src/backend/storage/aio/aio_callback.c
-index 03c9bba..7a29b52 100644
 --- a/src/backend/storage/aio/aio_callback.c
 +++ b/src/backend/storage/aio/aio_callback.c
-@@ -27,8 +27,13 @@ static const PgAioHandleCallbacks aio_invalid_cb = {0};
+@@ -27,8 +27,13 @@
  
  typedef struct PgAioHandleCallbacksEntry
  {
 +#ifndef USE_TDE_HOOKS
  	const PgAioHandleCallbacks *const cb;
  	const char *const name;
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	const PgAioHandleCallbacks *cb;
 +	const char *name;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  } PgAioHandleCallbacksEntry;
  
  /*
-@@ -36,7 +41,11 @@ typedef struct PgAioHandleCallbacksEntry
+@@ -36,7 +41,11 @@
   * handle.  See PgAioHandleCallbackID's definition for an explanation for why
   * callbacks are not identified by a pointer.
   */
 +#ifndef USE_TDE_HOOKS
  static const PgAioHandleCallbacksEntry aio_handle_cbs[] = {
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static PgAioHandleCallbacksEntry aio_handle_cbs[PGAIO_HCB_MAX] = {
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #define CALLBACK_ENTRY(id, callback)  [id] = {.cb = &callback, .name = #callback}
  	CALLBACK_ENTRY(PGAIO_HCB_INVALID, aio_invalid_cb),
  
-@@ -48,7 +57,25 @@ static const PgAioHandleCallbacksEntry aio_handle_cbs[] = {
+@@ -48,7 +57,25 @@
  #undef CALLBACK_ENTRY
  };
  
 +#ifdef USE_TDE_HOOKS
 +static PgAioHandleCallbackID aio_handle_max_cb_id = PGAIO_HCB_LOCAL_BUFFER_READV;
-+#endif /* USE_TDE_HOOKS */
- 
++#endif							/* USE_TDE_HOOKS */
++
 +#ifdef USE_TDE_HOOKS
 +PgAioHandleCallbackID
 +pgaio_io_register_callback_entry(const PgAioHandleCallbacks *callback, const char *name)
@@ -968,18 +1056,16 @@ index 03c9bba..7a29b52 100644
 +
 +	aio_handle_cbs[cb_id].cb = callback;
 +	aio_handle_cbs[cb_id].name = name;
-+
+ 
 +	return cb_id;
 +}
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  /* --------------------------------------------------------------------------------
   * Public callback related functions operating on IO Handles
-diff --git a/src/backend/storage/buffer/bufmgr.c b/src/backend/storage/buffer/bufmgr.c
-index a5b4bc5..91cc3ae 100644
 --- a/src/backend/storage/buffer/bufmgr.c
 +++ b/src/backend/storage/buffer/bufmgr.c
-@@ -946,7 +946,11 @@ ExtendBufferedRelTo(BufferManagerRelation bmr,
+@@ -946,7 +946,11 @@
  
  		/* recheck, fork might have been created concurrently */
  		if (!smgrexists(bmr.smgr, fork))
@@ -991,7 +1077,7 @@ index a5b4bc5..91cc3ae 100644
  
  		UnlockRelationForExtension(bmr.rel, ExclusiveLock);
  	}
-@@ -5280,7 +5284,11 @@ CreateAndCopyRelationData(RelFileLocator src_rlocator,
+@@ -5280,7 +5284,11 @@
  	 * directory.  Therefore, each individual relation doesn't need to be
  	 * registered for cleanup.
  	 */
@@ -1003,7 +1089,7 @@ index a5b4bc5..91cc3ae 100644
  
  	/* copy main fork. */
  	RelationCopyStorageUsingBuffer(src_rlocator, dst_rlocator, MAIN_FORKNUM,
-@@ -5292,7 +5300,11 @@ CreateAndCopyRelationData(RelFileLocator src_rlocator,
+@@ -5292,7 +5300,11 @@
  	{
  		if (smgrexists(src_rel, forkNum))
  		{
@@ -1015,11 +1101,9 @@ index a5b4bc5..91cc3ae 100644
  
  			/*
  			 * WAL log creation if the relation is persistent, or this is the
-diff --git a/src/backend/storage/smgr/md.c b/src/backend/storage/smgr/md.c
-index db4595d..83bd661 100644
 --- a/src/backend/storage/smgr/md.c
 +++ b/src/backend/storage/smgr/md.c
-@@ -85,6 +85,23 @@ typedef struct _MdfdVec
+@@ -85,6 +85,23 @@
  } MdfdVec;
  
  static MemoryContext MdCxt;		/* context for all MdfdVec objects */
@@ -1039,11 +1123,11 @@ index db4595d..83bd661 100644
 +} MdSMgrRelationData;
 +
 +typedef MdSMgrRelationData *MdSMgrRelation;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  
  /* Populate a file tag describing an md.c segment file. */
-@@ -131,32 +148,96 @@ typedef struct MdPathStr
+@@ -131,32 +148,96 @@
  } MdPathStr;
  
  
@@ -1079,17 +1163,17 @@ index db4595d..83bd661 100644
 +	MdSMgrId = smgr_register(&md_smgr, sizeof(MdSMgrRelationData));
 +}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  /* local routines */
  static void mdunlinkfork(RelFileLocatorBackend rlocator, ForkNumber forknum,
  						 bool isRedo);
 +#ifndef USE_TDE_HOOKS
  static MdfdVec *mdopenfork(SMgrRelation reln, ForkNumber forknum, int behavior);
  static void register_dirty_segment(SMgrRelation reln, ForkNumber forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static MdfdVec *mdopenfork(MdSMgrRelation reln, ForkNumber forknum, int behavior);
 +static void register_dirty_segment(MdSMgrRelation reln, ForkNumber forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  								   MdfdVec *seg);
  static void register_unlink_segment(RelFileLocatorBackend rlocator, ForkNumber forknum,
  									BlockNumber segno);
@@ -1097,485 +1181,487 @@ index db4595d..83bd661 100644
  									BlockNumber segno);
 +#ifndef USE_TDE_HOOKS
  static void _fdvec_resize(SMgrRelation reln,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static void _fdvec_resize(MdSMgrRelation reln,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						  ForkNumber forknum,
  						  int nseg);
 +#ifndef USE_TDE_HOOKS
  static MdPathStr _mdfd_segpath(SMgrRelation reln, ForkNumber forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static MdPathStr _mdfd_segpath(MdSMgrRelation reln, ForkNumber forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  							   BlockNumber segno);
 +#ifndef USE_TDE_HOOKS
  static MdfdVec *_mdfd_openseg(SMgrRelation reln, ForkNumber forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static MdfdVec *_mdfd_openseg(MdSMgrRelation reln, ForkNumber forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  							  BlockNumber segno, int oflags);
 +#ifndef USE_TDE_HOOKS
  static MdfdVec *_mdfd_getseg(SMgrRelation reln, ForkNumber forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static MdfdVec *_mdfd_getseg(MdSMgrRelation reln, ForkNumber forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  							 BlockNumber blkno, bool skipFsync, int behavior);
 +#ifndef USE_TDE_HOOKS
  static BlockNumber _mdnblocks(SMgrRelation reln, ForkNumber forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static BlockNumber _mdnblocks(MdSMgrRelation reln, ForkNumber forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  							  MdfdVec *seg);
  
 +#ifndef USE_TDE_HOOKS
  static PgAioResult md_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data);
-+#endif /* ! USE_TDE_HOOKS */
++#endif							/* ! USE_TDE_HOOKS */
  static void md_readv_report(PgAioResult result, const PgAioTargetData *td, int elevel);
  
 +#ifndef USE_TDE_HOOKS
  const PgAioHandleCallbacks aio_md_readv_cb = {
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +PgAioHandleCallbacks aio_md_readv_cb = {
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	.complete_shared = md_readv_complete,
  	.report = md_readv_report,
  };
-@@ -192,6 +273,10 @@ mdinit(void)
+@@ -192,6 +273,11 @@
  bool
  mdexists(SMgrRelation reln, ForkNumber forknum)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
++
  	/*
  	 * Close it first, to ensure that we notice if the fork has been unlinked
  	 * since we opened it.  As an optimization, we can skip that in recovery,
-@@ -200,7 +285,11 @@ mdexists(SMgrRelation reln, ForkNumber forknum)
+@@ -200,7 +286,11 @@
  	if (!InRecovery)
  		mdclose(reln, forknum);
  
 +#ifndef USE_TDE_HOOKS
  	return (mdopenfork(reln, forknum, EXTENSION_RETURN_NULL) != NULL);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	return (mdopenfork(mdreln, forknum, EXTENSION_RETURN_NULL) != NULL);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  }
  
  /*
-@@ -209,16 +298,31 @@ mdexists(SMgrRelation reln, ForkNumber forknum)
+@@ -209,16 +299,31 @@
   * If isRedo is true, it's okay for the relation to exist already.
   */
  void
 +#ifndef USE_TDE_HOOKS
  mdcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo)
-+#else /* USE_TDE_HOOKS */
+-{
++#else							/* USE_TDE_HOOKS */
 +mdcreate(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool isRedo)
-+#endif /* USE_TDE_HOOKS */
- {
++#endif							/* USE_TDE_HOOKS */
++{
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	MdfdVec    *mdfd;
  	RelPathStr	path;
  	File		fd;
  
 +#ifndef USE_TDE_HOOKS
  	if (isRedo && reln->md_num_open_segs[forknum] > 0)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	if (isRedo && mdreln->md_num_open_segs[forknum] > 0)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		return;					/* created and opened already... */
  
 +#ifndef USE_TDE_HOOKS
  	Assert(reln->md_num_open_segs[forknum] == 0);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	Assert(mdreln->md_num_open_segs[forknum] == 0);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * We may be using the target table space for the first time in this
-@@ -253,13 +357,22 @@ mdcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo)
+@@ -253,13 +358,22 @@
  		}
  	}
  
 +#ifndef USE_TDE_HOOKS
  	_fdvec_resize(reln, forknum, 1);
  	mdfd = &reln->md_seg_fds[forknum][0];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	_fdvec_resize(mdreln, forknum, 1);
 +	mdfd = &mdreln->md_seg_fds[forknum][0];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	mdfd->mdfd_vfd = fd;
  	mdfd->mdfd_segno = 0;
  
  	if (!SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  		register_dirty_segment(reln, forknum, mdfd);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		register_dirty_segment(mdreln, forknum, mdfd);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  }
  
  /*
-@@ -477,6 +590,9 @@ void
+@@ -477,6 +591,9 @@
  mdextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
  		 const void *buffer, bool skipFsync)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	off_t		seekpos;
  	int			nbytes;
  	MdfdVec    *v;
-@@ -503,7 +619,11 @@ mdextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -503,7 +620,11 @@
  						relpath(reln->smgr_rlocator, forknum).str,
  						InvalidBlockNumber)));
  
 +#ifndef USE_TDE_HOOKS
  	v = _mdfd_getseg(reln, forknum, blocknum, skipFsync, EXTENSION_CREATE);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	v = _mdfd_getseg(mdreln, forknum, blocknum, skipFsync, EXTENSION_CREATE);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	seekpos = (off_t) BLCKSZ * (blocknum % ((BlockNumber) RELSEG_SIZE));
  
-@@ -527,9 +647,17 @@ mdextend(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -527,9 +648,17 @@
  	}
  
  	if (!skipFsync && !SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  		register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  	Assert(_mdnblocks(reln, forknum, v) <= ((BlockNumber) RELSEG_SIZE));
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	Assert(_mdnblocks(mdreln, forknum, v) <= ((BlockNumber) RELSEG_SIZE));
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  }
  
  /*
-@@ -542,6 +670,9 @@ void
+@@ -542,6 +671,9 @@
  mdzeroextend(SMgrRelation reln, ForkNumber forknum,
  			 BlockNumber blocknum, int nblocks, bool skipFsync)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	MdfdVec    *v;
  	BlockNumber curblocknum = blocknum;
  	int			remblocks = nblocks;
-@@ -576,7 +707,11 @@ mdzeroextend(SMgrRelation reln, ForkNumber forknum,
+@@ -576,7 +708,11 @@
  		else
  			numblocks = remblocks;
  
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_getseg(reln, forknum, curblocknum, skipFsync, EXTENSION_CREATE);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_getseg(mdreln, forknum, curblocknum, skipFsync, EXTENSION_CREATE);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		Assert(segstartblock < RELSEG_SIZE);
  		Assert(segstartblock + numblocks <= RELSEG_SIZE);
-@@ -642,9 +777,17 @@ mdzeroextend(SMgrRelation reln, ForkNumber forknum,
+@@ -642,9 +778,17 @@
  		}
  
  		if (!skipFsync && !SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  			register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  		Assert(_mdnblocks(reln, forknum, v) <= ((BlockNumber) RELSEG_SIZE));
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		Assert(_mdnblocks(mdreln, forknum, v) <= ((BlockNumber) RELSEG_SIZE));
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		remblocks -= numblocks;
  		curblocknum += numblocks;
-@@ -662,7 +805,11 @@ mdzeroextend(SMgrRelation reln, ForkNumber forknum,
+@@ -662,7 +806,11 @@
   * invent one out of whole cloth.
   */
  static MdfdVec *
 +#ifndef USE_TDE_HOOKS
  mdopenfork(SMgrRelation reln, ForkNumber forknum, int behavior)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +mdopenfork(MdSMgrRelation reln, ForkNumber forknum, int behavior)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	MdfdVec    *mdfd;
  	RelPathStr	path;
-@@ -672,7 +819,11 @@ mdopenfork(SMgrRelation reln, ForkNumber forknum, int behavior)
+@@ -672,7 +820,11 @@
  	if (reln->md_num_open_segs[forknum] > 0)
  		return &reln->md_seg_fds[forknum][0];
  
 +#ifndef USE_TDE_HOOKS
  	path = relpath(reln->smgr_rlocator, forknum);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	path = relpath(reln->reln.smgr_rlocator, forknum);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	fd = PathNameOpenFile(path.str, _mdfd_open_flags());
  
-@@ -702,9 +853,17 @@ mdopenfork(SMgrRelation reln, ForkNumber forknum, int behavior)
+@@ -702,9 +854,17 @@
  void
  mdopen(SMgrRelation reln)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	/* mark it not open */
  	for (int forknum = 0; forknum <= MAX_FORKNUM; forknum++)
 +#ifndef USE_TDE_HOOKS
  		reln->md_num_open_segs[forknum] = 0;
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		mdreln->md_num_open_segs[forknum] = 0;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  }
  
  /*
-@@ -713,7 +872,12 @@ mdopen(SMgrRelation reln)
+@@ -713,7 +873,12 @@
  void
  mdclose(SMgrRelation reln, ForkNumber forknum)
  {
 +#ifndef USE_TDE_HOOKS
  	int			nopensegs = reln->md_num_open_segs[forknum];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +	int			nopensegs = mdreln->md_num_open_segs[forknum];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* No work if already closed */
  	if (nopensegs == 0)
-@@ -722,10 +886,18 @@ mdclose(SMgrRelation reln, ForkNumber forknum)
+@@ -722,10 +887,18 @@
  	/* close segments starting from the end */
  	while (nopensegs > 0)
  	{
 +#ifndef USE_TDE_HOOKS
  		MdfdVec    *v = &reln->md_seg_fds[forknum][nopensegs - 1];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		MdfdVec    *v = &mdreln->md_seg_fds[forknum][nopensegs - 1];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		FileClose(v->mdfd_vfd);
 +#ifndef USE_TDE_HOOKS
  		_fdvec_resize(reln, forknum, nopensegs - 1);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		_fdvec_resize(mdreln, forknum, nopensegs - 1);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		nopensegs--;
  	}
  }
-@@ -738,6 +910,9 @@ mdprefetch(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -738,6 +911,9 @@
  		   int nblocks)
  {
  #ifdef USE_PREFETCH
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	Assert((io_direct_flags & IO_DIRECT_DATA) == 0);
  
-@@ -750,7 +925,11 @@ mdprefetch(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -750,7 +926,11 @@
  		MdfdVec    *v;
  		int			nblocks_this_segment;
  
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_getseg(reln, forknum, blocknum, false,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_getseg(mdreln, forknum, blocknum, false,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						 InRecovery ? EXTENSION_RETURN_NULL : EXTENSION_FAIL);
  		if (v == NULL)
  			return false;
-@@ -848,6 +1027,10 @@ void
+@@ -848,6 +1028,10 @@
  mdreadv(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
  		void **buffers, BlockNumber nblocks)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	while (nblocks > 0)
  	{
  		struct iovec iov[PG_IOV_MAX];
-@@ -859,7 +1042,11 @@ mdreadv(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -859,7 +1043,11 @@
  		size_t		transferred_this_segment;
  		size_t		size_this_segment;
  
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_getseg(reln, forknum, blocknum, false,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_getseg(mdreln, forknum, blocknum, false,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY);
  
  		seekpos = (off_t) BLCKSZ * (blocknum % ((BlockNumber) RELSEG_SIZE));
-@@ -987,6 +1174,9 @@ mdstartreadv(PgAioHandle *ioh,
+@@ -987,6 +1175,9 @@
  			 SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
  			 void **buffers, BlockNumber nblocks)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	off_t		seekpos;
  	MdfdVec    *v;
  	BlockNumber nblocks_this_segment;
-@@ -994,7 +1184,11 @@ mdstartreadv(PgAioHandle *ioh,
+@@ -994,7 +1185,11 @@
  	int			iovcnt;
  	int			ret;
  
 +#ifndef USE_TDE_HOOKS
  	v = _mdfd_getseg(reln, forknum, blocknum, false,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	v = _mdfd_getseg(mdreln, forknum, blocknum, false,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  					 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY);
  
  	seekpos = (off_t) BLCKSZ * (blocknum % ((BlockNumber) RELSEG_SIZE));
-@@ -1060,6 +1254,10 @@ void
+@@ -1060,6 +1255,10 @@
  mdwritev(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
  		 const void **buffers, BlockNumber nblocks, bool skipFsync)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	/* This assert is too expensive to have on normally ... */
  #ifdef CHECK_WRITE_VS_EXTEND
  	Assert((uint64) blocknum + (uint64) nblocks <= (uint64) mdnblocks(reln, forknum));
-@@ -1076,7 +1274,11 @@ mdwritev(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -1076,7 +1275,11 @@
  		size_t		transferred_this_segment;
  		size_t		size_this_segment;
  
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_getseg(reln, forknum, blocknum, skipFsync,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_getseg(mdreln, forknum, blocknum, skipFsync,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						 EXTENSION_FAIL | EXTENSION_CREATE_RECOVERY);
  
  		seekpos = (off_t) BLCKSZ * (blocknum % ((BlockNumber) RELSEG_SIZE));
-@@ -1146,7 +1348,11 @@ mdwritev(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum,
+@@ -1146,7 +1349,11 @@
  		}
  
  		if (!skipFsync && !SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  			register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		nblocks -= nblocks_this_segment;
  		buffers += nblocks_this_segment;
-@@ -1165,6 +1371,10 @@ void
+@@ -1165,6 +1372,10 @@
  mdwriteback(SMgrRelation reln, ForkNumber forknum,
  			BlockNumber blocknum, BlockNumber nblocks)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	Assert((io_direct_flags & IO_DIRECT_DATA) == 0);
  
  	/*
-@@ -1179,7 +1389,11 @@ mdwriteback(SMgrRelation reln, ForkNumber forknum,
+@@ -1179,7 +1390,11 @@
  		int			segnum_start,
  					segnum_end;
  
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_getseg(reln, forknum, blocknum, true /* not used */ ,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_getseg(mdreln, forknum, blocknum, true /* not used */ ,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						 EXTENSION_DONT_OPEN);
  
  		/*
-@@ -1223,14 +1437,25 @@ mdwriteback(SMgrRelation reln, ForkNumber forknum,
+@@ -1223,14 +1438,25 @@
  BlockNumber
  mdnblocks(SMgrRelation reln, ForkNumber forknum)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	MdfdVec    *v;
  	BlockNumber nblocks;
  	BlockNumber segno;
  
 +#ifndef USE_TDE_HOOKS
  	mdopenfork(reln, forknum, EXTENSION_FAIL);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	mdopenfork(mdreln, forknum, EXTENSION_FAIL);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* mdopen has opened the first segment */
 +#ifndef USE_TDE_HOOKS
  	Assert(reln->md_num_open_segs[forknum] > 0);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	Assert(mdreln->md_num_open_segs[forknum] > 0);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * Start from the last open segments, to avoid redundant seeks.  We have
-@@ -1245,12 +1470,21 @@ mdnblocks(SMgrRelation reln, ForkNumber forknum)
+@@ -1245,12 +1471,21 @@
  	 * that's OK because the checkpointer never needs to compute relation
  	 * size.)
  	 */
 +#ifndef USE_TDE_HOOKS
  	segno = reln->md_num_open_segs[forknum] - 1;
  	v = &reln->md_seg_fds[forknum][segno];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	segno = mdreln->md_num_open_segs[forknum] - 1;
 +	v = &mdreln->md_seg_fds[forknum][segno];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	for (;;)
  	{
 +#ifndef USE_TDE_HOOKS
  		nblocks = _mdnblocks(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		nblocks = _mdnblocks(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		if (nblocks > ((BlockNumber) RELSEG_SIZE))
  			elog(FATAL, "segment too big");
  		if (nblocks < ((BlockNumber) RELSEG_SIZE))
-@@ -1268,7 +1502,11 @@ mdnblocks(SMgrRelation reln, ForkNumber forknum)
+@@ -1268,7 +1503,11 @@
  		 * undermines _mdfd_getseg's attempts to notice and report an error
  		 * upon access to a missing segment.
  		 */
 +#ifndef USE_TDE_HOOKS
  		v = _mdfd_openseg(reln, forknum, segno, 0);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = _mdfd_openseg(mdreln, forknum, segno, 0);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		if (v == NULL)
  			return segno * ((BlockNumber) RELSEG_SIZE);
  	}
-@@ -1291,6 +1529,9 @@ void
+@@ -1291,6 +1530,9 @@
  mdtruncate(SMgrRelation reln, ForkNumber forknum,
  		   BlockNumber curnblk, BlockNumber nblocks)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	BlockNumber priorblocks;
  	int			curopensegs;
  
-@@ -1311,14 +1552,22 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum,
+@@ -1311,14 +1553,22 @@
  	 * Truncate segments, starting at the last one. Starting at the end makes
  	 * managing the memory for the fd array easier, should there be errors.
  	 */
 +#ifndef USE_TDE_HOOKS
  	curopensegs = reln->md_num_open_segs[forknum];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	curopensegs = mdreln->md_num_open_segs[forknum];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	while (curopensegs > 0)
  	{
  		MdfdVec    *v;
@@ -1584,96 +1670,96 @@ index db4595d..83bd661 100644
  
 +#ifndef USE_TDE_HOOKS
  		v = &reln->md_seg_fds[forknum][curopensegs - 1];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		v = &mdreln->md_seg_fds[forknum][curopensegs - 1];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		if (priorblocks > nblocks)
  		{
-@@ -1333,13 +1582,25 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum,
+@@ -1333,13 +1583,25 @@
  								FilePathName(v->mdfd_vfd))));
  
  			if (!SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  				register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +				register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  			/* we never drop the 1st segment */
 +#ifndef USE_TDE_HOOKS
  			Assert(v != &reln->md_seg_fds[forknum][0]);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			Assert(v != &mdreln->md_seg_fds[forknum][0]);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  			FileClose(v->mdfd_vfd);
 +#ifndef USE_TDE_HOOKS
  			_fdvec_resize(reln, forknum, curopensegs - 1);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			_fdvec_resize(mdreln, forknum, curopensegs - 1);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		}
  		else if (priorblocks + ((BlockNumber) RELSEG_SIZE) > nblocks)
  		{
-@@ -1359,7 +1620,11 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum,
+@@ -1359,7 +1621,11 @@
  								FilePathName(v->mdfd_vfd),
  								nblocks)));
  			if (!SmgrIsTemp(reln))
 +#ifndef USE_TDE_HOOKS
  				register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +				register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		}
  		else
  		{
-@@ -1379,6 +1644,9 @@ mdtruncate(SMgrRelation reln, ForkNumber forknum,
+@@ -1379,6 +1645,9 @@
  void
  mdregistersync(SMgrRelation reln, ForkNumber forknum)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	int			segno;
  	int			min_inactive_seg;
  
-@@ -1388,7 +1656,11 @@ mdregistersync(SMgrRelation reln, ForkNumber forknum)
+@@ -1388,7 +1657,11 @@
  	 */
  	mdnblocks(reln, forknum);
  
 +#ifndef USE_TDE_HOOKS
  	min_inactive_seg = segno = reln->md_num_open_segs[forknum];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	min_inactive_seg = segno = mdreln->md_num_open_segs[forknum];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * Temporarily open inactive segments, then close them after sync.  There
-@@ -1396,20 +1668,36 @@ mdregistersync(SMgrRelation reln, ForkNumber forknum)
+@@ -1396,20 +1669,36 @@
  	 * harmless.  We don't bother to clean them up and take a risk of further
  	 * trouble.  The next mdclose() will soon close them.
  	 */
 +#ifndef USE_TDE_HOOKS
  	while (_mdfd_openseg(reln, forknum, segno, 0) != NULL)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	while (_mdfd_openseg(mdreln, forknum, segno, 0) != NULL)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		segno++;
  
  	while (segno > 0)
  	{
 +#ifndef USE_TDE_HOOKS
  		MdfdVec    *v = &reln->md_seg_fds[forknum][segno - 1];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		MdfdVec    *v = &mdreln->md_seg_fds[forknum][segno - 1];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  		register_dirty_segment(reln, forknum, v);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		register_dirty_segment(mdreln, forknum, v);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		/* Close inactive segments immediately */
  		if (segno > min_inactive_seg)
@@ -1681,220 +1767,221 @@ index db4595d..83bd661 100644
  			FileClose(v->mdfd_vfd);
 +#ifndef USE_TDE_HOOKS
  			_fdvec_resize(reln, forknum, segno - 1);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			_fdvec_resize(mdreln, forknum, segno - 1);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		}
  
  		segno--;
-@@ -1430,6 +1718,9 @@ mdregistersync(SMgrRelation reln, ForkNumber forknum)
+@@ -1430,6 +1719,9 @@
  void
  mdimmedsync(SMgrRelation reln, ForkNumber forknum)
  {
 +#ifdef USE_TDE_HOOKS
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	int			segno;
  	int			min_inactive_seg;
  
-@@ -1439,7 +1730,11 @@ mdimmedsync(SMgrRelation reln, ForkNumber forknum)
+@@ -1439,7 +1731,11 @@
  	 */
  	mdnblocks(reln, forknum);
  
 +#ifndef USE_TDE_HOOKS
  	min_inactive_seg = segno = reln->md_num_open_segs[forknum];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	min_inactive_seg = segno = mdreln->md_num_open_segs[forknum];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * Temporarily open inactive segments, then close them after sync.  There
-@@ -1447,12 +1742,20 @@ mdimmedsync(SMgrRelation reln, ForkNumber forknum)
+@@ -1447,12 +1743,20 @@
  	 * is harmless.  We don't bother to clean them up and take a risk of
  	 * further trouble.  The next mdclose() will soon close them.
  	 */
 +#ifndef USE_TDE_HOOKS
  	while (_mdfd_openseg(reln, forknum, segno, 0) != NULL)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	while (_mdfd_openseg(mdreln, forknum, segno, 0) != NULL)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		segno++;
  
  	while (segno > 0)
  	{
 +#ifndef USE_TDE_HOOKS
  		MdfdVec    *v = &reln->md_seg_fds[forknum][segno - 1];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		MdfdVec    *v = &mdreln->md_seg_fds[forknum][segno - 1];
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		/*
  		 * fsyncs done through mdimmedsync() should be tracked in a separate
-@@ -1473,7 +1776,11 @@ mdimmedsync(SMgrRelation reln, ForkNumber forknum)
+@@ -1473,7 +1777,11 @@
  		if (segno > min_inactive_seg)
  		{
  			FileClose(v->mdfd_vfd);
 +#ifndef USE_TDE_HOOKS
  			_fdvec_resize(reln, forknum, segno - 1);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +			_fdvec_resize(mdreln, forknum, segno - 1);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		}
  
  		segno--;
-@@ -1483,9 +1790,18 @@ mdimmedsync(SMgrRelation reln, ForkNumber forknum)
+@@ -1483,9 +1791,18 @@
  int
  mdfd(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum, uint32 *off)
  {
 +#ifndef USE_TDE_HOOKS
  	MdfdVec    *v = mdopenfork(reln, forknum, EXTENSION_FAIL);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	MdSMgrRelation mdreln = (MdSMgrRelation) reln;
 +	MdfdVec    *v = mdopenfork(mdreln, forknum, EXTENSION_FAIL);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  	v = _mdfd_getseg(reln, forknum, blocknum, false,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	v = _mdfd_getseg(mdreln, forknum, blocknum, false,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  					 EXTENSION_FAIL);
  
  	*off = (off_t) BLCKSZ * (blocknum % ((BlockNumber) RELSEG_SIZE));
-@@ -1505,14 +1821,26 @@ mdfd(SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum, uint32 *off)
+@@ -1505,14 +1822,26 @@
   * enough to be a performance problem).
   */
  static void
 +#ifndef USE_TDE_HOOKS
  register_dirty_segment(SMgrRelation reln, ForkNumber forknum, MdfdVec *seg)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +register_dirty_segment(MdSMgrRelation reln, ForkNumber forknum, MdfdVec *seg)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	FileTag		tag;
  
 +#ifndef USE_TDE_HOOKS
  	INIT_MD_FILETAG(tag, reln->smgr_rlocator.locator, forknum, seg->mdfd_segno);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	INIT_MD_FILETAG(tag, reln->reln.smgr_rlocator.locator, forknum, seg->mdfd_segno);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/* Temp relations should never be fsync'd */
 +#ifndef USE_TDE_HOOKS
  	Assert(!SmgrIsTemp(reln));
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	Assert(!SmgrIsTemp(&reln->reln));
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	if (!RegisterSyncRequest(&tag, SYNC_REQUEST, false /* retryOnError */ ))
  	{
-@@ -1630,7 +1958,11 @@ DropRelationFiles(RelFileLocator *delrels, int ndelrels, bool isRedo)
+@@ -1630,7 +1959,11 @@
   * _fdvec_resize() -- Resize the fork's open segments array
   */
  static void
+-_fdvec_resize(SMgrRelation reln,
 +#ifndef USE_TDE_HOOKS
- _fdvec_resize(SMgrRelation reln,
-+#else /* USE_TDE_HOOKS */
++			_fdvec_resize(SMgrRelation reln,
++#else							/* USE_TDE_HOOKS */
 +_fdvec_resize(MdSMgrRelation reln,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  			  ForkNumber forknum,
  			  int nseg)
  {
-@@ -1678,12 +2010,20 @@ _fdvec_resize(SMgrRelation reln,
+@@ -1678,12 +2011,20 @@
   * returned string is palloc'd.
   */
  static MdPathStr
 +#ifndef USE_TDE_HOOKS
  _mdfd_segpath(SMgrRelation reln, ForkNumber forknum, BlockNumber segno)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +_mdfd_segpath(MdSMgrRelation reln, ForkNumber forknum, BlockNumber segno)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	RelPathStr	path;
  	MdPathStr	fullpath;
  
 +#ifndef USE_TDE_HOOKS
  	path = relpath(reln->smgr_rlocator, forknum);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	path = relpath(reln->reln.smgr_rlocator, forknum);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	if (segno > 0)
  		sprintf(fullpath.str, "%s.%u", path.str, segno);
-@@ -1698,7 +2038,11 @@ _mdfd_segpath(SMgrRelation reln, ForkNumber forknum, BlockNumber segno)
+@@ -1698,7 +2039,11 @@
   * and make a MdfdVec object for it.  Returns NULL on failure.
   */
  static MdfdVec *
+-_mdfd_openseg(SMgrRelation reln, ForkNumber forknum, BlockNumber segno,
 +#ifndef USE_TDE_HOOKS
- _mdfd_openseg(SMgrRelation reln, ForkNumber forknum, BlockNumber segno,
-+#else /* USE_TDE_HOOKS */
++			_mdfd_openseg(SMgrRelation reln, ForkNumber forknum, BlockNumber segno,
++#else							/* USE_TDE_HOOKS */
 +_mdfd_openseg(MdSMgrRelation reln, ForkNumber forknum, BlockNumber segno,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  			  int oflags)
  {
  	MdfdVec    *v;
-@@ -1741,7 +2085,11 @@ _mdfd_openseg(SMgrRelation reln, ForkNumber forknum, BlockNumber segno,
+@@ -1741,7 +2086,11 @@
   * EXTENSION_CREATE case.
   */
  static MdfdVec *
+-_mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
 +#ifndef USE_TDE_HOOKS
- _mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
-+#else /* USE_TDE_HOOKS */
++			_mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
++#else							/* USE_TDE_HOOKS */
 +_mdfd_getseg(MdSMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  			 bool skipFsync, int behavior)
  {
  	MdfdVec    *v;
-@@ -1815,7 +2163,11 @@ _mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
+@@ -1815,7 +2164,11 @@
  				char	   *zerobuf = palloc_aligned(BLCKSZ, PG_IO_ALIGN_SIZE,
  													 MCXT_ALLOC_ZERO);
  
 +#ifndef USE_TDE_HOOKS
  				mdextend(reln, forknum,
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +				mdextend((SMgrRelation) reln, forknum,
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  						 nextsegno * ((BlockNumber) RELSEG_SIZE) - 1,
  						 zerobuf, skipFsync);
  				pfree(zerobuf);
-@@ -1870,7 +2222,11 @@ _mdfd_getseg(SMgrRelation reln, ForkNumber forknum, BlockNumber blkno,
+@@ -1870,7 +2223,11 @@
   * Get number of blocks present in a single disk file
   */
  static BlockNumber
 +#ifndef USE_TDE_HOOKS
  _mdnblocks(SMgrRelation reln, ForkNumber forknum, MdfdVec *seg)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +_mdnblocks(MdSMgrRelation reln, ForkNumber forknum, MdfdVec *seg)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	off_t		len;
  
-@@ -1893,7 +2249,11 @@ _mdnblocks(SMgrRelation reln, ForkNumber forknum, MdfdVec *seg)
+@@ -1893,7 +2250,11 @@
  int
  mdsyncfiletag(const FileTag *ftag, char *path)
  {
 +#ifndef USE_TDE_HOOKS
  	SMgrRelation reln = smgropen(ftag->rlocator, INVALID_PROC_NUMBER);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	MdSMgrRelation reln = (MdSMgrRelation) smgropen(ftag->rlocator, INVALID_PROC_NUMBER);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	File		file;
  	instr_time	io_start;
  	bool		need_to_close;
-@@ -1975,7 +2335,11 @@ mdfiletagmatches(const FileTag *ftag, const FileTag *candidate)
+@@ -1975,7 +2336,11 @@
  /*
   * AIO completion callback for mdstartreadv().
   */
 +#ifndef USE_TDE_HOOKS
  static PgAioResult
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +PgAioResult
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  md_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data)
  {
  	PgAioTargetData *td = pgaio_io_get_target_data(ioh);
-diff --git a/src/backend/storage/smgr/smgr.c b/src/backend/storage/smgr/smgr.c
-index 37b99fa..fe0995c 100644
 --- a/src/backend/storage/smgr/smgr.c
 +++ b/src/backend/storage/smgr/smgr.c
 @@ -71,10 +71,20 @@
@@ -1903,52 +1990,53 @@ index 37b99fa..fe0995c 100644
  #include "storage/smgr.h"
 +#ifdef USE_TDE_HOOKS
 +#include "port/atomics.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #include "utils/hsearch.h"
  #include "utils/inval.h"
 +#ifdef USE_TDE_HOOKS
 +#include "utils/memutils.h"
-+#endif /* USE_TDE_HOOKS */
- 
++#endif							/* USE_TDE_HOOKS */
++
 +#ifdef USE_TDE_HOOKS
 +static f_smgr *smgrsw;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
+-
 +#ifndef USE_TDE_HOOKS
  /*
   * This struct of function pointers defines the API between smgr.c and
   * any individual storage manager module.  Note that smgr subfunctions are
-@@ -124,7 +134,11 @@ typedef struct f_smgr
+@@ -124,7 +134,11 @@
  	void		(*smgr_registersync) (SMgrRelation reln, ForkNumber forknum);
  	int			(*smgr_fd) (SMgrRelation reln, ForkNumber forknum, BlockNumber blocknum, uint32 *off);
  } f_smgr;
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static int	NSmgr = 0;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  static const f_smgr smgrsw[] = {
  	/* magnetic disk */
  	{
-@@ -150,8 +164,17 @@ static const f_smgr smgrsw[] = {
+@@ -150,8 +164,17 @@
  		.smgr_fd = mdfd,
  	}
  };
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +static Size LargestSMgrRelationSize = 0;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
 +#ifndef USE_TDE_HOOKS
  static const int NSmgr = lengthof(smgrsw);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +SMgrId		storage_manager_id;
 +
 +bool		percona_allow_upstream_smgr_api = true;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  /*
   * Each backend has a hashtable that stores all extant SMgrRelation objects.
-@@ -175,6 +198,62 @@ const PgAioTargetInfo aio_smgr_target_info = {
+@@ -175,6 +198,62 @@
  	.describe_identity = smgr_aio_describe_identity,
  };
  
@@ -2007,11 +2095,11 @@ index 37b99fa..fe0995c 100644
 +
 +	return my_id;
 +}
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  /*
   * smgrinit(), smgrshutdown() -- Initialize or shut down storage
-@@ -252,8 +331,17 @@ smgropen(RelFileLocator rlocator, ProcNumber backend)
+@@ -252,8 +331,17 @@
  		/* First time through: initialize the hash table */
  		HASHCTL		ctl;
  
@@ -2019,30 +2107,30 @@ index 37b99fa..fe0995c 100644
 +		LargestSMgrRelationSize = MAXALIGN(LargestSMgrRelationSize);
 +		Assert(NSmgr > 0);
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		ctl.keysize = sizeof(RelFileLocatorBackend);
 +#ifndef USE_TDE_HOOKS
  		ctl.entrysize = sizeof(SMgrRelationData);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		ctl.entrysize = LargestSMgrRelationSize;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		SMgrRelationHash = hash_create("smgr relation table", 400,
  									   &ctl, HASH_ELEM | HASH_BLOBS);
  		dlist_init(&unpinned_relns);
-@@ -273,7 +361,12 @@ smgropen(RelFileLocator rlocator, ProcNumber backend)
+@@ -273,7 +361,12 @@
  		reln->smgr_targblock = InvalidBlockNumber;
  		for (int i = 0; i <= MAX_FORKNUM; ++i)
  			reln->smgr_cached_nblocks[i] = InvalidBlockNumber;
 +#ifndef USE_TDE_HOOKS
  		reln->smgr_which = 0;	/* we only have md.c at present */
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +
 +		reln->smgr_which = storage_manager_id;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  		/* it is not pinned yet */
  		reln->pincount = 0;
-@@ -470,6 +563,17 @@ smgrexists(SMgrRelation reln, ForkNumber forknum)
+@@ -470,6 +563,17 @@
  	return ret;
  }
  
@@ -2056,47 +2144,43 @@ index 37b99fa..fe0995c 100644
 +	smgrcreate_percona(reln->smgr_rlocator.locator, reln, forknum, isRedo);
 +}
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  /*
   * smgrcreate() -- Create a new relation.
   *
-@@ -478,10 +582,18 @@ smgrexists(SMgrRelation reln, ForkNumber forknum)
+@@ -478,10 +582,18 @@
   * to be created.
   */
  void
 +#ifndef USE_TDE_HOOKS
  smgrcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo)
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +smgrcreate_percona(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool isRedo)
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  {
  	HOLD_INTERRUPTS();
 +#ifndef USE_TDE_HOOKS
  	smgrsw[reln->smgr_which].smgr_create(reln, forknum, isRedo);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	smgrsw[reln->smgr_which].smgr_create(relold, reln, forknum, isRedo);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  	RESUME_INTERRUPTS();
  }
  
-diff --git a/src/backend/utils/cache/relcache.c b/src/backend/utils/cache/relcache.c
-index 559ba9c..13492df 100644
 --- a/src/backend/utils/cache/relcache.c
 +++ b/src/backend/utils/cache/relcache.c
-@@ -3880,7 +3880,11 @@ RelationSetNewRelfilenumber(Relation relation, char persistence)
+@@ -3880,7 +3880,11 @@
  		/* handle these directly, at least for now */
  		SMgrRelation srel;
  
 +#ifndef USE_TDE_HOOKS
  		srel = RelationCreateStorage(newrlocator, persistence, true);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +		srel = RelationCreateStoragePercona(relation->rd_locator, newrlocator, persistence, true);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  		smgrclose(srel);
  	}
  	else
-diff --git a/src/backend/utils/init/miscinit.c b/src/backend/utils/init/miscinit.c
-index df18257..b5bb18f 100644
 --- a/src/backend/utils/init/miscinit.c
 +++ b/src/backend/utils/init/miscinit.c
 @@ -43,6 +43,9 @@
@@ -2105,11 +2189,11 @@ index df18257..b5bb18f 100644
  #include "storage/ipc.h"
 +#ifdef USE_TDE_HOOKS
 +#include "storage/md.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  #include "storage/latch.h"
  #include "storage/pg_shmem.h"
  #include "storage/pmsignal.h"
-@@ -192,6 +195,11 @@ InitStandaloneProcess(const char *argv0)
+@@ -192,6 +195,12 @@
  	InitProcessLocalLatch();
  	InitializeLatchWaitSet();
  
@@ -2117,11 +2201,12 @@ index df18257..b5bb18f 100644
 +	/* Initialize smgrs */
 +	register_builtin_dynamic_managers();
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
++
  	/*
  	 * For consistency with InitPostmasterChild, initialize signal mask here.
  	 * But we don't unblock SIGQUIT or provide a default handler for it.
-@@ -1922,6 +1930,19 @@ process_session_preload_libraries(void)
+@@ -1922,6 +1931,19 @@
  	load_libraries(local_preload_libraries_string,
  				   "local_preload_libraries",
  				   true);
@@ -2137,14 +2222,11 @@ index df18257..b5bb18f 100644
 +	mdsmgr_register();
 +
 +	storage_manager_id = MdSMgrId;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  }
  
  /*
-diff --git a/src/include/access/xlog_smgr.h b/src/include/access/xlog_smgr.h
-new file mode 100644
-index 0000000..0083193
---- /dev/null
+--- a/src/include/access/xlog_smgr.h
 +++ b/src/include/access/xlog_smgr.h
 @@ -0,0 +1,43 @@
 +#ifdef USE_TDE_HOOKS
@@ -2189,9 +2271,7 @@ index 0000000..0083193
 +extern void SetXLogSmgr(const XLogSmgr *xlsmgr);
 +
 +#endif							/* XLOG_SMGR_H */
-+#endif /* USE_TDE_HOOKS */
-diff --git a/src/include/catalog/heap.h b/src/include/catalog/heap.h
-index 7f3a0ef..35ce797 100644
++#endif							/* USE_TDE_HOOKS */
 --- a/src/include/catalog/heap.h
 +++ b/src/include/catalog/heap.h
 @@ -17,6 +17,9 @@
@@ -2200,25 +2280,23 @@ index 7f3a0ef..35ce797 100644
  #include "parser/parse_node.h"
 +#ifdef USE_TDE_HOOKS
 +#include "storage/relfilelocator.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  
  /* flag bits for CheckAttributeType/CheckAttributeNamesTypes */
-@@ -62,7 +65,12 @@ extern Relation heap_create(const char *relname,
+@@ -62,7 +65,12 @@
  							bool allow_system_table_mods,
  							TransactionId *relfrozenxid,
  							MultiXactId *relminmxid,
 +#ifndef USE_TDE_HOOKS
  							bool create_storage);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +							bool create_storage,
 +							RelFileLocator *old_rlocator);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  extern Oid	heap_create_with_catalog(const char *relname,
  									 Oid relnamespace,
-diff --git a/src/include/catalog/index.h b/src/include/catalog/index.h
-index 4daa8be..cc8cf99 100644
 --- a/src/include/catalog/index.h
 +++ b/src/include/catalog/index.h
 @@ -16,6 +16,9 @@
@@ -2227,11 +2305,11 @@ index 4daa8be..cc8cf99 100644
  #include "nodes/execnodes.h"
 +#ifdef USE_TDE_HOOKS
 +#include "storage/relfilelocator.h"
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  
  #define DEFAULT_INDEX_TYPE	"btree"
-@@ -87,6 +90,31 @@ extern Oid	index_create(Relation heapRelation,
+@@ -87,6 +90,31 @@
  						 bool allow_system_table_mods,
  						 bool is_internal,
  						 Oid *constraintId);
@@ -2259,15 +2337,13 @@ index 4daa8be..cc8cf99 100644
 +								 bool is_internal,
 +								 Oid *constraintId,
 +								 RelFileLocator *old_rlocator);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  #define	INDEX_CONSTR_CREATE_MARK_AS_PRIMARY	(1 << 0)
  #define	INDEX_CONSTR_CREATE_DEFERRABLE		(1 << 1)
-diff --git a/src/include/catalog/storage.h b/src/include/catalog/storage.h
-index ba99225..e8cc0cf 100644
 --- a/src/include/catalog/storage.h
 +++ b/src/include/catalog/storage.h
-@@ -25,6 +25,12 @@ extern PGDLLIMPORT int wal_skip_threshold;
+@@ -25,6 +25,12 @@
  extern SMgrRelation RelationCreateStorage(RelFileLocator rlocator,
  										  char relpersistence,
  										  bool register_delete);
@@ -2276,26 +2352,22 @@ index ba99225..e8cc0cf 100644
 +												 RelFileLocator rlocator,
 +												 char relpersistence,
 +												 bool register_delete);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern void RelationDropStorage(Relation rel);
  extern void RelationPreserveStorage(RelFileLocator rlocator, bool atCommit);
  extern void RelationPreTruncate(Relation rel);
-diff --git a/src/include/miscadmin.h b/src/include/miscadmin.h
-index 9a7d733..1a65617 100644
 --- a/src/include/miscadmin.h
 +++ b/src/include/miscadmin.h
-@@ -524,6 +524,9 @@ extern void TouchSocketLockFiles(void);
+@@ -524,6 +524,9 @@
  extern void AddToDataDirLockFile(int target_line, const char *str);
  extern bool RecheckDataDirLockFile(void);
  extern void ValidatePgVersion(const char *path);
 +#ifdef USE_TDE_HOOKS
 +extern void register_builtin_dynamic_managers(void);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern void process_shared_preload_libraries(void);
  extern void process_session_preload_libraries(void);
  extern void process_shmem_requests(void);
-diff --git a/src/include/pg_config.h.in b/src/include/pg_config.h.in
-index 1483336..ec64708 100644
 --- a/src/include/pg_config.h.in
 +++ b/src/include/pg_config.h.in
 @@ -677,6 +677,9 @@
@@ -2308,8 +2380,6 @@ index 1483336..ec64708 100644
  /* Define to 1 to use AVX-512 CRC algorithms with a runtime check. */
  #undef USE_AVX512_CRC32C_WITH_RUNTIME_CHECK
  
-diff --git a/src/include/pg_config_manual.h b/src/include/pg_config_manual.h
-index 125d3eb..42a9753 100644
 --- a/src/include/pg_config_manual.h
 +++ b/src/include/pg_config_manual.h
 @@ -361,3 +361,17 @@
@@ -2330,34 +2400,30 @@ index 125d3eb..42a9753 100644
 + * available), pass CPPFLAGS="-DUSE_TDE_HOOKS" to configure, or uncomment:
 + */
 +/* #define USE_TDE_HOOKS 1 */
-diff --git a/src/include/storage/aio.h b/src/include/storage/aio.h
-index 2933eea..e84f96b 100644
 --- a/src/include/storage/aio.h
 +++ b/src/include/storage/aio.h
-@@ -200,7 +200,11 @@ typedef enum PgAioHandleCallbackID
+@@ -200,7 +200,11 @@
  	PGAIO_HCB_LOCAL_BUFFER_READV,
  } PgAioHandleCallbackID;
  
 +#ifndef USE_TDE_HOOKS
  #define PGAIO_HCB_MAX	PGAIO_HCB_LOCAL_BUFFER_READV
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +#define PGAIO_HCB_MAX	15
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  StaticAssertDecl(PGAIO_HCB_MAX < (1 << PGAIO_RESULT_ID_BITS),
  				 "PGAIO_HCB_MAX is too big for PGAIO_RESULT_ID_BITS");
  
-@@ -308,6 +312,9 @@ extern PgAioTargetData *pgaio_io_get_target_data(PgAioHandle *ioh);
+@@ -308,6 +312,9 @@
  extern char *pgaio_io_get_target_description(PgAioHandle *ioh);
  
  /* functions in aio_callback.c */
 +#ifdef USE_TDE_HOOKS
 +extern PgAioHandleCallbackID pgaio_io_register_callback_entry(const PgAioHandleCallbacks *callback, const char *name);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern void pgaio_io_register_callbacks(PgAioHandle *ioh, PgAioHandleCallbackID cb_id,
  										uint8 cb_data);
  extern void pgaio_io_set_handle_data_64(PgAioHandle *ioh, uint64 *data, uint8 len);
-diff --git a/src/include/storage/md.h b/src/include/storage/md.h
-index b563c27..f7b3725 100644
 --- a/src/include/storage/md.h
 +++ b/src/include/storage/md.h
 @@ -20,13 +20,25 @@
@@ -2366,13 +2432,13 @@ index b563c27..f7b3725 100644
  
 +#ifndef USE_TDE_HOOKS
  extern PGDLLIMPORT const PgAioHandleCallbacks aio_md_readv_cb;
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +extern PGDLLIMPORT PgAioHandleCallbacks aio_md_readv_cb;
 +
 +/* registration function for md storage manager */
 +extern void mdsmgr_register(void);
 +extern PGDLLIMPORT SMgrId MdSMgrId;
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  /* md storage manager functionality */
  extern void mdinit(void);
@@ -2380,25 +2446,23 @@ index b563c27..f7b3725 100644
  extern void mdclose(SMgrRelation reln, ForkNumber forknum);
 +#ifndef USE_TDE_HOOKS
  extern void mdcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo);
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +extern void mdcreate(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool isRedo);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern bool mdexists(SMgrRelation reln, ForkNumber forknum);
  extern void mdunlink(RelFileLocatorBackend rlocator, ForkNumber forknum, bool isRedo);
  extern void mdextend(SMgrRelation reln, ForkNumber forknum,
-@@ -61,5 +73,10 @@ extern void DropRelationFiles(RelFileLocator *delrels, int ndelrels, bool isRedo
+@@ -61,5 +73,10 @@
  extern int	mdsyncfiletag(const FileTag *ftag, char *path);
  extern int	mdunlinkfiletag(const FileTag *ftag, char *path);
  extern bool mdfiletagmatches(const FileTag *ftag, const FileTag *candidate);
 +#ifdef USE_TDE_HOOKS
 +
 +extern PgAioResult
-+md_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data);
-+#endif /* USE_TDE_HOOKS */
++			md_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data);
++#endif							/* USE_TDE_HOOKS */
  
  #endif							/* MD_H */
-diff --git a/src/include/storage/smgr.h b/src/include/storage/smgr.h
-index 3964d93..7f71e9c 100644
 --- a/src/include/storage/smgr.h
 +++ b/src/include/storage/smgr.h
 @@ -19,6 +19,13 @@
@@ -2411,11 +2475,11 @@ index 3964d93..7f71e9c 100644
 +extern PGDLLIMPORT SMgrId storage_manager_id;
 +extern PGDLLIMPORT bool percona_allow_upstream_smgr_api;
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  /*
   * smgr.c maintains a table of SMgrRelation objects, which are essentially
   * cached file handles.  An SMgrRelation is created (if not already present)
-@@ -52,6 +59,7 @@ typedef struct SMgrRelationData
+@@ -52,6 +59,7 @@
  	 * Fields below here are intended to be private to smgr.c and its
  	 * submodules.  Do not touch them from elsewhere.
  	 */
@@ -2423,17 +2487,17 @@ index 3964d93..7f71e9c 100644
  	int			smgr_which;		/* storage manager selector */
  
  	/*
-@@ -60,6 +68,9 @@ typedef struct SMgrRelationData
+@@ -60,6 +68,9 @@
  	 */
  	int			md_num_open_segs[MAX_FORKNUM + 1];
  	struct _MdfdVec *md_seg_fds[MAX_FORKNUM + 1];
-+#else /* USE_TDE_HOOKS */
++#else							/* USE_TDE_HOOKS */
 +	SMgrId		smgr_which;		/* storage manager selector */
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  
  	/*
  	 * Pinning support.  If unpinned (ie. pincount == 0), 'node' is a list
-@@ -76,6 +87,61 @@ typedef SMgrRelationData *SMgrRelation;
+@@ -76,6 +87,61 @@
  
  extern PGDLLIMPORT const PgAioTargetInfo aio_smgr_target_info;
  
@@ -2491,17 +2555,17 @@ index 3964d93..7f71e9c 100644
 +
 +extern SMgrId smgr_register(const f_smgr *smgr, Size smgrrelation_size);
 +
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern void smgrinit(void);
  extern SMgrRelation smgropen(RelFileLocator rlocator, ProcNumber backend);
  extern bool smgrexists(SMgrRelation reln, ForkNumber forknum);
-@@ -87,6 +153,9 @@ extern void smgrrelease(SMgrRelation reln);
+@@ -87,6 +153,9 @@
  extern void smgrreleaseall(void);
  extern void smgrreleaserellocator(RelFileLocatorBackend rlocator);
  extern void smgrcreate(SMgrRelation reln, ForkNumber forknum, bool isRedo);
 +#ifdef USE_TDE_HOOKS
 +extern void smgrcreate_percona(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool isRedo);
-+#endif /* USE_TDE_HOOKS */
++#endif							/* USE_TDE_HOOKS */
  extern void smgrdosyncall(SMgrRelation *rels, int nrels);
  extern void smgrdounlinkall(SMgrRelation *rels, int nrels, bool isRedo);
  extern void smgrextend(SMgrRelation reln, ForkNumber forknum,

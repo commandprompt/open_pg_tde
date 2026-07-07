@@ -10,7 +10,7 @@
 
 #include "encryption/cipher_provider.h"
 #include "encryption/enc_aes.h"
-#include "encryption/enc_tde.h"		/* CipherType ids */
+#include "encryption/enc_tde.h" /* CipherType ids */
 
 #ifdef FRONTEND
 #include "open_pg_tde_fe.h"
@@ -83,8 +83,8 @@ TdeCipherByKeyLen(int key_len)
 {
 	/*
 	 * Used only by the WAL/stream path, which needs a keystream cipher. Skip
-	 * block-only ciphers (e.g. XTS) so a shared key length does not resolve to
-	 * the wrong suite.
+	 * block-only ciphers (e.g. XTS) so a shared key length does not resolve
+	 * to the wrong suite.
 	 */
 	for (int i = 0; i < tde_cipher_count; i++)
 	{

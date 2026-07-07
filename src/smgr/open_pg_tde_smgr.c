@@ -428,9 +428,9 @@ tde_mdcreate(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool 
 	/*
 	 * When running pg_upgrade we do not want to overwrite any old keys. In
 	 * binary upgrade mode no new relfilenos are created so what we want to do
-	 * is to have copied the open_pg_tde directory with the keys before running
-	 * pg_upgrade and so we can just use exactly the same keys as we did in
-	 * the old cluster.
+	 * is to have copied the open_pg_tde directory with the keys before
+	 * running pg_upgrade and so we can just use exactly the same keys as we
+	 * did in the old cluster.
 	 */
 	if (IsBinaryUpgrade)
 		return;

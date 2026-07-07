@@ -27,9 +27,9 @@
  * Signature intentionally matches AesEncrypt/AesDecrypt in enc_aes.h.
  */
 typedef void (*TdeBlockCryptFn) (const unsigned char *key, int key_len,
-								  const unsigned char *iv,
-								  const unsigned char *in, int in_len,
-								  unsigned char *out);
+								 const unsigned char *iv,
+								 const unsigned char *in, int in_len,
+								 unsigned char *out);
 
 /*
  * Fill out[] with the CTR keystream for blocks [block1, block2) (used for the
@@ -43,8 +43,8 @@ typedef void (*TdeKeystreamFn) (void *ctxPtr, const unsigned char *key, int key_
 typedef struct TdeCipher
 {
 	uint32_t	id;				/* stable numeric id; persisted in the key map
-								 * (map_entry->cipher) and the WAL key file, so
-								 * ids must never be reused for a different
+								 * (map_entry->cipher) and the WAL key file,
+								 * so ids must never be reused for a different
 								 * algorithm. Matches the CipherType enum. */
 	const char *name;			/* stable identifier, e.g. "aes-256" */
 	uint32_t	key_len;		/* key length in bytes (16 or 32) */

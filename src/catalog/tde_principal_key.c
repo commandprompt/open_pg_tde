@@ -474,8 +474,8 @@ open_pg_tde_create_key_using_database_key_provider(PG_FUNCTION_ARGS)
 	char	   *provider_name = PG_ARGISNULL(1) ? NULL : text_to_cstring(PG_GETARG_TEXT_PP(1));
 
 	open_pg_tde_create_principal_key_internal(MyDatabaseId,
-										 key_name,
-										 provider_name);
+											  key_name,
+											  provider_name);
 
 	PG_RETURN_VOID();
 }
@@ -487,16 +487,16 @@ open_pg_tde_create_key_using_global_key_provider(PG_FUNCTION_ARGS)
 	char	   *provider_name = PG_ARGISNULL(1) ? NULL : text_to_cstring(PG_GETARG_TEXT_PP(1));
 
 	open_pg_tde_create_principal_key_internal(GLOBAL_DATA_TDE_OID,
-										 key_name,
-										 provider_name);
+											  key_name,
+											  provider_name);
 
 	PG_RETURN_VOID();
 }
 
 static void
 open_pg_tde_create_principal_key_internal(Oid providerOid,
-									 const char *key_name,
-									 const char *provider_name)
+										  const char *key_name,
+										  const char *provider_name)
 {
 
 	GenericKeyring *provider;
@@ -554,9 +554,9 @@ open_pg_tde_set_default_key_using_global_key_provider(PG_FUNCTION_ARGS)
 
 	/* Using a global provider for the default encryption setting */
 	open_pg_tde_set_principal_key_internal(GLOBAL_DATA_TDE_OID,
-									  DEFAULT_DATA_TDE_OID,
-									  principal_key_name,
-									  provider_name);
+										   DEFAULT_DATA_TDE_OID,
+										   principal_key_name,
+										   provider_name);
 
 	/*
 	 * Ensure a server (WAL) principal key exists so that operations needing
@@ -570,9 +570,9 @@ open_pg_tde_set_default_key_using_global_key_provider(PG_FUNCTION_ARGS)
 
 	if (need_server_key)
 		open_pg_tde_set_principal_key_internal(GLOBAL_DATA_TDE_OID,
-										  GLOBAL_DATA_TDE_OID,
-										  principal_key_name,
-										  provider_name);
+											   GLOBAL_DATA_TDE_OID,
+											   principal_key_name,
+											   provider_name);
 
 	PG_RETURN_VOID();
 }
@@ -585,9 +585,9 @@ open_pg_tde_set_key_using_database_key_provider(PG_FUNCTION_ARGS)
 
 	/* Using a local provider for the current database */
 	open_pg_tde_set_principal_key_internal(MyDatabaseId,
-									  MyDatabaseId,
-									  principal_key_name,
-									  provider_name);
+										   MyDatabaseId,
+										   principal_key_name,
+										   provider_name);
 
 	PG_RETURN_VOID();
 }
@@ -600,9 +600,9 @@ open_pg_tde_set_key_using_global_key_provider(PG_FUNCTION_ARGS)
 
 	/* Using a global provider for the current database */
 	open_pg_tde_set_principal_key_internal(GLOBAL_DATA_TDE_OID,
-									  MyDatabaseId,
-									  principal_key_name,
-									  provider_name);
+										   MyDatabaseId,
+										   principal_key_name,
+										   provider_name);
 
 	PG_RETURN_VOID();
 }
@@ -615,18 +615,18 @@ open_pg_tde_set_server_key_using_global_key_provider(PG_FUNCTION_ARGS)
 
 	/* Using a global provider for the global (wal) database */
 	open_pg_tde_set_principal_key_internal(GLOBAL_DATA_TDE_OID,
-									  GLOBAL_DATA_TDE_OID,
-									  principal_key_name,
-									  provider_name);
+										   GLOBAL_DATA_TDE_OID,
+										   principal_key_name,
+										   provider_name);
 
 	PG_RETURN_VOID();
 }
 
 static void
 open_pg_tde_set_principal_key_internal(Oid providerOid,
-								  Oid dbOid,
-								  const char *key_name,
-								  const char *provider_name)
+									   Oid dbOid,
+									   const char *key_name,
+									   const char *provider_name)
 {
 	TDEPrincipalKey *existingDefaultKey = NULL;
 	TDEPrincipalKey existingKeyCopy;

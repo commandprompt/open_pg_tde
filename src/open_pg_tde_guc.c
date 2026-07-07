@@ -50,7 +50,7 @@ assign_keys_size(int newval, void *extra)
 void
 TdeGucInit(void)
 {
-	DefineCustomBoolVariable("open_pg_tde.inherit_global_providers", /* name */
+	DefineCustomBoolVariable("open_pg_tde.inherit_global_providers",	/* name */
 							 "Allow using global key providers for databases.", /* short_desc */
 							 NULL,	/* long_desc */
 							 &AllowInheritGlobalProviders,	/* value address */
@@ -62,7 +62,7 @@ TdeGucInit(void)
 							 NULL	/* show_hook */
 		);
 
-	DefineCustomBoolVariable("open_pg_tde.wal_encrypt",	/* name */
+	DefineCustomBoolVariable("open_pg_tde.wal_encrypt", /* name */
 							 "Enable/Disable encryption of WAL.",	/* short_desc */
 							 NULL,	/* long_desc */
 							 &EncryptXLog,	/* value address */
@@ -99,7 +99,7 @@ TdeGucInit(void)
 							 NULL	/* show_hook */
 		);
 
-	DefineCustomEnumVariable("open_pg_tde.data_cipher",	/* name */
+	DefineCustomEnumVariable("open_pg_tde.data_cipher", /* name */
 							 "Cipher used to encrypt new table data files.",	/* short_desc */
 							 "'inherit' follows open_pg_tde.cipher; otherwise this overrides it for data files. "
 							 "The chosen cipher is recorded per table at creation time.",	/* long_desc */

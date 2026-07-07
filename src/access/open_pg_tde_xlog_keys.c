@@ -185,8 +185,8 @@ open_pg_tde_create_wal_range(WalEncryptionRange *range, WalEncryptionRangeType t
 
 	/*
 	 * The WAL key length still selects the cipher for the WAL stream; resolve
-	 * it to the matching cipher id. (Per-stream cipher selection is a separate
-	 * follow-up; today the WAL stream uses the AES-CTR keystream.)
+	 * it to the matching cipher id. (Per-stream cipher selection is a
+	 * separate follow-up; today the WAL stream uses the AES-CTR keystream.)
 	 */
 	open_pg_tde_generate_internal_key(&range->key, TdeCipherByKeyLen(key_len)->id);
 
@@ -403,8 +403,8 @@ open_pg_tde_add_wal_range_to_cache(WalEncryptionRange *range)
 
 static int
 open_pg_tde_open_wal_key_file_basic(const char *filename,
-							   int flags,
-							   bool ignore_missing)
+									int flags,
+									bool ignore_missing)
 {
 	int			fd;
 
@@ -421,8 +421,8 @@ open_pg_tde_open_wal_key_file_basic(const char *filename,
 
 static int
 open_pg_tde_open_wal_key_file_read(const char *filename,
-							  bool ignore_missing,
-							  off_t *curr_pos)
+								   bool ignore_missing,
+								   off_t *curr_pos)
 {
 	int			fd;
 	WalKeyFileHeader fheader;
@@ -448,9 +448,9 @@ open_pg_tde_open_wal_key_file_read(const char *filename,
 
 static int
 open_pg_tde_open_wal_key_file_write(const char *filename,
-							   const TDESignedPrincipalKeyInfo *signed_key_info,
-							   bool truncate,
-							   off_t *curr_pos)
+									const TDESignedPrincipalKeyInfo *signed_key_info,
+									bool truncate,
+									off_t *curr_pos)
 {
 	int			fd;
 	WalKeyFileHeader fheader;
@@ -478,9 +478,9 @@ open_pg_tde_open_wal_key_file_write(const char *filename,
 
 static void
 open_pg_tde_wal_key_file_header_read(const char *filename,
-								int fd,
-								WalKeyFileHeader *fheader,
-								off_t *bytes_read)
+									 int fd,
+									 WalKeyFileHeader *fheader,
+									 off_t *bytes_read)
 {
 	Assert(fheader);
 
@@ -500,9 +500,9 @@ open_pg_tde_wal_key_file_header_read(const char *filename,
 
 static int
 open_pg_tde_wal_key_file_header_write(const char *filename,
-								 int fd,
-								 const TDESignedPrincipalKeyInfo *signed_key_info,
-								 off_t *bytes_written)
+									  int fd,
+									  const TDESignedPrincipalKeyInfo *signed_key_info,
+									  off_t *bytes_written)
 {
 	WalKeyFileHeader fheader;
 
@@ -537,8 +537,8 @@ open_pg_tde_wal_key_file_header_write(const char *filename,
  */
 static bool
 open_pg_tde_read_one_wal_key_file_entry(int fd,
-								   WalKeyFileEntry *entry,
-								   off_t *offset)
+										WalKeyFileEntry *entry,
+										off_t *offset)
 {
 	off_t		bytes_read = 0;
 
@@ -558,8 +558,8 @@ open_pg_tde_read_one_wal_key_file_entry(int fd,
 
 static void
 open_pg_tde_read_one_wal_key_file_entry2(int fd,
-									int32 key_index,
-									WalKeyFileEntry *entry)
+										 int32 key_index,
+										 WalKeyFileEntry *entry)
 {
 	off_t		read_pos;
 
@@ -575,7 +575,7 @@ open_pg_tde_read_one_wal_key_file_entry2(int fd,
 
 static void
 open_pg_tde_write_wal_key_file_entry(const WalEncryptionRange *range,
-								const TDEPrincipalKey *principal_key)
+									 const TDEPrincipalKey *principal_key)
 {
 	int			fd;
 	off_t		curr_pos = 0;
@@ -630,9 +630,9 @@ open_pg_tde_wal_range_from_entry(const TDEPrincipalKey *principal_key, WalKeyFil
 
 static void
 open_pg_tde_write_one_wal_key_file_entry(int fd,
-									const WalKeyFileEntry *entry,
-									off_t *offset,
-									const char *db_map_path)
+										 const WalKeyFileEntry *entry,
+										 off_t *offset,
+										 const char *db_map_path)
 {
 	int			bytes_written = 0;
 
@@ -656,8 +656,8 @@ open_pg_tde_write_one_wal_key_file_entry(int fd,
 
 static void
 open_pg_tde_initialize_wal_key_file_entry(WalKeyFileEntry *entry,
-									 const TDEPrincipalKey *principal_key,
-									 const WalEncryptionRange *range)
+										  const TDEPrincipalKey *principal_key,
+										  const WalEncryptionRange *range)
 {
 	Assert(range->type == WAL_ENCRYPTION_RANGE_ENCRYPTED || range->type == WAL_ENCRYPTION_RANGE_UNENCRYPTED);
 
@@ -695,8 +695,8 @@ open_pg_tde_initialize_wal_key_file_entry(WalKeyFileEntry *entry,
  */
 void
 open_pg_tde_perform_rotate_server_key(const TDEPrincipalKey *principal_key,
-								 const TDEPrincipalKey *new_principal_key,
-								 bool write_xlog)
+									  const TDEPrincipalKey *new_principal_key,
+									  bool write_xlog)
 {
 	TDESignedPrincipalKeyInfo new_signed_key_info;
 	off_t		old_curr_pos,
@@ -935,8 +935,8 @@ typedef struct WalKeyFileEntryV1
 
 static bool
 open_pg_tde_read_one_wal_key_file_entry_v1(int fd,
-									  WalKeyFileEntryV1 *entry,
-									  off_t *offset)
+										   WalKeyFileEntryV1 *entry,
+										   off_t *offset)
 {
 	off_t		bytes_read = 0;
 

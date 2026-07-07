@@ -105,13 +105,13 @@ tde_xor_stream_distinct(char *restrict out, const char *restrict data,
  */
 void
 open_pg_tde_stream_crypt(const char *iv_prefix,
-					uint32 start_offset,
-					const char *data,
-					uint32 data_len,
-					char *out,
-					const uint8 *key,
-					int key_len,
-					void **ctxPtr)
+						 uint32 start_offset,
+						 const char *data,
+						 uint32 data_len,
+						 char *out,
+						 const uint8 *key,
+						 int key_len,
+						 void **ctxPtr)
 {
 	const uint64 aes_start_block = start_offset / AES_BLOCK_SIZE;
 	const uint64 aes_end_block = (start_offset + data_len + (AES_BLOCK_SIZE - 1)) / AES_BLOCK_SIZE;

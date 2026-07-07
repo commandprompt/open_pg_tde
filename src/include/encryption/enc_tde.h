@@ -35,13 +35,13 @@ typedef struct InternalKey
 
 extern void open_pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher);
 extern void open_pg_tde_stream_crypt(const char *iv_prefix,
-								uint32 start_offset,
-								const char *data,
-								uint32 data_len,
-								char *out,
-								const uint8 *key,
-								int key_len,
-								void **ctxPtr);
+									 uint32 start_offset,
+									 const char *data,
+									 uint32 data_len,
+									 char *out,
+									 const uint8 *key,
+									 int key_len,
+									 void **ctxPtr);
 
 extern void tde_decrypt_smgr_block(InternalKey *rel_key, ForkNumber forknum,
 								   BlockNumber blocknum, const unsigned char *in,

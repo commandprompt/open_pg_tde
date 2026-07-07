@@ -95,8 +95,8 @@ static int	open_pg_tde_open_file_write(const char *tde_filename, const TDESigned
  */
 void
 open_pg_tde_save_smgr_key(RelFileLocator rel,
-					 const InternalKey *rel_key_data,
-					 bool replace_existing)
+						  const InternalKey *rel_key_data,
+						  bool replace_existing)
 {
 	char		file_path[MAXPGPATH];
 	bool		entry_already_exists;
@@ -450,8 +450,9 @@ open_pg_tde_initialize_map_entry(TDEMapEntry *map_entry, const TDEPrincipalKey *
 	memcpy(map_entry->key_base_iv, rel_key_data->base_iv, INTERNAL_KEY_IV_LEN);
 
 	Assert(rel_key_data->key_len == 16 || rel_key_data->key_len == 32);
-	map_entry->cipher = rel_key_data->cipher;	/* recorded so reads dispatch on
-												 * the cipher chosen at creation */
+	map_entry->cipher = rel_key_data->cipher;	/* recorded so reads dispatch
+												 * on the cipher chosen at
+												 * creation */
 
 	if (!RAND_bytes(map_entry->entry_iv, MAP_ENTRY_IV_SIZE))
 		ereport(ERROR,

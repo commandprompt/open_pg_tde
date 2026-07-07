@@ -628,13 +628,13 @@ static ProcessUtility_hook_type next_ProcessUtility_hook = NULL;
  */
 static void
 open_pg_tde_proccess_utility(PlannedStmt *pstmt,
-						const char *queryString,
-						bool readOnlyTree,
-						ProcessUtilityContext context,
-						ParamListInfo params,
-						QueryEnvironment *queryEnv,
-						DestReceiver *dest,
-						QueryCompletion *qc)
+							 const char *queryString,
+							 bool readOnlyTree,
+							 ProcessUtilityContext context,
+							 ParamListInfo params,
+							 QueryEnvironment *queryEnv,
+							 DestReceiver *dest,
+							 QueryCompletion *qc)
 {
 	Node	   *parsetree = pstmt->utilityStmt;
 
