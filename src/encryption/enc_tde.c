@@ -39,6 +39,9 @@ open_pg_tde_cipher_key_length(CipherType cipher)
 			return KEY_DATA_SIZE_256;
 		case CIPHER_AES_128_XTS:
 			return KEY_DATA_SIZE_256;	/* 32-byte key (two AES-128 subkeys) */
+		case CIPHER_AES_256_XTS:
+			return 2 * KEY_DATA_SIZE_256;	/* 64-byte key (two AES-256
+											 * subkeys) */
 
 		default:
 			elog(ERROR, "failed to get key size from the unknown cipher %d",
@@ -51,7 +54,7 @@ open_pg_tde_generate_internal_key(InternalKey *int_key, CipherType cipher)
 {
 	int			key_len = open_pg_tde_cipher_key_length(cipher);
 
-	Assert(key_len == 16 || key_len == 32);
+	Assert(key_len == 16 || key_len == 32 || key_len == 64);
 
 	/*
 	 * key_len might be less then a size of the memory allocated for the key,

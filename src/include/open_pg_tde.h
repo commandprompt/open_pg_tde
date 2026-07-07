@@ -16,7 +16,7 @@
  */
 #define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x024B4557	/* version ID value = WEK
 													 * 02 */
-#define OPEN_PG_TDE_SMGR_FILE_MAGIC		  0x04454454	/* version ID value =
+#define OPEN_PG_TDE_SMGR_FILE_MAGIC		  0x05454454	/* version ID value =
 														 * TDE 04 */
 
 #define FILEMAGIC_VERSION(FM) ((FM & 0xF000000) >> 24)

@@ -105,6 +105,42 @@ The cipher id is recorded per relation, so existing tables continue to decrypt
 with the cipher they were created with, and different tables in one cluster may
 use different ciphers. WAL is unaffected (it uses AES-CTR).
 
+## The WAL key format is intentionally not bumped
+
+`INTERNAL_KEY_MAX_LEN` is used in three places: the in-memory `InternalKey`, the
+data key map entry (`TDEMapEntry.encrypted_key_data`), and the **WAL** key file
+entry (`WalKeyFileEntry.encrypted_key_data`). Growing it to 64 everywhere would
+also change the WAL key file format and force a WAL key file migration. This
+design deliberately does **not** do that: it grows the in-memory key and the
+data key map to 64, and pins the WAL key entry at its previous 32-byte size, so
+the WAL key file format is byte-for-byte unchanged.
+
+Reasoning:
+
+- **WAL genuinely never needs a 64-byte key.** WAL is encrypted with AES-CTR, a
+  stream cipher suited to append-only data. XTS is for rewritable disk blocks;
+  AES-256-XTS is meaningless for WAL. WAL keys are AES-128 (16 bytes) or AES-256
+  (32 bytes), never larger.
+- **Smaller blast radius, lower-risk upgrade.** Existing clusters' WAL key files
+  stay untouched and no WAL migration runs. Only the small data key map migrates
+  (version 4 to 5) on first startup. The most crash-sensitive subsystem is not
+  disturbed. Bumping both formats would waste 32 bytes per WAL entry, require a
+  WAL migration, and buy nothing.
+- **The two key files already version independently.** The data key map and the
+  WAL key file have separate magics (`OPEN_PG_TDE_SMGR_FILE_MAGIC` and
+  `OPEN_PG_TDE_WAL_KEY_FILE_MAGIC`). A change that only affects data-file ciphers
+  should not force a WAL format bump; decoupling their evolution is correct.
+
+Implication and safeguard: pinning the WAL entry at 32 bytes while the in-memory
+`InternalKey.key` is 64 creates an invariant, that a WAL key is always at most
+32 bytes. Nothing can violate it today, because WAL ranges only ever use CTR
+ciphers. To keep a future change from silently overflowing the 32-byte WAL
+buffer, the WAL key write path keeps its `key_len == 16 || key_len == 32`
+assertion (it is not relaxed like the data path) and adds an always-on runtime
+check that fails loudly if a key longer than the WAL entry ever reaches it.
+`INTERNAL_KEY_MAX_LEN` therefore documents the in-memory and data-key maximum,
+while the WAL entry size is fixed independently.
+
 ## Migration and compatibility
 
 - Existing clusters: the key map files migrate from version 4 to 5 on the first
