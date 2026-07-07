@@ -1,4 +1,4 @@
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/jdatcmd/open_pg_tde/badge)](https://scorecard.dev/viewer/?uri=github.com/jdatcmd/open_pg_tde)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/commandprompt/open_pg_tde/badge)](https://scorecard.dev/viewer/?uri=github.com/commandprompt/open_pg_tde)
 
 # open_pg_tde: Transparent Data Encryption for PostgreSQL
 
@@ -41,7 +41,7 @@ Percona provides binary packages of `open_pg_tde` extension only for Percona Ser
 
 To run `open_pg_tde` in Docker, follow the instructions in the [official open_pg_tde Docker documentation](https://docs.percona.com/postgresql/17/docker.html#enable-encryption).
 
-_For details on the build process and developer setup, see [Make Builds for Developers](https://github.com/jdatcmd/open_pg_tde/wiki/Make-builds-for-developers)._
+_For details on the build process and developer setup, see [Make Builds for Developers](https://github.com/commandprompt/open_pg_tde/wiki/Make-builds-for-developers)._
 
 ## Set up open_pg_tde
 

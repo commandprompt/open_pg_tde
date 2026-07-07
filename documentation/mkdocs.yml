@@ -1,13 +1,13 @@
 # MkDocs general configuration
 
-site_name: Percona Transparent Data Encryption for PostgreSQL
+site_name: open_pg_tde - Transparent Data Encryption for PostgreSQL
 site_description: Documentation
-site_author: Percona LLC
+site_author: Command Prompt, Inc.
 copyright: >
-  <a href="https://www.percona.com/about">Percona LLC</a> and/or its affiliates © 2026 — <a href="#__consent">Cookie Consent</a>
+  <a href="https://www.commandprompt.com/">Command Prompt, Inc.</a> © 2026
 
-repo_name: jdatcmd/open_pg_tde
-repo_url: https://github.com/jdatcmd/open_pg_tde
+repo_name: commandprompt/open_pg_tde
+repo_url: https://github.com/commandprompt/open_pg_tde
 edit_uri: edit/main/documentation/docs
 
 use_directory_urls: false
@@ -17,7 +17,6 @@ theme:
   name: material
   logo: _images/postgresql-mark.svg
   favicon: _images/postgresql-fav.svg
-  custom_dir: _resourcepdf/overrides
   font:
     text: Roboto
   palette:
@@ -26,14 +25,14 @@ theme:
         icon: material/brightness-auto
         name: Color theme set to Automatic. Click to change
     - media: "(prefers-color-scheme: light)"
-      scheme: percona-light
+      scheme: default
       primary: custom
       accent: custom
       toggle:
         icon: material/brightness-7
         name: Color theme set to Light Mode. Click to change
     - media: "(prefers-color-scheme: dark)"
-      scheme: percona-dark
+      scheme: slate
       primary: custom
       accent: custom
       toggle:
@@ -58,17 +57,13 @@ extra_css:
   - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css
   - css/extra.css
   - css/design.css
-  - css/osano.css
   - css/postgresql.css
   - css/rating.css
-  - css/kapa.css
 
 extra_javascript:
   - js/version-select.js
   - js/promptremover.js
-  - js/consent.js
   - js/rating.js
-  - js/kapa.js
 
 markdown_extensions:
   - attr_list
@@ -121,7 +116,7 @@ plugins:
         - 'variables.yml' # Use in markdown as '{{ VAR }}'
   - print-site:
       add_to_navigation: false
-      print_page_title: 'Percona Transparent Data Encryption documentation'
+      print_page_title: 'open_pg_tde documentation'
       add_print_site_banner: false
       # Table of contents
       add_table_of_contents: true

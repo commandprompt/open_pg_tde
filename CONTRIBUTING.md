@@ -71,7 +71,7 @@ To build `open_pg_tde` from source code, you require the following:
 * gcc or clang
 * Percona Server for PostgreSQL 17 or later
 
-Refer to the [Building from source code](https://github.com/jdatcmd/open_pg_tde?tab=readme-ov-file#building-from-sources-for-community-postgresql) section for guidelines.
+Refer to the [Building from source code](https://github.com/commandprompt/open_pg_tde?tab=readme-ov-file#building-from-sources-for-community-postgresql) section for guidelines.
 
 ### Run tests
 
