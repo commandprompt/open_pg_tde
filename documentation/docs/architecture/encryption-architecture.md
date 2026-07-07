@@ -23,9 +23,11 @@ A table with 4 indexes will have at least 5 internal keys, one for the table and
 
 `pg_tde` currently uses the following encryption algorithms:
 
-* `AES-128-CBC`, `AES-256-CBC` for encrypting database files; encrypted with internal keys
+* `AES-128-XTS` (default) or `AES-128-CBC` / `AES-256-CBC` for encrypting database files, selected by [`pg_tde.data_cipher`](../variables.md#pg_tdedata_cipher); encrypted with internal keys
 * `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
 * `AES-128-GCM`, `AES-256-GCM` for encrypting internal keys; encrypted with the principal key
+
+Temporary files produced by query execution (for example, sorts and hashes that spill to disk) are not encrypted. Encrypting them requires a hook in the PostgreSQL temporary file path that the current server does not provide.
 
 ## Pluggable cipher providers
 

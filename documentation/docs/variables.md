@@ -74,14 +74,15 @@ The setting applies only to objects created after the value is set, including pr
 ## pg_tde.data_cipher
 
 **Type** - enum <br>
-**Default** - inherit
+**Default** - aes_xts
 
 Selects the cipher used to encrypt the data files of **new** encrypted tables (`tde_heap`). Supported values:
 
-* `inherit` - follow the [`pg_tde.cipher`](#pg_tdecipher) setting (default; preserves the historical behavior)
-* `aes_128` - AES 128-bit
-* `aes_256` - AES 256-bit
+* `aes_xts` - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.
+* `aes_256` - AES-256-CBC.
+* `aes_128` - AES-128-CBC.
+* `inherit` - follow the [`pg_tde.cipher`](#pg_tdecipher) setting.
 
-The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `pg_tde.data_cipher` therefore only affects tables created afterwards; existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
+The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `pg_tde.data_cipher` therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
 
-This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format.
+This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format. WAL is always encrypted with AES-CTR and is not affected by this setting.
