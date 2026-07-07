@@ -97,7 +97,8 @@ scratch. Two lessons already recorded:
 |------------|-----------|-----|----------------|-------------------|
 | 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance, CREATE DATABASE) | **Done** (encrypt, recovery, archiving, key TLI) | **Done** (rewind, basebackup, upgrade) | **Done** (verified OFF=clean PG / ON=encrypts; `verify-gate.sh`) |
 | 17 | Done | Done | Done | Done (verified OFF=clean PG / ON=encrypts) |
-| 14 - 16 | Patch series in progress | | | |
+| 16 | Done | Done | Done | Done (verified OFF=clean PG / ON=encrypts) |
+| 14 - 15 | Not supported by the extension | | | |
 
 **PostgreSQL 18: full extension suite passes (42/42). PostgreSQL 17: 41/42
 (one test, `keys_update`, requires PG18 and self-skips).** Run the suite with

@@ -2,19 +2,19 @@
 CREATE EXTENSION open_pg_tde;
 SELECT open_pg_tde_add_database_key_provider_file('file-vault','/tmp/open_pg_tde_test_keyring.per');
  open_pg_tde_add_database_key_provider_file 
----------------------------------------
+--------------------------------------------
  
 (1 row)
 
 SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key','file-vault');
  open_pg_tde_create_key_using_database_key_provider 
------------------------------------------------
+----------------------------------------------------
  
 (1 row)
 
 SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key','file-vault');
  open_pg_tde_set_key_using_database_key_provider 
---------------------------------------------
+-------------------------------------------------
  
 (1 row)
 
@@ -56,7 +56,7 @@ SELECT relname, open_pg_tde_is_encrypted(relname) FROM (VALUES ('test_enc_pkey')
 ERROR:  relation "test_part_pkey" does not exist
 SELECT open_pg_tde_is_encrypted(NULL);
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  
 (1 row)
 

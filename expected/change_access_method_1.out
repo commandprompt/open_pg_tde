@@ -2,19 +2,19 @@
 CREATE EXTENSION open_pg_tde;
 SELECT open_pg_tde_add_database_key_provider_file('file-vault', '/tmp/open_pg_tde_test_keyring.per');
  open_pg_tde_add_database_key_provider_file 
----------------------------------------
+--------------------------------------------
  
 (1 row)
 
 SELECT open_pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
  open_pg_tde_create_key_using_database_key_provider 
------------------------------------------------
+----------------------------------------------------
  
 (1 row)
 
 SELECT open_pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
  open_pg_tde_set_key_using_database_key_provider 
---------------------------------------------
+-------------------------------------------------
  
 (1 row)
 
@@ -37,19 +37,19 @@ SELECT * FROM country_table;
 
 SELECT open_pg_tde_is_encrypted('country_table');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_pkey');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
@@ -73,19 +73,19 @@ SELECT * FROM country_table;
 
 SELECT open_pg_tde_is_encrypted('country_table');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  f
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  f
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_pkey');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  f
 (1 row)
 
@@ -111,19 +111,19 @@ SELECT * FROM country_table;
 
 SELECT open_pg_tde_is_encrypted('country_table');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_country_id_seq');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
 SELECT open_pg_tde_is_encrypted('country_table_pkey');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
@@ -135,7 +135,7 @@ LINE 1: ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
                                                     ^
 SELECT open_pg_tde_is_encrypted('country_table');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
@@ -146,7 +146,7 @@ LINE 1: ALTER TABLE country_table SET ACCESS METHOD DEFAULT;
                                                     ^
 SELECT open_pg_tde_is_encrypted('country_table');
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
@@ -154,7 +154,7 @@ RESET default_table_access_method;
 ALTER TABLE country_table ADD y text;
 SELECT open_pg_tde_is_encrypted('pg_toast.pg_toast_' || 'country_table'::regclass::oid);
  open_pg_tde_is_encrypted 
----------------------
+--------------------------
  t
 (1 row)
 
