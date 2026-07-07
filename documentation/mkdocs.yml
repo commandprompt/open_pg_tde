@@ -181,6 +181,7 @@ nav:
       - "Key and provider management": architecture/key-provider-management.md
     - "Usage reference": advanced-topics/usage-guide.md
     - "GUC variables": variables.md
+    - "Performance": advanced-topics/performance.md
     - "Functions": functions.md
     - "Streaming replication with tde_heap": replication.md
   - "TDE operations":
