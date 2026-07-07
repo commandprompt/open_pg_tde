@@ -370,6 +370,7 @@ tap_tests = [
   't/tde_heap.pl',
   't/unlogged_tables.pl',
   't/wal_archiving.pl',
+  't/checksum_hint_bits.pl',
   't/wal_encrypt.pl',
   't/wal_key_tli.pl',
 ]
