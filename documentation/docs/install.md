@@ -1,47 +1,35 @@
 # Install open_pg_tde
 
-You can select from multiple easy-to-follow installation options to install `open_pg_tde`, however **we strongly recommend using a Package Manager** for a convenient and quick installation.
+`open_pg_tde` runs on **standard, upstream PostgreSQL 14 and later**. It does not
+require a vendor fork of the server. Because encryption relies on storage-manager
+and WAL extensibility that upstream PostgreSQL does not yet expose, you install
+`open_pg_tde` by applying a small, gated core patch to a stock PostgreSQL source
+tree and building it, then building the extension against that install.
 
-`open_pg_tde` availability by PostgreSQL version:
+=== ":octicons-git-branch-16: From source (recommended)"
 
-| **PostgreSQL version** | **Is open_pg_tde installed automatically?** | **Action Required** |
-| -------- | -------- | -------- |
-| 17.x - 17.6 (minor updates) | Yes | None |
-| 17.7 (and later) | No | Install the package manually |
-| 18.x (and later) | No | Install the package manually |
+    Apply the `open_pg_tde` core patch to a stock PostgreSQL 14+ source tree,
+    build with the hooks enabled, and build the extension against it. This is the
+    supported path and works on any platform that can build PostgreSQL.
 
-!!! important
-    Starting with PPG 17.7, `open_pg_tde` is no longer bundled with the Percona server for PostgreSQL package. It is now delivered as a separate package named `percona-pg-tde(pg-version)` for Debian or Ubuntu and `percona-open_pg_tde(pg-version)` for Red Hat Enterprise Linux and Derivatives.
+    [Install from source :material-arrow-right:](install-from-source.md){.md-button}
 
-!!! note
-    Specific information on the supported platforms, products, and versions is described in the [Percona Software and Platform Lifecycle :octicons-link-external-16:](https://www.percona.com/services/policies/percona-software-support-lifecycle) page.
+=== ":octicons-package-16: Prebuilt packages"
 
-=== ":octicons-terminal-16: Package manager"
+    Prebuilt DEB and RPM packages of `open_pg_tde` together with a compatible
+    PostgreSQL build are planned. When available, they will be documented here.
 
-    Percona provides installation packages in DEB and RPM formats for 64-bit Linux distributions.
+## Supported PostgreSQL versions
 
-    If you are on Debian or Ubuntu, use `apt` for installation.
+| **PostgreSQL major** | **Status** |
+| -------- | -------- |
+| 18 | Supported |
+| 14 - 17 | Patch series in progress |
 
-    If you are on Red Hat Enterprise Linux or compatible derivatives, use `yum` for installation.
-
-    [Install on Debian or Ubuntu :material-arrow-right:](apt.md){.md-button}
-    [Install on RHEL or derivatives :material-arrow-right:](yum.md){.md-button}
-
-=== ":simple-docker: Docker"
-
-    `open_pg_tde` is a part of the Percona Distribution for PostgreSQL Docker image. Use this image to enjoy full encryption capabilities. Check below to get access to a detailed step-by-step guide. 
-
-    [Run in Docker :octicons-link-external-16:](https://docs.percona.com/postgresql/17/docker.html#enable-encryption){.md-button}
-
-=== ":simple-kubernetes: Kubernetes"
-
-    You can enable `open_pg_tde` when deploying Percona Server for PostgreSQL in Kubernetes using the Percona Operator.
-
-=== ":octicons-download-16: Tar download (not recommended)"
-
-    `open_pg_tde` is included in the Percona Distribution for PostgreSQL tarball. Select the below link to access the step-by-step guide. 
-
-    [Install from tarballs :material-arrow-right:](https://docs.percona.com/postgresql/18/tarball.html){.md-button}
+The core patch is maintained as a per-major-version series, since the storage
+manager interface changes between PostgreSQL majors. See
+`patches/postgresql/README.md` in the source tree for the current status and the
+maintenance process.
 
 ## Next steps
 

@@ -156,8 +156,7 @@ nav:
     - "Versions and supported PostgreSQL deployments": index/supported-versions.md
   - "Get started":
     - "1. Install open_pg_tde": install.md
-    - "1.1 Via apt": apt.md
-    - "1.2 Via yum": yum.md
+    - "1.1 Install from source": install-from-source.md
     - "2. Configure open_pg_tde": setup.md
     - "2.1 Configure key management (KMS)": 
       - "Key management overview": global-key-provider-configuration/overview.md
