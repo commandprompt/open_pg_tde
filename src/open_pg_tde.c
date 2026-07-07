@@ -16,7 +16,6 @@
 #include "storage/lwlock.h"
 #include "storage/shmem.h"
 #include "utils/builtins.h"
-#include "utils/percona.h"
 
 #include "access/open_pg_tde_tdemap.h"
 #include "access/open_pg_tde_xlog.h"
@@ -110,8 +109,6 @@ _PG_init(void)
 		 */
 		elog(FATAL, "open_pg_tde can only be loaded at server startup. Restart required.");
 	}
-
-	check_percona_api_version();
 
 	open_pg_tde_init_data_dir();
 	AesInit();
