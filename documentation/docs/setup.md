@@ -82,6 +82,15 @@ instead. Data checksums also verify page integrity on read; the checksum is
 computed on the plaintext page and then the page is encrypted, so verification
 runs on the decrypted page and works normally with `open_pg_tde`.
 
+PostgreSQL 18 enables data checksums by default, so a default PostgreSQL 18
+cluster is already safe. On earlier versions checksums are off unless you enable
+them. If neither data checksums nor `wal_log_hints` is enabled, `open_pg_tde`
+emits a warning at server start:
+
+```
+WARNING:  open_pg_tde is loaded but neither data checksums nor wal_log_hints is enabled
+```
+
 ## Next steps
 
 [Configure Key Management (KMS) :material-arrow-right:](global-key-provider-configuration/overview.md){.md-button}

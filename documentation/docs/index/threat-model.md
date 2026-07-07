@@ -61,7 +61,9 @@ running server:
 - **Enable data checksums.** `open_pg_tde` encrypts a whole page as one unit, so
   a hint-bit update re-encrypts the page. Initialize the cluster with
   `initdb --data-checksums` (or set `wal_log_hints = on`) so hint-bit changes
-  are WAL-logged and torn writes are recoverable. See
+  are WAL-logged and torn writes are recoverable. PostgreSQL 18 enables data
+  checksums by default. If neither data checksums nor `wal_log_hints` is
+  enabled, `open_pg_tde` warns at server start. See
   [Configure open_pg_tde](../setup.md#recommended-enable-data-checksums).
 
 ## Summary

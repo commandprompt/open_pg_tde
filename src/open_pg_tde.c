@@ -120,6 +120,18 @@ _PG_init(void)
 	RegisterTdeRmgr();
 	RegisterStorageMgr();
 
+	/*
+	 * open_pg_tde encrypts each page as a whole, so a hint-bit update
+	 * re-encrypts the page. If hint-bit changes are not WAL-logged, a torn
+	 * write of a hint-bit-only change during a crash may not be recoverable.
+	 * Warn if neither data checksums nor wal_log_hints is enabled.
+	 */
+	if (!XLogHintBitIsNeeded())
+		ereport(WARNING,
+				errmsg("open_pg_tde is loaded but neither data checksums nor wal_log_hints is enabled"),
+				errdetail("Encrypted pages are encrypted as a whole, so a hint-bit update re-encrypts the page. Without hint-bit WAL logging, a torn write of a hint-bit-only page change during a crash may not be recoverable."),
+				errhint("Initialize the cluster with data checksums (initdb --data-checksums) or set wal_log_hints = on."));
+
 	prev_shmem_request_hook = shmem_request_hook;
 	shmem_request_hook = tde_shmem_request;
 	prev_shmem_startup_hook = shmem_startup_hook;
