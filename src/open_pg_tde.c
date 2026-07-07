@@ -6,6 +6,10 @@
 #include "postgres.h"
 
 #include <unistd.h>
+#include <openssl/evp.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/provider.h>
+#endif
 
 #include "access/tableam.h"
 #include "access/xlog.h"
@@ -96,6 +100,32 @@ tde_shmem_startup(void)
 	LWLockRelease(AddinShmemInitLock);
 }
 
+/*
+ * When open_pg_tde.require_fips is on, verify that OpenSSL will use its
+ * FIPS-validated provider for cryptography, and refuse to start otherwise. All
+ * of open_pg_tde's ciphers (AES in CBC, CTR, XTS, and GCM) are FIPS-approved,
+ * so this makes the whole extension run on validated cryptography.
+ */
+static void
+open_pg_tde_check_fips(void)
+{
+	if (!RequireFips)
+		return;
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	if (EVP_default_properties_is_fips_enabled(NULL) != 1 ||
+		!OSSL_PROVIDER_available(NULL, "fips"))
+		ereport(FATAL,
+				errmsg("open_pg_tde.require_fips is set but OpenSSL is not in FIPS mode"),
+				errdetail("The OpenSSL FIPS provider is not active, so cryptography would not use FIPS-validated implementations."),
+				errhint("Configure the OpenSSL FIPS provider, or turn off open_pg_tde.require_fips."));
+#else
+	ereport(FATAL,
+			errmsg("open_pg_tde.require_fips requires OpenSSL 3.0 or later"),
+			errhint("Turn off open_pg_tde.require_fips, or build against OpenSSL 3.0 or later with the FIPS provider."));
+#endif
+}
+
 void
 _PG_init(void)
 {
@@ -114,6 +144,7 @@ _PG_init(void)
 	open_pg_tde_init_data_dir();
 	AesInit();
 	TdeGucInit();
+	open_pg_tde_check_fips();
 #ifdef USE_TDE_HOOKS
 	TdeTempFileInit();
 #endif

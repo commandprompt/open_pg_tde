@@ -65,6 +65,9 @@ running server:
   checksums by default. If neither data checksums nor `wal_log_hints` is
   enabled, `open_pg_tde` warns at server start. See
   [Configure open_pg_tde](../setup.md#recommended-enable-data-checksums).
+- **Use a FIPS build of OpenSSL where required.** All of open_pg_tde's
+  algorithms are FIPS-approved, and it can enforce that OpenSSL is in FIPS mode.
+  See [FIPS compliance](fips.md).
 
 ## Summary
 

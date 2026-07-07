@@ -13,6 +13,7 @@
 bool		AllowInheritGlobalProviders = true;
 bool		EncryptXLog = false;
 bool		EnforceEncryption = false;
+bool		RequireFips = false;
 int			Cipher = CIPHER_AES_128;
 int			KeyLength = KEY_DATA_SIZE_128;
 
@@ -81,6 +82,20 @@ TdeGucInit(void)
 							 &EnforceEncryption,	/* value address */
 							 false, /* boot value */
 							 PGC_SUSET, /* context */
+							 0, /* flags */
+							 NULL,	/* check_hook */
+							 NULL,	/* assign_hook */
+							 NULL	/* show_hook */
+		);
+
+	DefineCustomBoolVariable("open_pg_tde.require_fips",	/* name */
+							 "Refuse to start unless OpenSSL is in FIPS mode.", /* short_desc */
+							 "When on, open_pg_tde verifies at startup that the OpenSSL FIPS "
+							 "provider is active and raises a fatal error otherwise, so that all "
+							 "encryption uses FIPS-validated cryptography.",	/* long_desc */
+							 &RequireFips,	/* value address */
+							 false, /* boot value */
+							 PGC_POSTMASTER,	/* context */
 							 0, /* flags */
 							 NULL,	/* check_hook */
 							 NULL,	/* assign_hook */

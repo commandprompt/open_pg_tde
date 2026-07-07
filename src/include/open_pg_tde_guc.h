@@ -10,6 +10,7 @@
 extern bool AllowInheritGlobalProviders;
 extern bool EncryptXLog;
 extern bool EnforceEncryption;
+extern bool RequireFips;
 extern int	Cipher;
 extern int	DataCipher;
 extern int	KeyLength;
