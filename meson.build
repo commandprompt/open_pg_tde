@@ -72,7 +72,7 @@ lz4 = dependency('liblz4', required: false)
 z = dependency('zlib')
 zstd = dependency('libzstd', required: false)
 
-major_version = version.split(' ')[1].split('.')[0].to_int()
+major_version = version.split(' ')[1].split('.')[0].split('beta')[0].split('rc')[0].split('devel')[0].to_int()
 
 fetools = 'fetools/pg@0@'.format(major_version)
 
