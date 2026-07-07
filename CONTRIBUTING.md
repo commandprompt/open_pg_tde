@@ -89,6 +89,10 @@ The tests live in the `sql` and `t` directories.
 
 Tests also run automatically through GitHub Actions when you open a pull request.
 
+### Build the release tarballs
+
+Maintainers cutting a release build one source tarball per supported PostgreSQL major with `ci_scripts/build-source-tarballs.sh` and publish them as GitHub release assets. See [RELEASING.md](RELEASING.md) for the full process.
+
 ## Documentation contribution
 
 To contribute to the documentation, see the [documentation contributing guide](documentation/documentation-contributing.md).
