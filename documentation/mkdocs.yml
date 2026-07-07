@@ -153,6 +153,7 @@ nav:
       - "Impact of open_pg_tde on database operations": index/what-tde-impacts.md
       - "Encrypted data scope": index/tde-encrypts.md
       - "Threat model": index/threat-model.md
+      - "FIPS compliance": index/fips.md
       - "Table access methods and open_pg_tde": index/table-access-method.md
     - "Limitations of open_pg_tde": index/tde-limitations.md
     - "Versions and supported PostgreSQL deployments": index/supported-versions.md

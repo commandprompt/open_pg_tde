@@ -28,7 +28,7 @@ A `boolean` variable that controls whether temporary files written to disk durin
 
 This variable is defined by the patched PostgreSQL server, so it is not prefixed with `open_pg_tde`. It requires a server restart and can only be set at the server level.
 
-`open_pg_tde` encrypts temporary files with AES-128-CBC using a key generated at server startup and held only in memory. Because temporary files never outlive the cluster, the key is never written to disk, and the data cannot be recovered once the server stops.
+`open_pg_tde` encrypts temporary files with AES-128-XTS, keyed by each buffer's position, using a key generated at server startup and held only in memory. A buffer shorter than one AES block is masked with an AES-128-CTR keystream. Both are FIPS-approved modes. Because temporary files never outlive the cluster, the key is never written to disk, and the data cannot be recovered once the server stops.
 
 ## open_pg_tde.enforce_encryption
 
@@ -98,3 +98,12 @@ Selects the cipher used to encrypt the data files of **new** encrypted tables (`
 The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `open_pg_tde.data_cipher` therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
 
 This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format. WAL is always encrypted with AES-CTR and is not affected by this setting.
+
+## open_pg_tde.require_fips
+
+**Type** - boolean <br>
+**Default** - off
+
+A `boolean` variable that requires OpenSSL to be in FIPS mode. When on, `open_pg_tde` verifies at startup that the OpenSSL FIPS provider is active and raises a fatal error if it is not, so the server does not run with non-validated cryptography. It requires a server restart and can only be set at the server level.
+
+This variable does not put OpenSSL into FIPS mode; it enforces that OpenSSL is already configured for FIPS. See [FIPS compliance](index/fips.md) for how to configure the FIPS provider and what open_pg_tde does and does not certify.

@@ -10,16 +10,21 @@
  * Temporary files (sorts, hashes, and other BufFile spills) never outlive the
  * cluster: they are removed on restart and after a crash. The key that
  * protects them therefore does not need to be persisted or recovered. This
- * module generates a random AES-128 internal key in the postmaster, held only
- * in memory and inherited by every backend through fork, so backends that
- * share a temporary file set (for example parallel workers) use the same key.
- * Because the key is never written to disk, temporary data on disk cannot be
- * recovered once the cluster stops, even with access to the storage media.
+ * module generates random keys in the postmaster, held only in memory and
+ * inherited by every backend through fork, so backends that share a temporary
+ * file set (for example parallel workers) use the same keys. Because the keys
+ * are never written to disk, temporary data on disk cannot be recovered once
+ * the cluster stops, even with access to the storage media.
  *
- * The buffer transformation is AES-128-CBC per 8 kB block, with the IV derived
- * from the block's logical position, and a partial trailing sub-block masked
- * with an AES-ECB keystream so the ciphertext length equals the plaintext
- * length and file offsets are unchanged.
+ * The buffer transformation is AES-128-XTS, keyed by the block's logical
+ * position through the XTS tweak. XTS is length-preserving for any buffer of at
+ * least one AES block (it uses ciphertext stealing for a non-block-multiple
+ * length) and is safe when a block position is rewritten in place, which
+ * temporary-file space reuse does. A buffer shorter than one AES block cannot
+ * use XTS; such a tail is masked with an AES-128-CTR keystream instead. Both
+ * XTS (NIST SP 800-38E) and CTR (SP 800-38A) are FIPS-approved modes, so with a
+ * FIPS build of OpenSSL every temporary-file operation uses approved
+ * cryptography. See documentation/docs/index/fips.md.
  *
  *-------------------------------------------------------------------------
  */
@@ -35,11 +40,14 @@
 
 #include "open_pg_tde_tempfile.h"
 
-#define TEMPFILE_KEY_LEN 16		/* AES-128 */
+#define TEMPFILE_XTS_KEY_LEN 32 /* AES-128-XTS: two independent 128-bit keys */
+#define TEMPFILE_CTR_KEY_LEN 16 /* AES-128-CTR, for sub-block tails */
 #define TEMPFILE_IV_LEN 16
+#define AES_BLOCK_LEN 16
 
 static bool tempfile_key_ready = false;
-static unsigned char tempfile_key[TEMPFILE_KEY_LEN];
+static unsigned char tempfile_xts_key[TEMPFILE_XTS_KEY_LEN];
+static unsigned char tempfile_ctr_key[TEMPFILE_CTR_KEY_LEN];
 static unsigned char tempfile_base_iv[TEMPFILE_IV_LEN];
 
 static void tempfile_encrypt(char *data, int nbytes, int64 blocknum);
@@ -53,8 +61,8 @@ tempfile_ssl_error(const char *what)
 }
 
 /*
- * Generate the ephemeral temporary-file key. Called once in the postmaster so
- * the key is inherited by all backends through fork.
+ * Generate the ephemeral temporary-file keys. Called once in the postmaster so
+ * they are inherited by all backends through fork.
  */
 static void
 tempfile_init_key(void)
@@ -62,14 +70,15 @@ tempfile_init_key(void)
 	if (tempfile_key_ready)
 		return;
 
-	if (!pg_strong_random(tempfile_key, TEMPFILE_KEY_LEN) ||
+	if (!pg_strong_random(tempfile_xts_key, TEMPFILE_XTS_KEY_LEN) ||
+		!pg_strong_random(tempfile_ctr_key, TEMPFILE_CTR_KEY_LEN) ||
 		!pg_strong_random(tempfile_base_iv, TEMPFILE_IV_LEN))
 		elog(FATAL, "open_pg_tde: could not generate temporary file key");
 
 	tempfile_key_ready = true;
 }
 
-/* Derive a per-block IV by mixing the block position into the base IV. */
+/* Derive a per-block IV (XTS tweak) by mixing the block position into the base. */
 static void
 tempfile_block_iv(int64 blocknum, unsigned char *iv)
 {
@@ -78,8 +87,13 @@ tempfile_block_iv(int64 blocknum, unsigned char *iv)
 		iv[TEMPFILE_IV_LEN - 1 - i] ^= (unsigned char) (blocknum >> (8 * i));
 }
 
+/*
+ * AES-128-XTS one buffer in place. The block position is the XTS tweak. len
+ * must be at least one AES block; XTS uses ciphertext stealing for a length
+ * that is not a block multiple, so the output length equals the input length.
+ */
 static void
-tempfile_run_cbc(int enc, const unsigned char *iv, unsigned char *buf, int len)
+tempfile_run_xts(int enc, const unsigned char *iv, unsigned char *buf, int len)
 {
 	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 	int			outl;
@@ -88,49 +102,55 @@ tempfile_run_cbc(int enc, const unsigned char *iv, unsigned char *buf, int len)
 	if (ctx == NULL)
 		tempfile_ssl_error("EVP_CIPHER_CTX_new");
 
-	if (EVP_CipherInit_ex(ctx, EVP_aes_128_cbc(), NULL, tempfile_key, iv, enc) == 0 ||
+	if (EVP_CipherInit_ex(ctx, EVP_aes_128_xts(), NULL, tempfile_xts_key, iv, enc) == 0 ||
 		EVP_CIPHER_CTX_set_padding(ctx, 0) == 0 ||
 		EVP_CipherUpdate(ctx, buf, &outl, buf, len) == 0 ||
 		EVP_CipherFinal_ex(ctx, buf + outl, &finall) == 0)
 	{
 		EVP_CIPHER_CTX_free(ctx);
-		tempfile_ssl_error("AES-128-CBC");
+		tempfile_ssl_error("AES-128-XTS");
 	}
 	EVP_CIPHER_CTX_free(ctx);
 	Assert(outl + finall == len);
 }
 
-/* AES-ECB of a single 16-byte block, used to mask a sub-block tail. */
+/*
+ * AES-128-CTR one buffer in place, for a tail shorter than one AES block. CTR
+ * is its own inverse, so the same routine encrypts and decrypts.
+ */
 static void
-tempfile_ecb_block(const unsigned char *in16, unsigned char *out16)
+tempfile_run_ctr(const unsigned char *iv, unsigned char *buf, int len)
 {
 	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 	int			outl;
+	int			finall;
 
 	if (ctx == NULL)
 		tempfile_ssl_error("EVP_CIPHER_CTX_new");
 
-	if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, tempfile_key, NULL) == 0 ||
+	if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ctr(), NULL, tempfile_ctr_key, iv) == 0 ||
 		EVP_CIPHER_CTX_set_padding(ctx, 0) == 0 ||
-		EVP_EncryptUpdate(ctx, out16, &outl, in16, 16) == 0)
+		EVP_EncryptUpdate(ctx, buf, &outl, buf, len) == 0 ||
+		EVP_EncryptFinal_ex(ctx, buf + outl, &finall) == 0)
 	{
 		EVP_CIPHER_CTX_free(ctx);
-		tempfile_ssl_error("AES-128-ECB");
+		tempfile_ssl_error("AES-128-CTR");
 	}
 	EVP_CIPHER_CTX_free(ctx);
+	Assert(outl + finall == len);
 }
 
 /*
- * Encrypt or decrypt one temporary-file buffer in place. Full 16-byte blocks
- * are transformed with CBC; a partial trailing sub-block is masked with an ECB
- * keystream so the length is preserved.
+ * Encrypt or decrypt one temporary-file buffer in place. A buffer of at least
+ * one AES block is transformed with XTS; a shorter tail is masked with a CTR
+ * keystream. The encrypt and decrypt directions must agree on the mode for a
+ * given (blocknum, nbytes), which they do because a buffer is always read back
+ * at the length it was written.
  */
 static void
 tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum)
 {
 	unsigned char iv[TEMPFILE_IV_LEN];
-	int			full = nbytes & ~15;
-	int			rem = nbytes - full;
 
 	if (nbytes <= 0)
 		return;
@@ -139,20 +159,10 @@ tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum)
 
 	tempfile_block_iv(blocknum, iv);
 
-	if (full > 0)
-		tempfile_run_cbc(enc, iv, (unsigned char *) data, full);
-
-	if (rem > 0)
-	{
-		unsigned char ks[16];
-		unsigned char iv2[16];
-
-		memcpy(iv2, iv, 16);
-		iv2[0] ^= 0x80;
-		tempfile_ecb_block(iv2, ks);
-		for (int i = 0; i < rem; i++)
-			data[full + i] ^= ks[i];
-	}
+	if (nbytes >= AES_BLOCK_LEN)
+		tempfile_run_xts(enc, iv, (unsigned char *) data, nbytes);
+	else
+		tempfile_run_ctr(iv, (unsigned char *) data, nbytes);
 }
 
 static void
@@ -169,7 +179,8 @@ tempfile_decrypt(char *data, int nbytes, int64 blocknum)
 
 /*
  * Install the temporary-file encryption hooks. Called from _PG_init in the
- * postmaster. The key is generated here so it is inherited by every backend.
+ * postmaster. The keys are generated here so they are inherited by every
+ * backend.
  */
 void
 TdeTempFileInit(void)
