@@ -22,6 +22,16 @@ patches/postgresql/
 
 There is one series per PostgreSQL major version because the SMGR interface
 changes between majors (zeroextend in 16, readv/writev in 17, AIO in 18).
+`apply.sh` applies every `*.patch` in the version directory in order. Each
+version currently has two patches:
+
+- `0001-*` adds the pluggable storage manager and WAL storage manager (data
+  file and WAL encryption).
+- `0002-*` adds the temporary-file encryption hook (`encrypt_temp_files`), so
+  the extension can encrypt query-spill files.
+
+Both are gated behind `USE_TDE_HOOKS`; with the flag off, the patched tree
+builds as clean PostgreSQL.
 
 ## Applying
 

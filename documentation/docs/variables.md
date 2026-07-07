@@ -19,6 +19,17 @@ This variable only controls new writes to the WAL, it doesn't affect existing WA
 
 Enabling WAL encryption requires a configured global principal key. Refer to the [WAL encryption configuration](wal-encryption.md) topic for more information.
 
+## encrypt_temp_files
+
+**Type** - boolean <br>
+**Default** - off
+
+A `boolean` variable that controls whether temporary files written to disk during query execution are encrypted. Temporary files hold query-spill data, for example external sorts and hash joins that exceed `work_mem`.
+
+This variable is defined by the patched PostgreSQL server, so it is not prefixed with `open_pg_tde`. It requires a server restart and can only be set at the server level.
+
+`open_pg_tde` encrypts temporary files with AES-128-CBC using a key generated at server startup and held only in memory. Because temporary files never outlive the cluster, the key is never written to disk, and the data cannot be recovered once the server stops.
+
 ## open_pg_tde.enforce_encryption
 
 **Type** - boolean <br>

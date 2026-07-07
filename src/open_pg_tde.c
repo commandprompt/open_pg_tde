@@ -32,6 +32,7 @@
 #include "open_pg_tde_event_capture.h"
 #include "open_pg_tde_guc.h"
 #include "smgr/open_pg_tde_smgr.h"
+#include "open_pg_tde_tempfile.h"
 
 #if PG_VERSION_NUM >= 180000
 PG_MODULE_MAGIC_EXT(.name = OPEN_PG_TDE_NAME,.version = OPEN_PG_TDE_VERSION);
@@ -113,6 +114,9 @@ _PG_init(void)
 	open_pg_tde_init_data_dir();
 	AesInit();
 	TdeGucInit();
+#ifdef USE_TDE_HOOKS
+	TdeTempFileInit();
+#endif
 	TdeEventCaptureInit();
 	InstallFileKeyring();
 	InstallKmipKeyring();

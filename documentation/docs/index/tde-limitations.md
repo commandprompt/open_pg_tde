@@ -18,7 +18,7 @@ These incompatibilities can occur even when the hooks are enabled but `open_pg_t
 Limitations of `open_pg_tde` {{release}}:
 
 * PostgreSQL’s internal system tables, which include statistics and metadata, are not encrypted.
-* Temporary files created when queries exceed `work_mem` are not encrypted. These files may persist during long-running queries or after a server crash which can expose sensitive data in plaintext on disk.
+* Temporary files created when queries exceed `work_mem` are not encrypted by default. Enable [`encrypt_temp_files`](../variables.md#encrypt_temp_files) to encrypt them. With it off, these files may persist during long-running queries or after a server crash, which can expose sensitive data in plaintext on disk.
 
 ## Recovery without `open_pg_tde` in `shared_preload_libraries`
 
