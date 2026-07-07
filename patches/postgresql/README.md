@@ -77,15 +77,15 @@ inherits its key.
 
 ## Maintenance
 
-**Watch the Percona postgres branches (`PSP_REL_*_STABLE`) for changes to the
-files above and fold them into the series.** Percona actively maintains this
-code (bug fixes, new PostgreSQL versions, and work to upstream extensible
-SMGR). To rebase for a new PostgreSQL release, apply the series to the new tag,
-resolve any rejects, and regenerate the series - do **not** re-extract from
-scratch. Two lessons already recorded:
+**Watch the upstream branches this patch is derived from
+(`github.com/percona/postgres`, `PSP_REL_*_STABLE` / `TDE_REL_*_STABLE`) for
+changes to the files above and fold them into the series.** To rebase for a new
+PostgreSQL release, apply the series to the new tag, resolve any rejects, and
+regenerate the series - do **not** re-extract from scratch. Two lessons already
+recorded:
 
 - Apply the WAL-recovery files as **hunk-level** patches, not whole-file
-  copies: Percona's tree can predate native helpers (e.g.
+  copies: the upstream tree can predate native helpers (e.g.
   `XLogFlushBufferForRedoIfInit`), so a wholesale copy deletes symbols native
   index-AM redo needs.
 - The md storage manager must register via `register_builtin_dynamic_managers()`

@@ -61,5 +61,3 @@ Now WAL files start to be encrypted for both encrypted and unencrypted tables.
 
 For more technical references related to architecture, variables or functions, see:
 [Technical Reference](advanced-topics/tech-reference.md){.md-button}
-
-💬 Need help customizing this for your infrastructure? [Contact Percona support :octicons-link-external-16:](get-help.md)

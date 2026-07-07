@@ -17,6 +17,6 @@ When combined with an external Key Management System (KMS), `open_pg_tde` enable
 
 !!! admonition "See also"
 
-    You can find more information on Transparent Data Encryption (TDE) in [this article](https://www.percona.com/blog/transparent-data-encryption-tde/).
+    For more background on Transparent Data Encryption (TDE), see [About Transparent Data Encryption](about-tde.md).
     
 [Learn how open_pg_tde works :material-arrow-right:](how-does-tde-work.md){.md-button}

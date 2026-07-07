@@ -67,7 +67,7 @@ The following tools are currently unsupported with `open_pg_tde` WAL encryption:
 
 ## Supported WAL tools
 
-The following tools have been tested and verified by Percona to work with `open_pg_tde` WAL encryption:
+The following tools have been tested to work with `open_pg_tde` WAL encryption:
 
 * Patroni, for an example configuration see the following [Patroni configuration file](#example-patroni-configuration)
 * `open_pg_tde_basebackup` (with `--wal-method=stream` or `--wal-method=none`), for details on using `open_pg_tde_basebackup` with WAL encryption, see [Backup with WAL encryption enabled](../how-to/backup-wal-enabled.md)
@@ -79,11 +79,11 @@ The following tools have been tested and verified by Percona to work with `open_
 
 ## Example Patroni configuration
 
-The following is a Percona-tested example configuration.
+The following is an example configuration.
 
-??? example "Click to expand the Percona-tested Patroni configuration"
+??? example "Click to expand the example Patroni configuration"
     ```yaml
-    # Example Patroni configuration file maintained by Percona
+    # Example Patroni configuration file
     # Source: https://github.com/jobinau/pgscripts/blob/main/patroni/patroni.yml
     scope: tde
     name: pg1
@@ -148,7 +148,7 @@ The following is a Percona-tested example configuration.
     ```
 
 !!! warning  
-    The above example is Percona-tested, but Patroni versions differ, especially with discovery backends such as `etcd`. Ensure you adjust the configuration to match your environment, version, and security requirements.
+    The above example is provided as a reference, but Patroni versions differ, especially with discovery backends such as `etcd`. Ensure you adjust the configuration to match your environment, version, and security requirements.
 
 ## Next steps
 

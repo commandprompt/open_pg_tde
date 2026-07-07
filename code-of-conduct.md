@@ -1,5 +1,10 @@
-# Percona Code of Conduct
+# Code of Conduct
 
-All Percona Products follow the [Percona Community Code of Conduct](https://github.com/percona/community/blob/main/content/contribute/coc.md).
+The `open_pg_tde` project adopts the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/), version 2.1.
 
-If you notice any unacceptable behavior, let us know as soon as possible by writing to <community-team@percona.com>. We will respond within 48 hours.
+We are committed to providing a welcoming and harassment-free experience for
+everyone who participates in the project, regardless of background or identity.
+
+If you experience or witness unacceptable behavior, report it to the maintainers
+at [Command Prompt, Inc.](https://www.commandprompt.com). Reports are handled
+confidentially.

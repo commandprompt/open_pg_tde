@@ -1,6 +1,6 @@
 # open_pg_tde 2.2.0 ({{date.2_2_0}})
 
-The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
+The `open_pg_tde` extension adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
 
 [Get Started](../install.md){.md-button}
 
@@ -9,7 +9,7 @@ The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encrypt
 `open_pg_tde` now supports 256-bit AES encryption and introduces [`open_pg_tde_upgrade`](../command-line-tools/pg-tde-upgrade.md), a utility that simplifies the upgrades of encrypted clusters. For more details, see the [Changelog](#changelog).
 
 !!! warning
-    `open_pg_tde` 2.2.0 is not compatible with Percona Distribution for PostgreSQL older than 17.10 or 18.4.
+    `open_pg_tde` 2.2.0 is not compatible with PostgreSQL builds older than 17.10 or 18.4.
 
 ### Documentation updates
 
@@ -47,17 +47,17 @@ Changes introduced in `open_pg_tde` 2.2.0:
 
 ### New Features
 
-- [PG-1968](https://perconadev.atlassian.net/browse/PG-1968) - AES-256 encryption support, `open_pg_tde` now supports 256-bit AES encryption, providing stronger cryptographic protection for encrypted tablespaces.
-- [PG-2017](https://perconadev.atlassian.net/browse/PG-2017) - AES-256 compatibility for `open_pg_tde_resetwal`, the `open_pg_tde_resetwal` utility has been updated to work correctly with AES-256 encrypted data.
-- [PG-2018](https://perconadev.atlassian.net/browse/PG-2018) - AES-256 compatibility for `open_pg_tde_basebackup`, the `open_pg_tde_basebackup` utility now fully supports AES-256 encryption, ensuring consistent backup and restore behavior for databases using the new cipher.
-- [PG-2240](https://perconadev.atlassian.net/browse/PG-2240) - Introducing `open_pg_tde_upgrade`, a utility that automates the steps required to upgrade a `open_pg_tde`-enabled cluster, making the upgrade process more convenient.
+- AES-256 encryption support, `open_pg_tde` now supports 256-bit AES encryption, providing stronger cryptographic protection for encrypted tablespaces.
+- AES-256 compatibility for `open_pg_tde_resetwal`, the `open_pg_tde_resetwal` utility has been updated to work correctly with AES-256 encrypted data.
+- AES-256 compatibility for `open_pg_tde_basebackup`, the `open_pg_tde_basebackup` utility now fully supports AES-256 encryption, ensuring consistent backup and restore behavior for databases using the new cipher.
+- Introducing `open_pg_tde_upgrade`, a utility that automates the steps required to upgrade a `open_pg_tde`-enabled cluster, making the upgrade process more convenient.
 
 ### Improvements
 
-- [PG-2278](https://perconadev.atlassian.net/browse/PG-2278) - Storage manager (SMGR) encryption has been optimized to reuse OpenSSL cipher contexts, reducing overhead and improving throughput for encrypted I/O operations.
+- Storage manager (SMGR) encryption has been optimized to reuse OpenSSL cipher contexts, reducing overhead and improving throughput for encrypted I/O operations.
 
 ### Bug Fixes
 
-- [PG-2240](https://perconadev.atlassian.net/browse/PG-2240) - Fixed an issue where `pg_upgrade` would fail when run against databases containing encrypted data.
-- [PG-1895](https://perconadev.atlassian.net/browse/PG-1895) - Resolved a bug where performing WAL key rotation or SMGR key rotation during a `pg_basebackup` operation could prevent the secondary server from starting successfully.
-- [PG-2125](https://perconadev.atlassian.net/browse/PG-2125) - Fixed key creation failures that occurred when `open_pg_tde` was configured to use HashiCorp Vault via the KMIP protocol.
+- Fixed an issue where `pg_upgrade` would fail when run against databases containing encrypted data.
+- Resolved a bug where performing WAL key rotation or SMGR key rotation during a `pg_basebackup` operation could prevent the secondary server from starting successfully.
+- Fixed key creation failures that occurred when `open_pg_tde` was configured to use HashiCorp Vault via the KMIP protocol.

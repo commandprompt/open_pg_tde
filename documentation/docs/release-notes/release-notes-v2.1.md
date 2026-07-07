@@ -1,6 +1,6 @@
 # open_pg_tde 2.1.0 ({{date.2_1}})
 
-The `open_pg_tde` by Percona extension brings [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
+The `open_pg_tde` extension brings [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and enables you to keep sensitive data safe and secure.
 
 [Get Started](../install.md){.md-button}
 
@@ -18,7 +18,7 @@ It is no longer bundled with the main PostgreSQL server package.
 
 If your PostgreSQL 18 deployment uses `open_pg_tde`, make sure to install the matching `open_pg_tde` package separately.
 
-Percona’s PostgreSQL **Docker images continue to include `open_pg_tde` by default**, so no additional action is required for container-based deployments.
+`open_pg_tde` is built as an extension against a patched PostgreSQL. See the [install from source guide](../install-from-source.md).
 
 For more information on the availability by PostgreSQL version, please see [Install open_pg_tde](../install.md).
 
@@ -36,7 +36,7 @@ Reorganized the project into a multi-repository structure to support several Pos
 
 ### Tooling changes
 
-The standard PostgreSQL command-line utilities can no longer operate on clusters encrypted with `open_pg_tde`. To manage encrypted data safely, use the `open_pg_tde_` equivalents provided by Percona:
+The standard PostgreSQL command-line utilities can no longer operate on clusters encrypted with `open_pg_tde`. To manage encrypted data safely, use the `open_pg_tde_` equivalents:
 
 * pg_basebackup to open_pg_tde_basebackup
 * pg_checksums to open_pg_tde_checksums

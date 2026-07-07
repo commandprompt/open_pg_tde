@@ -1,6 +1,6 @@
 # open_pg_tde 2.2.1 ({{date.2_2_1}})
 
-The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
+The `open_pg_tde` extension adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
 
 [Get Started](../install.md){.md-button}
 
@@ -9,7 +9,7 @@ The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encrypt
 `open_pg_tde` 2.2.1 focuses on stability and compatibility improvements. This release improves `pg_rewind` reliability and Microsoft Visual C++ (MSVC) compatibility. For more details, see the [Changelog](#changelog).
 
 !!! warning
-    `open_pg_tde` 2.2.1 is not compatible with Percona Distribution for PostgreSQL older than 17.10.2 or 18.4.2.
+    `open_pg_tde` 2.2.1 is not compatible with PostgreSQL builds older than 17.10.2 or 18.4.2.
 
 ## Known issues
 
@@ -28,5 +28,5 @@ Changes introduced in `open_pg_tde` 2.2.1:
 
 ### Bug Fixes
 
-- [PG-2473](https://perconadev.atlassian.net/browse/PG-2473) - Fixed build and runtime compatibility issues for Microsoft Visual C++ (MSVC) on Windows.
-- [PG-2407](https://perconadev.atlassian.net/browse/PG-2407) - Fixed multiple issues affecting `pg_rewind` for `open_pg_tde` clusters, improving reliability during rewind and recovery operations.
+- Fixed build and runtime compatibility issues for Microsoft Visual C++ (MSVC) on Windows.
+- Fixed multiple issues affecting `pg_rewind` for `open_pg_tde` clusters, improving reliability during rewind and recovery operations.

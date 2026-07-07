@@ -29,9 +29,9 @@ The following sections break down the key architectural components of this desig
 
 The main components of `open_pg_tde` are:
 
-* **Core server changes** focus on making the server more extensible, allowing the main logic of `open_pg_tde` to remain separate, as an extension. Core changes also add encryption-awareness to some command line tools that have to work directly with encrypted tables or encrypted WAL files. 
+* **Core server changes** focus on making the server more extensible, allowing the main logic of `open_pg_tde` to remain separate, as an extension. Core changes also add encryption-awareness to some command line tools that have to work directly with encrypted tables or encrypted WAL files.
 
-    You can find the source code [here :octicons-link-external-16:](https://github.com/percona/postgres/tree/{{tdebranch}}).
+    These changes are shipped as a gated patch that you apply to upstream PostgreSQL. See the patch series and its per-version status in `patches/postgresql/` and the [install from source guide](../install-from-source.md).
 
 * The **`open_pg_tde` extension** implements the encryption code by hooking into the extension points introduced in the core changes, and the already existing extension points in the PostgreSQL server.
 

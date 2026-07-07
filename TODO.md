@@ -34,15 +34,16 @@ The patches live under `patches/postgresql/<major>/` and are applied with
 
 ## Documentation (required)
 
-- [ ] `patches/postgresql/README.md` kept current (apply, gate, maintenance).
-- [ ] User docs: replace the "Percona Server for PostgreSQL" install pages with
-      "apply the patch to PostgreSQL 16+ and build with `--enable-tde-hooks`".
+- [x] `patches/postgresql/README.md` kept current (apply, gate, maintenance).
+- [x] User docs point at the from-source install (apply the patch to
+      PostgreSQL 16+ and build with `--enable-tde-hooks`).
 - [ ] Architecture doc: the SMGR/WAL hook design and the gate.
 
 ## Core patch maintenance (ongoing)
 
-- **Watch Percona Server for PostgreSQL** (`percona/postgres`, `PSP_REL_*_STABLE`)
-  for changes to the patched files and fold them in. Always re-check on a new
+- **Track the upstream pg_tde project** that this patch is derived from
+  (`github.com/percona/postgres`, `PSP_REL_*_STABLE` / `TDE_REL_*_STABLE`) for
+  changes to the patched files, and fold them in. Always re-check on a new
   PostgreSQL minor or major release. Rebase the series; do not re-extract.
 
 ## Temporary file encryption
@@ -53,6 +54,7 @@ The patches live under `patches/postgresql/<major>/` and are applied with
 
 ## Branding / release
 
-- [ ] Command Prompt docs theme (brand hex + mammoth logo, pending assets).
-- [ ] Finish removing Percona references from doc content.
-- [ ] Initial push to `commandprompt/open_pg_tde`.
+- [x] Command Prompt docs theme (brand palette + mammoth logo).
+- [x] Remove Percona service/product references from doc content (kept only
+      copyright and the fork attribution).
+- [x] Initial push to `commandprompt/open_pg_tde`.

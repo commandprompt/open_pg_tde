@@ -2,14 +2,14 @@
 
 Thank you for deciding to contribute and help us improve the **open_pg_tde documentation**!
 
-We welcome contributors from all users and the community. By contributing, you agree to the [Percona Community code of conduct](https://github.com/percona/community/blob/main/content/contribute/coc.md). 
+We welcome contributions from all users and the community. By contributing, you agree to the project [Code of Conduct](../code-of-conduct.md).
 
 If you want to contribute code, see the [Code contribution guide](../CONTRIBUTING.md).
 
 You can contribute to the documentation in one of the following ways:
 
 1. [Submit a pull request (PR) for documentation on GitHub](#edit-documentation-on-github)
-2. Reach us on our [Forums](https://forums.percona.com/c/postgresql/pg-tde-transparent-data-encryption-tde/82)
+2. [Start a discussion](https://github.com/commandprompt/open_pg_tde/discussions)
 
 The `open_pg_tde` documentation is written in Markdown.
 
@@ -25,7 +25,7 @@ The `open_pg_tde` documentation is written in Markdown.
 - Select the **Create a new branch for this commit** and name your branch
 - Click **Propose changes** to create the pull request
 
-4. GitHub creates a branch and a commit for your changes. It loads a new page on which you can open a pull request to Percona. The page shows the base branch (the one you offer your changes for), your commit message, and a diff (a visual representation of your changes against the original page). This allows you to make any last-minute changes. When you are ready, click the **Create pull request** button.
+4. GitHub creates a branch and a commit for your changes. It loads a new page on which you can open a pull request against `commandprompt/open_pg_tde`. The page shows the base branch (the one you offer your changes for), your commit message, and a diff (a visual representation of your changes against the original page). This allows you to make any last-minute changes. When you are ready, click the **Create pull request** button.
 
 5. Your changes will be reviewed and merged into the documentation.
 
@@ -33,42 +33,37 @@ The `open_pg_tde` documentation is written in Markdown.
 
 To edit the documentation locally:
 
-1. Fork this repository
-2. Clone the repository on your machine:
+1. Fork this repository.
+2. Clone your fork:
 
 ```sh
-git clone --recursive git@github.com:<your-name>/postgres.git
+git clone git@github.com:<your-name>/open_pg_tde.git
+cd open_pg_tde
+git remote add upstream git@github.com:commandprompt/open_pg_tde.git
 ```
 
-3. Change the directory to `contrib/open_pg_tde` and add the remote upstream repository:
-
-```sh
-git remote add upstream git@github.com:percona/postgres.git
-```
-
-4. Pull the latest changes from upstream:
+3. Pull the latest changes from upstream:
 
 ```sh
 git fetch upstream
-git merge upstream/<target-branch>
+git merge upstream/main
 ```
 
-5. Create a separate branch for your changes. If you work on a Jira issue, please follow this pattern for a branch name: `<PG-123>-short-description`:
+4. Create a branch for your changes. If the change relates to an issue, include the issue number in the branch name:
 
 ```sh
-git checkout -b <PG-123>-short-description upstream/<target-branch>
-
+git checkout -b 123-short-description upstream/main
 ```
 
-6. Make and commit your changes. If applicable, mention the Jira issue in the commit message:
+5. Make and commit your changes. If the change relates to an issue, reference it in the commit message:
 
    ```
    git add .
-   git commit -m "<my_fixes>"
-   git push -u origin <my_branch_name>
+   git commit -m "Short summary of the change"
+   git push -u origin 123-short-description
    ```
 
-7. Open a pull request to Percona
+6. Open a pull request against `commandprompt/open_pg_tde`.
 
 ### Building the documentation using MkDocs
 
@@ -122,7 +117,7 @@ The repository includes the following directories and files:
   - `.icons` - Custom icons used in the documentation
   - `overrides`:
     - `partials` - The layout templates for various parts of the documentation such as header, copyright and others.
-    - `main.html` - The layout template for hosting the documentation on Percona website
+    - `main.html` - The layout template for hosting the documentation
     - `404.html` - The 404 page template
 - `_resourcepdf` - The set of Material theme templates with our customizations for PDF builds
 - `site` - This is where the output HTML files are put after the build

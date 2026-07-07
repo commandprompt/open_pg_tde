@@ -1,6 +1,6 @@
 # open_pg_tde 2.1.1 ({{date.2_1_1}})
 
-The `open_pg_tde` extension, provided by Percona, adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
+The `open_pg_tde` extension adds [Transparent Data Encryption (TDE)](../index/about-tde.md) to PostgreSQL and helps protect sensitive data at rest.
 
 [Get Started](../install.md){.md-button}
 
@@ -12,7 +12,7 @@ The namespace of Hashicorp vault is integrated with ``open_pg_tde`` through the 
 
 ### Documentation updates
 
-Updated the [Global Principal Key configuration :octicons-link-external-16:](https://docs.percona.com/pg-tde/global-key-provider-configuration/set-principal-key.html) and [Configure WAL encryption :octicons-link-external-16:](https://docs.percona.com/pg-tde/wal-encryption.html) chapters with updated installation steps and removed outdated KMS configuration information.
+Updated the [Global Principal Key configuration](../global-key-provider-configuration/set-principal-key.md) and [Configure WAL encryption](../wal-encryption.md) chapters with updated installation steps and removed outdated KMS configuration information.
 
 ## Known issues
 
@@ -37,4 +37,4 @@ Updated the [Global Principal Key configuration :octicons-link-external-16:](htt
 
 ### New Features
 
-* [PG-1959 :octicons-link-external-16:](https://perconadev.atlassian.net/browse/PG-1959) - Namespace of Hashicorp vault is integrated with `open_pg_tde`
+* Namespace of Hashicorp vault is integrated with `open_pg_tde`

@@ -6,8 +6,8 @@
 
 !!! important
 
-    This version of Percona Transparent Data Encryption extension **is 
-    not recommended for production environments yet**. We encourage you to test it and [give your feedback](https://forums.percona.com/c/postgresql/pg-tde-transparent-data-encryption-tde/82).
+    This version of the `open_pg_tde` extension **is 
+    not recommended for production environments yet**. We encourage you to test it and [give your feedback](https://github.com/commandprompt/open_pg_tde/discussions).
   
     This will help us improve the product and make it production-ready faster.
 
@@ -16,7 +16,7 @@
 With this release, `open_pg_tde` extension offers two database specific versions:
 
 *  PostgreSQL Community version provides only the `tde_heap_basic` access method using which you can introduce table encryption and WAL encryption for data in the encrypted tables. Index data remains unencrypted.
-* Version for Percona Server for PostgreSQL provides the `tde_heap`access method. using this method you can encrypt index data in encrypted tables thus increasing the safety of your sensitive data. For backward compatibility, the `tde_heap_basic` method is available in this version too. 
+* This version provides the `tde_heap` access method. Using this method you can encrypt index data in encrypted tables thus increasing the safety of your sensitive data. For backward compatibility, the `tde_heap_basic` method is available in this version too.
 
 ## Changelog
 
@@ -24,7 +24,7 @@ The Beta 2 version introduces the following features and improvements:
 
 ### New Features
 
-* Added the `tde_heap` access method with which you can now enable index encryption for encrypted tables and global WAL data encryption. To use this access method, you must install Percona Server for PostgreSQL. Check the [installation guide](../install.md)
+* Added the `tde_heap` access method with which you can now enable index encryption for encrypted tables and global WAL data encryption. Check the [installation guide](../install.md)
 * Added event triggers to identify index creation operations on encrypted tables and store those in a custom storage.
 * Added support for secure transfer of keys using the [OASIS Key Management Interoperability Protocol (KMIP)](https://docs.oasis-open.org/kmip/kmip-spec/v2.0/os/kmip-spec-v2.0-os.html). The KMIP implementation was tested with the PyKMIP server and the HashiCorp Vault Enterprise KMIP Secrets Engine.
 

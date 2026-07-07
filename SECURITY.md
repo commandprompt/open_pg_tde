@@ -6,10 +6,12 @@ open_pg_tde project follows rolling release strategy. So all security updates go
 
 ## Reporting a Vulnerability
 
-Please report any vulnerabilities to our project in [Jira](https://perconadev.atlassian.net/jira/software/c/projects/PG/issues).
+Please report vulnerabilities privately through GitHub's
+[private security advisories](https://github.com/commandprompt/open_pg_tde/security/advisories/new).
+Do not open a public issue for a security vulnerability.
 
-If the vulnerability is accepted and confirmed by our experts, you should normally expect us to deliver
-a version with a fix according to the timelines provided below:
+If the vulnerability is accepted and confirmed, you should normally expect a
+release with a fix according to the timelines below:
 
 - Low/Medium: 120 days
 - High: 90 days

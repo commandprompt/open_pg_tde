@@ -43,7 +43,7 @@ SELECT open_pg_tde_add_global_key_provider_kmip(
 
 For more information on related functions, see the link below:
 
-[Percona open_pg_tde Function Reference](../functions.md){.md-button}
+[open_pg_tde Function Reference](../functions.md){.md-button}
 
 ## Next steps
 

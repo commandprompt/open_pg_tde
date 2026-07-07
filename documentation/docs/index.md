@@ -16,7 +16,7 @@ Get started quickly with the step-by-step installation instructions.
 
 ### :rocket: Features { .title }
 
-Explore what features Percona's `open_pg_tde` extension brings to PostgreSQL.
+Explore what features the `open_pg_tde` extension brings to PostgreSQL.
 
 [Check what you can do with `open_pg_tde` :material-arrow-right:](features.md){ .md-button }
 
@@ -24,7 +24,7 @@ Explore what features Percona's `open_pg_tde` extension brings to PostgreSQL.
 
 ### :material-cog-refresh-outline: Architecture { .title }
 
-Understand how `open_pg_tde` integrates into PostgreSQL with Percona's architecture. Learn how keys are managed, how encryption is applied, and how our design ensures performance and security.
+Understand how `open_pg_tde` integrates into PostgreSQL. Learn how keys are managed, how encryption is applied, and how the design ensures performance and security.
 
 [Check what’s under the hood for `open_pg_tde` :material-arrow-right:](architecture/overview.md){.md-button}
 

@@ -1,27 +1,28 @@
-# Get Help from Percona
+# Get help
 
-Our documentation guides are packed with information, but they can't cover everything you need to know about `open_pg_tde`. They also won't cover every scenario you might come across. Don't be afraid to try things out and ask questions when you get stuck.
+The documentation covers most of what you need to know about `open_pg_tde`, but
+it cannot cover every scenario. When you get stuck, reach out.
 
-## Percona's Community Forum
+## Questions and discussion
 
-Be a part of a space where you can tap into a wealth of knowledge from other database enthusiasts and experts who work with Percona's software every day. While our service is entirely free, keep in mind that response times can vary depending on the complexity of the question. You are engaging with people who genuinely love solving database challenges.
+For questions, ideas, and general discussion, use
+[GitHub Discussions](https://github.com/commandprompt/open_pg_tde/discussions).
 
-We recommend visiting our [Community Forum](https://forums.percona.com/t/welcome-to-perconas-community-forum/7){:target="_blank"}. It's an excellent place for discussions, technical insights, and support around Percona database software. If you’re new and feeling a bit unsure, our [FAQ](https://forums.percona.com/faq){:target="_blank"} and [Guide for New Users](https://forums.percona.com/t/faq-guide-for-new-users/8562){:target="_blank"} ease you in.
+## Bugs and feature requests
 
-If you have thoughts, feedback, or ideas, the community team would like to hear from you at [Any ideas on how to make the forum better?](https://forums.percona.com/t/any-ideas-on-how-to-make-the-forum-better/11522){:target="blank"}. We’re always excited to connect and improve everyone's experience.
+To report a bug or request a feature, open an issue in
+[GitHub Issues](https://github.com/commandprompt/open_pg_tde/issues). Before you
+file, search the existing issues in case it is already reported. When reporting a
+bug, include the PostgreSQL major version and steps to reproduce. See the
+[contributing guide](contribute.md) for details.
 
-## Percona experts
+## Security issues
 
-Percona experts bring years of experience in tackling tough database performance issues and design challenges.
+Do not report security vulnerabilities in public issues. See
+[SECURITY.md](https://github.com/commandprompt/open_pg_tde/blob/main/SECURITY.md)
+for how to report them privately.
 
-<div data-tf-live="01JKGYHB4DKYX1CC6KNF0VHP1A"></div><script src="//embed.typeform.com/next/embed.js"></script>
-We understand your challenges when managing complex database environments. That's why we offer various services to help you simplify your operations and achieve your goals.
+## About the project
 
-| Service                    | Description                                                                                                                                                           |
-|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 24/7 Expert Support        | Our dedicated team of database experts is available 24/7 to assist you with any database issues. We provide flexible support plans tailored to your specific needs.   |
-| Hands-On Database Management | Our managed services team can take over the day-to-day management of your database infrastructure, freeing up your time to focus on other priorities.               |
-| Expert Consulting          | Our experienced consultants provide guidance on database topics like architecture design, migration planning, performance optimization, and security best practices.  |
-| Comprehensive Training     | Our training programs help your team develop skills to manage databases effectively, offering virtual and in-person courses.                                          |
-
-We're here to help you every step of the way. Whether you need a quick fix or a long-term partnership, we're ready to provide your expertise and support.
+`open_pg_tde` is an open fork of Percona's `pg_tde`, maintained by
+[Command Prompt, Inc.](https://www.commandprompt.com)
