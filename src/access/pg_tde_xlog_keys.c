@@ -964,6 +964,8 @@ wal_range_from_entry_v1(WalKeyFileEntryV1 *entry, const TDEPrincipalKey *princip
 	range->end.tli = MaxTimeLineID;
 	range->end.lsn = MaxXLogRecPtr;
 	range->key.key_len = sizeof(entry->encrypted_key_data);
+	/* v1 entries always hold a 16-byte key, i.e. AES-128. */
+	range->key.cipher = CIPHER_AES_128;
 
 	memcpy(range->key.base_iv, entry->key_base_iv, sizeof(entry->key_base_iv));
 	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,

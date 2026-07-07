@@ -952,6 +952,8 @@ static void
 ikey_from_map_entry_v3(TDEMapEntryV3 *entry, const TDEPrincipalKey *principal_key, InternalKey *out)
 {
 	out->key_len = sizeof(entry->encrypted_key_data);
+	/* v3 entries always hold a 16-byte key, i.e. AES-128. */
+	out->cipher = CIPHER_AES_128;
 
 	memcpy(out->base_iv, entry->key_base_iv, sizeof(entry->key_base_iv));
 	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,
