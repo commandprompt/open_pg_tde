@@ -93,7 +93,7 @@ scratch. Two lessons already recorded:
 
 | PostgreSQL | Data files | WAL | Frontend tools | Compile-time gate |
 |------------|-----------|-----|----------------|-------------------|
-| 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance) | In progress | In progress | In progress |
+| 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance) | In progress | In progress | **Done** (verified OFF=clean PG / ON=encrypts; `verify-gate.sh`) |
 | 14-17 | Not started | — | — | — |
 
 See `../../TODO.md` for the tracked work.
