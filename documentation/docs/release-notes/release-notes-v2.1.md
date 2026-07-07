@@ -28,7 +28,7 @@ Added support for **asynchronous I/O (AIO)** which is now the default I/O mechan
 
 ### Added namespace support for Vault Enterprise and OpenBao
 
-Added support for HashiCorp Vault and OpenBao namespaces. The `namespace` parameter is now documented in [Add or modify Vault providers](../functions.md#add-or-modify-vault-providers) and fully supported.
+Added support for HashiCorp Vault and OpenBao namespaces. The `namespace` parameter is now documented in [OpenBao provider configuration](../global-key-provider-configuration/openbao.md) and fully supported.
 
 ### Repository split for multi-version PostgreSQL support
 
@@ -62,7 +62,7 @@ Implemented support for the "namespace" feature in Vault Enterprise and OpenBao,
 - Added the [Impact of open_pg_tde on database operations](../index/what-tde-impacts.md) topic which summarizes how `open_pg_tde` interacts with core PostgreSQL operations
 - Updated the [FAQ](../faq.md) with an answer to logical replication keeping data encrypted on subscribers
 - Updated [Install open_pg_tde](../install.md) with a table for the `open_pg_tde` availability by PostgreSQL version
-- Updated [Add or modify Vault providers](../functions.md#add-or-modify-vault-providers) to include the `namespace` parameter.
+- Updated [OpenBao provider configuration](../global-key-provider-configuration/openbao.md) to include the `namespace` parameter.
 
 ## Known issues
 
