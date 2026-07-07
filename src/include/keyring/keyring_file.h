@@ -1,5 +1,5 @@
 /*
- * File vault implementation
+ * File based keyring provider implementation
  */
 
 #ifndef KEYRING_FILE_H

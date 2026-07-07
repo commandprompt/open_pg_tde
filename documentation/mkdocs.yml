@@ -168,7 +168,6 @@ nav:
       - "Key management overview": global-key-provider-configuration/overview.md
       - "KMIP configuration": global-key-provider-configuration/kmip-server.md
       - "Fortanix configuration": global-key-provider-configuration/kmip-fortanix.md  
-      - "Vault configuration": global-key-provider-configuration/vault.md
       - "Thales configuration": global-key-provider-configuration/kmip-thales.md
       - "Akeyless configuration": global-key-provider-configuration/kmip-akeyless.md
       - "Using OpenBao as a key provider": global-key-provider-configuration/openbao.md

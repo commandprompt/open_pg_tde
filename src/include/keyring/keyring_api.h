@@ -11,7 +11,6 @@ typedef enum ProviderType
 {
 	UNKNOWN_KEY_PROVIDER,
 	FILE_KEY_PROVIDER,
-	VAULT_V2_KEY_PROVIDER,
 	KMIP_KEY_PROVIDER,
 } ProviderType;
 
@@ -59,17 +58,6 @@ typedef struct FileKeyring
 	GenericKeyring keyring;		/* Must be the first field */
 	char	   *file_name;
 } FileKeyring;
-
-typedef struct VaultV2Keyring
-{
-	GenericKeyring keyring;		/* Must be the first field */
-	char	   *vault_token;
-	char	   *vault_token_path;
-	char	   *vault_url;
-	char	   *vault_ca_path;
-	char	   *vault_mount_path;
-	char	   *vault_namespace;
-} VaultV2Keyring;
 
 typedef struct KmipKeyring
 {

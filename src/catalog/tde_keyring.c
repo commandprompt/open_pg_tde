@@ -50,7 +50,6 @@ typedef enum ProviderScanType
 #define PG_TDE_KEYRING_FILENAME "%d_providers"
 
 #define FILE_KEYRING_TYPE "file"
-#define VAULTV2_KEYRING_TYPE "vault-v2"
 #define KMIP_KEYRING_TYPE "kmip"
 
 static void debug_print_kerying(GenericKeyring *keyring);
@@ -59,9 +58,7 @@ static inline void get_keyring_infofile_path(char *resPath, Oid dbOid);
 static FileKeyring *load_file_keyring_provider_options(char *keyring_options);
 static GenericKeyring *load_keyring_provider_from_record(KeyringProviderRecord *provider);
 static KmipKeyring *load_kmip_keyring_provider_options(char *keyring_options);
-static VaultV2Keyring *load_vaultV2_keyring_provider_options(char *keyring_options);
 static int	open_keyring_infofile(Oid dbOid, int flags);
-static char *get_file_value(const char *path, const char *field_name);
 
 #ifdef FRONTEND
 
@@ -146,8 +143,6 @@ get_keyring_provider_typename(ProviderType p_type)
 	{
 		case FILE_KEY_PROVIDER:
 			return FILE_KEYRING_TYPE;
-		case VAULT_V2_KEY_PROVIDER:
-			return VAULTV2_KEYRING_TYPE;
 		case KMIP_KEY_PROVIDER:
 			return KMIP_KEYRING_TYPE;
 		default:
@@ -585,7 +580,6 @@ void
 free_keyring(GenericKeyring *keyring)
 {
 	FileKeyring *file = (FileKeyring *) keyring;
-	VaultV2Keyring *vault = (VaultV2Keyring *) keyring;
 	KmipKeyring *kmip = (KmipKeyring *) keyring;
 
 	switch (keyring->type)
@@ -593,20 +587,6 @@ free_keyring(GenericKeyring *keyring)
 		case FILE_KEY_PROVIDER:
 			if (file->file_name)
 				pfree(file->file_name);
-			break;
-		case VAULT_V2_KEY_PROVIDER:
-			if (vault->vault_ca_path)
-				pfree(vault->vault_ca_path);
-			if (vault->vault_namespace)
-				pfree(vault->vault_namespace);
-			if (vault->vault_mount_path)
-				pfree(vault->vault_mount_path);
-			if (vault->vault_token)
-				pfree(vault->vault_token);
-			if (vault->vault_token_path)
-				pfree(vault->vault_token_path);
-			if (vault->vault_url)
-				pfree(vault->vault_url);
 			break;
 		case KMIP_KEY_PROVIDER:
 			if (kmip->kmip_ca_path)
@@ -840,9 +820,6 @@ load_keyring_provider_from_record(KeyringProviderRecord *provider)
 		case FILE_KEY_PROVIDER:
 			keyring = (GenericKeyring *) load_file_keyring_provider_options(provider->options);
 			break;
-		case VAULT_V2_KEY_PROVIDER:
-			keyring = (GenericKeyring *) load_vaultV2_keyring_provider_options(provider->options);
-			break;
 		case KMIP_KEY_PROVIDER:
 			keyring = (GenericKeyring *) load_kmip_keyring_provider_options(provider->options);
 			break;
@@ -881,35 +858,6 @@ load_file_keyring_provider_options(char *keyring_options)
 	return file_keyring;
 }
 
-static VaultV2Keyring *
-load_vaultV2_keyring_provider_options(char *keyring_options)
-{
-	VaultV2Keyring *vaultV2_keyring = palloc0_object(VaultV2Keyring);
-
-	vaultV2_keyring->keyring.type = VAULT_V2_KEY_PROVIDER;
-
-	ParseKeyringJSONOptions(VAULT_V2_KEY_PROVIDER,
-							(GenericKeyring *) vaultV2_keyring,
-							keyring_options, strlen(keyring_options));
-
-	if (vaultV2_keyring->vault_token_path == NULL || vaultV2_keyring->vault_token_path[0] == '\0' ||
-		vaultV2_keyring->vault_url == NULL || vaultV2_keyring->vault_url[0] == '\0' ||
-		vaultV2_keyring->vault_mount_path == NULL || vaultV2_keyring->vault_mount_path[0] == '\0')
-	{
-		ereport(ERROR,
-				errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-				errmsg("missing in the keyring options:%s%s%s",
-					   (vaultV2_keyring->vault_token_path != NULL && vaultV2_keyring->vault_token_path[0] != '\0') ? "" : " tokenPath",
-					   (vaultV2_keyring->vault_url != NULL && vaultV2_keyring->vault_url[0] != '\0') ? "" : " url",
-					   (vaultV2_keyring->vault_mount_path != NULL && vaultV2_keyring->vault_mount_path[0] != '\0') ? "" : " mountPath"));
-	}
-
-	/* TODO: the vault_token mem should be protected from paging to the swap */
-	vaultV2_keyring->vault_token = get_file_value(vaultV2_keyring->vault_token_path, "vault_token");
-
-	return vaultV2_keyring;
-}
-
 static KmipKeyring *
 load_kmip_keyring_provider_options(char *keyring_options)
 {
@@ -939,36 +887,6 @@ load_kmip_keyring_provider_options(char *keyring_options)
 	return kmip_keyring;
 }
 
-#define MAX_FILE_DATA_LENGTH 1024
-
-static char *
-get_file_value(const char *path, const char *field_name)
-{
-	FILE	   *fd;
-	char	   *val;
-
-	fd = AllocateFile(path, "r");
-	if (fd == NULL)
-	{
-		ereport(ERROR,
-				(errcode_for_file_access(),
-				 errmsg("could not open file \"%s\" for \"%s\": %m", path, field_name)));
-	}
-
-	val = palloc(MAX_FILE_DATA_LENGTH);
-	if (fgets(val, MAX_FILE_DATA_LENGTH, fd) == NULL && ferror(fd))
-	{
-		ereport(ERROR,
-				(errcode_for_file_access(),
-				 errmsg("could not read file \"%s\" for \"%s\": %m", path, field_name)));
-	}
-	/* remove trailing whitespace */
-	val[strcspn(val, " \t\n\r")] = '\0';
-
-	FreeFile(fd);
-	return val;
-}
-
 static void
 debug_print_kerying(GenericKeyring *keyring)
 {
@@ -980,16 +898,6 @@ debug_print_kerying(GenericKeyring *keyring)
 	{
 		case FILE_KEY_PROVIDER:
 			elog(DEBUG2, "File Keyring Path: %s", ((FileKeyring *) keyring)->file_name);
-			break;
-		case VAULT_V2_KEY_PROVIDER:
-			elog(DEBUG2, "Vault Keyring Token Path: %s", ((VaultV2Keyring *) keyring)->vault_token_path);
-			elog(DEBUG2, "Vault Keyring URL: %s", ((VaultV2Keyring *) keyring)->vault_url);
-			elog(DEBUG2, "Vault Keyring Mount Path: %s", ((VaultV2Keyring *) keyring)->vault_mount_path);
-			elog(DEBUG2, "Vault Keyring CA Path: %s", ((VaultV2Keyring *) keyring)->vault_ca_path);
-			if (((VaultV2Keyring *) keyring)->vault_namespace != NULL)
-			{
-				elog(DEBUG2, "Vault Keyring Namespace: %s", ((VaultV2Keyring *) keyring)->vault_namespace);
-			}
 			break;
 		case KMIP_KEY_PROVIDER:
 			elog(DEBUG2, "KMIP Keyring Host: %s", ((KmipKeyring *) keyring)->kmip_host);
@@ -1063,8 +971,6 @@ get_keyring_provider_from_typename(char *provider_type)
 {
 	if (strcmp(FILE_KEYRING_TYPE, provider_type) == 0)
 		return FILE_KEY_PROVIDER;
-	else if (strcmp(VAULTV2_KEYRING_TYPE, provider_type) == 0)
-		return VAULT_V2_KEY_PROVIDER;
 	else if (strcmp(KMIP_KEYRING_TYPE, provider_type) == 0)
 		return KMIP_KEY_PROVIDER;
 	else

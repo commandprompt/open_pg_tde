@@ -28,7 +28,6 @@
 #include "keyring/keyring_api.h"
 #include "keyring/keyring_file.h"
 #include "keyring/keyring_kmip.h"
-#include "keyring/keyring_vault.h"
 #include "pg_tde.h"
 #include "pg_tde_event_capture.h"
 #include "pg_tde_guc.h"
@@ -118,7 +117,6 @@ _PG_init(void)
 	TdeGucInit();
 	TdeEventCaptureInit();
 	InstallFileKeyring();
-	InstallVaultV2Keyring();
 	InstallKmipKeyring();
 	RegisterTdeRmgr();
 	RegisterStorageMgr();

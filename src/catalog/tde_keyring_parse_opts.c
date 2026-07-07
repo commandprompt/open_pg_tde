@@ -32,12 +32,6 @@ typedef enum JsonKeyringField
 	/* Settings specific for the individual key provider types. */
 	JK_FILE_PATH,
 
-	JK_VAULT_TOKEN_PATH,
-	JK_VAULT_URL,
-	JK_VAULT_MOUNT_PATH,
-	JK_VAULT_CA_PATH,
-	JK_VAULT_NAMESPACE,
-
 	JK_KMIP_HOST,
 	JK_KMIP_PORT,
 	JK_KMIP_CA_PATH,
@@ -52,17 +46,10 @@ static const char *JK_FIELD_NAMES[JK_FIELDS_TOTAL] = {
 	[JK_FIELD_UNKNOWN] = "unknownField",
 
 	/*
-	 * These values should match pg_tde_add_database_key_provider_vault_v2,
-	 * pg_tde_add_database_key_provider_file and
+	 * These values should match pg_tde_add_database_key_provider_file and
 	 * pg_tde_add_database_key_provider_kmip SQL interfaces
 	 */
 	[JK_FILE_PATH] = "path",
-
-	[JK_VAULT_TOKEN_PATH] = "tokenPath",
-	[JK_VAULT_URL] = "url",
-	[JK_VAULT_MOUNT_PATH] = "mountPath",
-	[JK_VAULT_CA_PATH] = "caPath",
-	[JK_VAULT_NAMESPACE] = "namespace",
 
 	[JK_KMIP_HOST] = "host",
 	[JK_KMIP_PORT] = "port",
@@ -228,26 +215,6 @@ json_kring_object_field_start(void *state, char *fname, bool isnull)
 					}
 					break;
 
-				case VAULT_V2_KEY_PROVIDER:
-					if (strcmp(fname, JK_FIELD_NAMES[JK_VAULT_TOKEN_PATH]) == 0)
-						parse->current_field = JK_VAULT_TOKEN_PATH;
-					else if (strcmp(fname, JK_FIELD_NAMES[JK_VAULT_URL]) == 0)
-						parse->current_field = JK_VAULT_URL;
-					else if (strcmp(fname, JK_FIELD_NAMES[JK_VAULT_MOUNT_PATH]) == 0)
-						parse->current_field = JK_VAULT_MOUNT_PATH;
-					else if (strcmp(fname, JK_FIELD_NAMES[JK_VAULT_CA_PATH]) == 0)
-						parse->current_field = JK_VAULT_CA_PATH;
-					else if (strcmp(fname, JK_FIELD_NAMES[JK_VAULT_NAMESPACE]) == 0)
-						parse->current_field = JK_VAULT_NAMESPACE;
-					else
-					{
-						parse->current_field = JK_FIELD_UNKNOWN;
-						ereport(ERROR,
-								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-								errmsg("unexpected field \"%s\" for vault-v2 provider", fname));
-					}
-					break;
-
 				case KMIP_KEY_PROVIDER:
 					if (strcmp(fname, JK_FIELD_NAMES[JK_KMIP_HOST]) == 0)
 						parse->current_field = JK_KMIP_HOST;
@@ -264,7 +231,7 @@ json_kring_object_field_start(void *state, char *fname, bool isnull)
 						parse->current_field = JK_FIELD_UNKNOWN;
 						ereport(ERROR,
 								errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-								errmsg("unexpected field \"%s\" for vault-v2 provider", fname));
+								errmsg("unexpected field \"%s\" for kmip provider", fname));
 					}
 					break;
 
@@ -327,7 +294,6 @@ json_kring_scalar(void *state, char *token, JsonTokenType tokentype)
 static void
 json_kring_assign_scalar(JsonKeyringState *parse, JsonKeyringField field, char *value)
 {
-	VaultV2Keyring *vault = (VaultV2Keyring *) parse->provider_opts;
 	FileKeyring *file = (FileKeyring *) parse->provider_opts;
 	KmipKeyring *kmip = (KmipKeyring *) parse->provider_opts;
 
@@ -335,22 +301,6 @@ json_kring_assign_scalar(JsonKeyringState *parse, JsonKeyringField field, char *
 	{
 		case JK_FILE_PATH:
 			file->file_name = value;
-			break;
-
-		case JK_VAULT_TOKEN_PATH:
-			vault->vault_token_path = value;
-			break;
-		case JK_VAULT_URL:
-			vault->vault_url = value;
-			break;
-		case JK_VAULT_MOUNT_PATH:
-			vault->vault_mount_path = value;
-			break;
-		case JK_VAULT_CA_PATH:
-			vault->vault_ca_path = value;
-			break;
-		case JK_VAULT_NAMESPACE:
-			vault->vault_namespace = value;
 			break;
 
 		case JK_KMIP_HOST:
