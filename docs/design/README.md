@@ -9,4 +9,5 @@ a date.
 
 | Document | Status |
 | -------- | ------ |
+| [Encryption feature roadmap](encryption-roadmap.md) | Proposed |
 | [Tablespace-level encryption](tablespace-encryption.md) | Proposed |
