@@ -17,6 +17,7 @@ typedef enum CipherType
 {
 	CIPHER_AES_128,
 	CIPHER_AES_256,
+	CIPHER_AES_128_XTS,			/* AES-128-XTS, 32-byte key; data files only */
 } CipherType;
 
 extern uint32 pg_tde_cipher_key_length(CipherType cipher);

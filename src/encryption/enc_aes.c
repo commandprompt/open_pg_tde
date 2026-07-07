@@ -42,6 +42,9 @@ static const EVP_CIPHER *cipher_ctr_ecb_256 = NULL;
 static EVP_CIPHER_CTX *ctx_cbc_128 = NULL;
 static EVP_CIPHER_CTX *ctx_cbc_256 = NULL;
 
+/* AES-128-XTS uses a 32-byte key (two 128-bit keys) and a 16-byte tweak. */
+static EVP_CIPHER_CTX *ctx_xts_128 = NULL;
+
 static EVP_CIPHER_CTX *
 AesCbcInitCtx(const EVP_CIPHER *cipher, const char *name)
 {
@@ -72,6 +75,9 @@ AesInit(void)
 	cipher_gcm_256 = EVP_aes_256_gcm();
 	cipher_ctr_ecb_256 = EVP_aes_256_ecb();
 	ctx_cbc_256 = AesCbcInitCtx(EVP_aes_256_cbc(), "AES-256-CBC");
+
+	/* AesCbcInitCtx just wraps EVP_CipherInit_ex; it works for XTS too. */
+	ctx_xts_128 = AesCbcInitCtx(EVP_aes_128_xts(), "AES-128-XTS");
 
 	/* Register the built-in cipher suites that wrap the primitives above. */
 	TdeCipherRegistryInit();
@@ -145,6 +151,50 @@ AesRunCbc(int enc, const unsigned char *key, int key_len, const unsigned char *i
 	 */
 	out_len += out_len_final;
 	Assert(in_len == out_len);
+}
+
+/*
+ * AES-XTS variant of AesRunCbc, used to encrypt/decrypt a data page. XTS is a
+ * tweakable block cipher intended for storage: the IV is used as the tweak
+ * (the block's logical position) and, unlike CBC, no chaining crosses page
+ * boundaries. The 32-byte key holds the two AES-128 subkeys XTS requires.
+ */
+static void
+AesRunXts(int enc, const unsigned char *key, int key_len, const unsigned char *iv, const unsigned char *in, int in_len, unsigned char *out)
+{
+	int			out_len;
+	int			out_len_final;
+	EVP_CIPHER_CTX *ctx = ctx_xts_128;
+
+	Assert(key_len == 32);
+	Assert(ctx != NULL);
+
+	if (EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, enc) == 0)
+		ereport(ERROR,
+				errmsg("EVP_CipherInit_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+
+	if (EVP_CipherUpdate(ctx, out, &out_len, in, in_len) == 0)
+		ereport(ERROR,
+				errmsg("EVP_CipherUpdate failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+
+	if (EVP_CipherFinal_ex(ctx, out + out_len, &out_len_final) == 0)
+		ereport(ERROR,
+				errmsg("EVP_CipherFinal_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+
+	out_len += out_len_final;
+	Assert(in_len == out_len);
+}
+
+void
+AesXtsEncrypt(const unsigned char *key, int key_len, const unsigned char *iv, const unsigned char *in, int in_len, unsigned char *out)
+{
+	AesRunXts(1, key, key_len, iv, in, in_len, out);
+}
+
+void
+AesXtsDecrypt(const unsigned char *key, int key_len, const unsigned char *iv, const unsigned char *in, int in_len, unsigned char *out)
+{
+	AesRunXts(0, key, key_len, iv, in, in_len, out);
 }
 
 void

@@ -57,6 +57,12 @@ TdeCipherRegistryInit(void)
 	register_cipher(CIPHER_AES_128, "aes-128", 16, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
 	register_cipher(CIPHER_AES_256, "aes-256", 32, AesEncrypt, AesDecrypt, AesCtrEncryptedZeroBlocks);
 
+	/*
+	 * AES-128-XTS is a data-file (block) cipher only. It has no keystream, so
+	 * it is never selected for the WAL/stream path (see TdeCipherByKeyLen).
+	 */
+	register_cipher(CIPHER_AES_128_XTS, "aes-128-xts", 32, AesXtsEncrypt, AesXtsDecrypt, NULL);
+
 	tde_cipher_registry_initialized = true;
 }
 
@@ -75,15 +81,20 @@ TdeCipherByName(const char *name)
 const TdeCipher *
 TdeCipherByKeyLen(int key_len)
 {
+	/*
+	 * Used only by the WAL/stream path, which needs a keystream cipher. Skip
+	 * block-only ciphers (e.g. XTS) so a shared key length does not resolve to
+	 * the wrong suite.
+	 */
 	for (int i = 0; i < tde_cipher_count; i++)
 	{
-		if (tde_ciphers[i].key_len == (uint32_t) key_len)
+		if (tde_ciphers[i].key_len == (uint32_t) key_len && tde_ciphers[i].keystream != NULL)
 			return &tde_ciphers[i];
 	}
 
 	ereport(ERROR,
 			errcode(ERRCODE_INTERNAL_ERROR),
-			errmsg("no pg_tde cipher registered for key length %d", key_len));
+			errmsg("no pg_tde keystream cipher registered for key length %d", key_len));
 
 	return NULL;				/* keep the compiler happy */
 }

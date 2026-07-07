@@ -366,6 +366,7 @@ tap_tests = [
   't/reuse_relfilenode_in_cache.pl',
   't/rotate_key.pl',
   't/tde_heap_aes_256.pl',
+  't/tde_heap_xts.pl',
   't/tde_heap.pl',
   't/unlogged_tables.pl',
   't/wal_archiving.pl',

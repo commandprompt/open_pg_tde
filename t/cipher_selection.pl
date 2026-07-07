@@ -27,7 +27,7 @@ $node->safe_psql(
 # --- GUC validation -------------------------------------------------------
 
 is($node->safe_psql('postgres', 'SHOW pg_tde.data_cipher'),
-	'inherit', 'pg_tde.data_cipher defaults to inherit');
+	'aes_xts', 'pg_tde.data_cipher defaults to aes_xts');
 
 is( $node->safe_psql(
 		'postgres', 'SET pg_tde.data_cipher = aes_256; SHOW pg_tde.data_cipher'),
@@ -38,6 +38,11 @@ is( $node->safe_psql(
 		'postgres', 'SET pg_tde.data_cipher = aes_128; SHOW pg_tde.data_cipher'),
 	'aes_128',
 	'pg_tde.data_cipher accepts aes_128');
+
+is( $node->safe_psql(
+		'postgres', 'SET pg_tde.data_cipher = aes_xts; SHOW pg_tde.data_cipher'),
+	'aes_xts',
+	'pg_tde.data_cipher accepts aes_xts');
 
 my ($rc, $stdout, $stderr) =
   $node->psql('postgres', 'SET pg_tde.data_cipher = aes_999');

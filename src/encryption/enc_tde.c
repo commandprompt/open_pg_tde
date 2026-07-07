@@ -37,6 +37,8 @@ pg_tde_cipher_key_length(CipherType cipher)
 			return KEY_DATA_SIZE_128;
 		case CIPHER_AES_256:
 			return KEY_DATA_SIZE_256;
+		case CIPHER_AES_128_XTS:
+			return KEY_DATA_SIZE_256;	/* 32-byte key (two AES-128 subkeys) */
 
 		default:
 			elog(ERROR, "failed to get key size from the unknown cipher %d",

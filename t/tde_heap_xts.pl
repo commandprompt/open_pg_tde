@@ -1,3 +1,8 @@
+# tde_heap coverage with the data-file cipher set to AES-XTS.
+#
+# XTS shares a key length with AES-256-CBC, so this also exercises the
+# id-based cipher dispatch: tables encrypted with XTS must be read back with
+# XTS regardless of key length.
 use strict;
 use warnings FATAL => 'all';
 use PostgreSQL::Test::Cluster;
@@ -11,46 +16,16 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
 $node->append_conf('postgresql.conf', "shared_preload_libraries = 'pg_tde'");
-# This test exercises the AES-256-CBC data path, so request it explicitly
-# rather than relying on the data-file default (which is AES-XTS).
-$node->append_conf('postgresql.conf', "pg_tde.data_cipher = 'aes_256'");
+$node->append_conf('postgresql.conf', "pg_tde.data_cipher = 'aes_xts'");
 $node->start;
 
 $node->safe_psql(
 	'postgres', qq(
 	CREATE EXTENSION pg_tde;
-	SELECT pg_tde_add_database_key_provider_file('file-vault', '$keydir/db.keys');
-	SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'file-vault');
-	SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'file-vault');
+	SELECT pg_tde_add_database_key_provider_file('keyprov', '$keydir/db.keys');
+	SELECT pg_tde_create_key_using_database_key_provider('test-db-key', 'keyprov');
+	SELECT pg_tde_set_key_using_database_key_provider('test-db-key', 'keyprov');
 ));
-
-# test_enc0 (simple create table w tde_heap and aes_128 and then add data when changed key size)
-$node->safe_psql(
-	'postgres', qq(
-	CREATE TABLE test_enc0 (id SERIAL, k VARCHAR(32), PRIMARY KEY (id)) USING tde_heap;
-	INSERT INTO test_enc0 (k) VALUES ('multitude'), ('multitudinous');
-));
-
-$stdout =
-  $node->safe_psql('postgres', 'SELECT * FROM test_enc0 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc0');
-
-$node->append_conf('postgresql.conf', "pg_tde.cipher = 'aes_256'");
-$node->restart;
-
-$stdout =
-  $node->safe_psql('postgres', 'SELECT * FROM test_enc0 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can still read test_enc0');
-
-$node->safe_psql('postgres',
-	"INSERT INTO test_enc0 (k) VALUES ('multitudinously'), ('multitudinousness');"
-);
-
-$stdout =
-  $node->safe_psql('postgres', 'SELECT * FROM test_enc0 ORDER BY id;');
-is( $stdout,
-	"1|multitude\n2|multitudinous\n3|multitudinously\n4|multitudinousness",
-	'can still read test_enc0');
 
 # test_enc1 (simple create table w tde_heap)
 $node->safe_psql(
@@ -87,22 +62,6 @@ $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc3 ORDER BY id;');
 is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc3');
 
-# test_enc4 (create heap + alter default)
-if ($node->pg_version >= 17)
-{
-	$node->safe_psql(
-		'postgres', qq(
-		CREATE TABLE test_enc4 (id SERIAL, k VARCHAR(32), PRIMARY KEY (id)) USING heap;
-		INSERT INTO test_enc4 (k) VALUES ('multitude'), ('multitudinous');
-		SET default_table_access_method = "tde_heap";
-		ALTER TABLE test_enc4 SET ACCESS METHOD DEFAULT;
-	));
-
-	$stdout =
-	  $node->safe_psql('postgres', 'SELECT * FROM test_enc4 ORDER BY id;');
-	is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc4');
-}
-
 # test_enc5 (create tde_heap + truncate)
 $node->safe_psql(
 	'postgres', qq(
@@ -117,54 +76,36 @@ $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc5 ORDER BY id;');
 is($stdout, "3|multitude\n4|multitudinous", 'can read test_enc5');
 
-# test_enc6 (unencrypted table to cross check verify_table())
+# test_enc6 (unencrypted table to cross-check the at-rest checks below)
 $node->safe_psql(
 	'postgres', qq(
 	CREATE TABLE test_enc6 (id SERIAL, k VARCHAR(32), PRIMARY KEY (id)) USING heap;
 	INSERT INTO test_enc6 (k) VALUES ('multitude'), ('multitudinous');
 ));
 
-$stdout =
-  $node->safe_psql('postgres', 'SELECT * FROM test_enc6 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc6');
-
 $node->restart;
 
-# Verify that we still can read all tables
+# Verify that we still can read all tables after a restart.
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc1 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc1');
+is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc1 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc2 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc2');
+is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc2 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc3 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc3');
-if ($node->pg_version >= 17)
-{
-	$stdout =
-	  $node->safe_psql('postgres', 'SELECT * FROM test_enc4 ORDER BY id;');
-	is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc4');
-}
+is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc3 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc5 ORDER BY id;');
-is($stdout, "3|multitude\n4|multitudinous", 'can read test_enc5');
-$stdout =
-  $node->safe_psql('postgres', 'SELECT * FROM test_enc6 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc6');
+is($stdout, "3|multitude\n4|multitudinous", 'can read test_enc5 after restart');
 
-# Verify if we can see the data in the files
+# Verify the data is ciphertext on disk for tde_heap tables and plaintext for heap.
 unlike(slurp_relfile('test_enc1'),
 	qr/multitud/, 'should not find plain text in test_enc1');
 unlike(slurp_relfile('test_enc2'),
 	qr/multitud/, 'should not find plain text in test_enc2');
 unlike(slurp_relfile('test_enc3'),
 	qr/multitud/, 'should not find plain text in test_enc3');
-if ($node->pg_version >= 17)
-{
-	unlike(slurp_relfile('test_enc4'),
-		qr/multitud/, 'should not find plain text in test_enc4');
-}
 unlike(slurp_relfile('test_enc5'),
 	qr/multitud/, 'should not find plain text in test_enc5');
 like(slurp_relfile('test_enc6'),

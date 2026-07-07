@@ -20,10 +20,11 @@ int			KeyLength = KEY_DATA_SIZE_128;
  * Cipher used to encrypt new data-file (relation) keys. -1 means "inherit",
  * i.e. follow pg_tde.cipher; any other value is a CipherType id and overrides
  * it. The chosen id is persisted per relation, so existing tables keep using
- * the cipher recorded at their creation.
+ * the cipher recorded at their creation. Data files default to AES-XTS, the
+ * standard tweakable mode for storage encryption.
  */
 #define DATA_CIPHER_INHERIT (-1)
-int			DataCipher = DATA_CIPHER_INHERIT;
+int			DataCipher = CIPHER_AES_128_XTS;
 
 /* Custom GUC variable */
 static const struct config_enum_entry cipher_options[] = {
@@ -36,6 +37,7 @@ static const struct config_enum_entry data_cipher_options[] = {
 	{"inherit", DATA_CIPHER_INHERIT, false},
 	{"aes_128", CIPHER_AES_128, false},
 	{"aes_256", CIPHER_AES_256, false},
+	{"aes_xts", CIPHER_AES_128_XTS, false},
 	{NULL, 0, false}
 };
 
@@ -102,7 +104,7 @@ TdeGucInit(void)
 							 "'inherit' follows pg_tde.cipher; otherwise this overrides it for data files. "
 							 "The chosen cipher is recorded per table at creation time.",	/* long_desc */
 							 &DataCipher,	/* value address */
-							 DATA_CIPHER_INHERIT,	/* boot value */
+							 CIPHER_AES_128_XTS,	/* boot value */
 							 data_cipher_options,	/* options */
 							 PGC_SUSET, /* context */
 							 0, /* flags */
