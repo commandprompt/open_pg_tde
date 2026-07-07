@@ -15,10 +15,10 @@ use_directory_urls: false
 # Theme settings
 theme:
   name: material
-  logo: _images/postgresql-mark.svg
-  favicon: _images/postgresql-fav.svg
+  logo: _images/mammoth.png
+  favicon: _images/mammoth-48.png
   font:
-    text: Roboto
+    text: Work Sans
   palette:
     - media: "(prefers-color-scheme)"
       toggle:
@@ -59,6 +59,7 @@ extra_css:
   - css/design.css
   - css/postgresql.css
   - css/rating.css
+  - css/commandprompt.css
 
 extra_javascript:
   - js/version-select.js
