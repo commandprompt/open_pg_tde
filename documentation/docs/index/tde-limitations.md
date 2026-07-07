@@ -17,7 +17,7 @@ These incompatibilities can occur even when the hooks are enabled but `open_pg_t
 
 Limitations of `open_pg_tde` {{release}}:
 
-* PostgreSQL’s internal system tables, which include statistics and metadata, are not encrypted.
+* PostgreSQL’s internal system catalogs are not encrypted. Table and column names, table structure, and other schema metadata are stored in the clear, as are optimizer statistics in `pg_statistic`, which can include sampled values from encrypted columns. This does not expose encryption keys: the keys are held in the `open_pg_tde` key files wrapped by the principal key, not in the catalog. See the [threat model](threat-model.md) for the full scope.
 * Temporary files created when queries exceed `work_mem` are not encrypted by default. Enable [`encrypt_temp_files`](../variables.md#encrypt_temp_files) to encrypt them. With it off, these files may persist during long-running queries or after a server crash, which can expose sensitive data in plaintext on disk.
 
 ## Recovery without `open_pg_tde` in `shared_preload_libraries`

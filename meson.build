@@ -377,6 +377,8 @@ tap_tests = [
   't/unlogged_tables.pl',
   't/wal_archiving.pl',
   't/temp_file_encryption.pl',
+  't/checksum_hint_bits.pl',
+  't/checksum_startup_warning.pl',
   't/wal_encrypt.pl',
   't/wal_key_tli.pl',
 ]
