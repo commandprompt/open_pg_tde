@@ -313,6 +313,49 @@ index 29d4df7..7cad63d 100644
  
  		/* Update state for read */
  		recptr += readbytes;
+diff --git a/src/backend/access/transam/xlogrecovery.c b/src/backend/access/transam/xlogrecovery.c
+index 4761871..0ba2f0c 100644
+--- a/src/backend/access/transam/xlogrecovery.c
++++ b/src/backend/access/transam/xlogrecovery.c
+@@ -40,6 +40,9 @@
+ #include "access/xlogreader.h"
+ #include "access/xlogrecovery.h"
+ #include "access/xlogutils.h"
++#ifdef USE_TDE_HOOKS
++#include "access/xlog_smgr.h"
++#endif
+ #include "backup/basebackup.h"
+ #include "catalog/pg_control.h"
+ #include "commands/tablespace.h"
+@@ -3423,7 +3426,12 @@ retry:
+ 	io_start = pgstat_prepare_io_time(track_wal_io_timing);
+ 
+ 	pgstat_report_wait_start(WAIT_EVENT_WAL_READ);
++#ifdef USE_TDE_HOOKS
++	r = xlog_smgr->seg_read(readFile, readBuf, XLOG_BLCKSZ, (off_t) readOff,
++							curFileTLI, readSegNo, wal_segment_size);
++#else
+ 	r = pg_pread(readFile, readBuf, XLOG_BLCKSZ, (off_t) readOff);
++#endif
+ 	if (r != XLOG_BLCKSZ)
+ 	{
+ 		char		fname[MAXFNAMELEN];
+diff --git a/src/backend/access/transam/xlogutils.c b/src/backend/access/transam/xlogutils.c
+index 0d67f25..cfc1748 100644
+--- a/src/backend/access/transam/xlogutils.c
++++ b/src/backend/access/transam/xlogutils.c
+@@ -511,7 +511,11 @@ XLogReadBufferExtended(RelFileLocator rlocator, ForkNumber forknum,
+ 	 * filesystem loses an inode during a crash.  Better to write the data
+ 	 * until we are actually told to delete the file.)
+ 	 */
++#ifdef USE_TDE_HOOKS
++	smgrcreate_percona(rlocator, smgr, forknum, true);
++#else
+ 	smgrcreate(smgr, forknum, true);
++#endif
+ 
+ 	lastblock = smgrnblocks(smgr, forknum);
+ 
 diff --git a/src/backend/bootstrap/bootparse.y b/src/backend/bootstrap/bootparse.y
 index 9833f52..050a997 100644
 --- a/src/backend/bootstrap/bootparse.y
@@ -809,6 +852,34 @@ index 5abe026..7a57ad7 100644
  
  			/*
  			 * WAL log creation if the relation is persistent, or this is the
+diff --git a/src/backend/replication/walreceiver.c b/src/backend/replication/walreceiver.c
+index 6df19f8..fc241b5 100644
+--- a/src/backend/replication/walreceiver.c
++++ b/src/backend/replication/walreceiver.c
+@@ -57,6 +57,9 @@
+ #include "access/xlog_internal.h"
+ #include "access/xlogarchive.h"
+ #include "access/xlogrecovery.h"
++#ifdef USE_TDE_HOOKS
++#include "access/xlog_smgr.h"
++#endif
+ #include "catalog/pg_authid.h"
+ #include "funcapi.h"
+ #include "libpq/pqformat.h"
+@@ -928,7 +931,13 @@ XLogWalRcvWrite(char *buf, Size nbytes, XLogRecPtr recptr, TimeLineID tli)
+ 		start = pgstat_prepare_io_time(track_wal_io_timing);
+ 
+ 		pgstat_report_wait_start(WAIT_EVENT_WAL_WRITE);
++#ifdef USE_TDE_HOOKS
++		byteswritten = xlog_smgr->seg_write(recvFile, buf, segbytes,
++											(off_t) startoff, recvFileTLI,
++											recvSegNo, wal_segment_size);
++#else
+ 		byteswritten = pg_pwrite(recvFile, buf, segbytes, (off_t) startoff);
++#endif
+ 		pgstat_report_wait_end();
+ 
+ 		if (byteswritten <= 0)
 diff --git a/src/backend/storage/aio/aio_callback.c b/src/backend/storage/aio/aio_callback.c
 index 03c9bba..7a29b52 100644
 --- a/src/backend/storage/aio/aio_callback.c
