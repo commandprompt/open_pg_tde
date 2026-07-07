@@ -155,6 +155,7 @@ nav:
       - "Threat model": index/threat-model.md
       - "Table access methods and open_pg_tde": index/table-access-method.md
     - "Limitations of open_pg_tde": index/tde-limitations.md
+    - "Comparison with Percona pg_tde": index/comparison-percona.md
     - "Versions and supported PostgreSQL deployments": index/supported-versions.md
   - "Get started":
     - "1. Install open_pg_tde": install.md
