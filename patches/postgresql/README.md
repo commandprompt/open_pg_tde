@@ -94,9 +94,19 @@ scratch. Two lessons already recorded:
 | PostgreSQL | Data files | WAL | Frontend tools | Compile-time gate |
 |------------|-----------|-----|----------------|-------------------|
 | 18 | Done (full `tde_heap` suite: basic, AES-256, AES-XTS, cipher selection, TRUNCATE/VACUUM inheritance, CREATE DATABASE) | **Done** (encrypt, recovery, archiving, key TLI) | **Done** (rewind, basebackup, upgrade) | **Done** (verified OFF=clean PG / ON=encrypts; `verify-gate.sh`) |
+| 17 | Done | Done | Done | Done (verified OFF=clean PG / ON=encrypts) |
+| 14 - 16 | Patch series in progress | | | |
 
-**PostgreSQL 18: full extension suite passes (42/42).** Run the suite with
+**PostgreSQL 18: full extension suite passes (42/42). PostgreSQL 17: 41/42
+(one test, `keys_update`, requires PG18 and self-skips).** Run the suite with
 `LD_LIBRARY_PATH=<prefix>/lib` so the frontend tools find `libpq` at runtime.
+
+The PG17 series is derived from the pg_tde project's `TDE_REL_17_STABLE`
+branch (rather than full Percona Server), so it carries only the core changes
+the extension needs. PG17 has no AIO subsystem (so no `aio.h`/`aio_callback.c`)
+and registers the md storage manager in `postmaster.c` + `miscinit.c` (no
+`launch_backend.c` change). It also backports one small PostgreSQL 18 security
+helper, `path_is_safe_for_extraction()`, that the frontend tools require.
 | 14-17 | Not started | — | — | — |
 
 See `../../TODO.md` for the tracked work.
