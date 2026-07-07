@@ -83,7 +83,8 @@ Thus, to protect your sensitive data, consider using TDE to encrypt it at the ta
 
 You can use the following KMSs:
 
-* KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management; for more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
+* KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management. For more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
+* [OpenBao](https://openbao.org/), an Apache 2.0 licensed fork of HashiCorp Vault. `pg_tde` uses its Key/Value version 2 secrets engine. For more information see [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
 
 For development and testing, keys can also be stored in a local keyring file instead of an external KMS.
 

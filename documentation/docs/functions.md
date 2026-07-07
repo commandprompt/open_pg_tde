@@ -107,6 +107,60 @@ where:
 !!! note
     The specified access parameters require permission to read and write keys at the server.
 
+#### Add or modify OpenBao providers
+
+The OpenBao provider uses the Key/Value version 2 (KV v2) secrets engine of an OpenBao server.
+
+Use these functions to add an OpenBao provider:
+
+```sql
+SELECT pg_tde_add_database_key_provider_openbao(
+  'provider-name',
+  'url',
+  'mount',
+  'token_path',
+  'ca_path'
+);
+
+SELECT pg_tde_add_global_key_provider_openbao(
+  'provider-name',
+  'url',
+  'mount',
+  'token_path',
+  'ca_path'
+);
+```
+
+These functions change the OpenBao provider:
+
+```sql
+SELECT pg_tde_change_database_key_provider_openbao(
+  'provider-name',
+  'url',
+  'mount',
+  'token_path',
+  'ca_path'
+);
+
+SELECT pg_tde_change_global_key_provider_openbao(
+  'provider-name',
+  'url',
+  'mount',
+  'token_path',
+  'ca_path'
+);
+```
+
+where:
+
+* `provider-name` is the name of the provider.
+* `url` is the URL of the OpenBao server.
+* `mount` is the mount point where the keyring stores the keys.
+* `token_path` is the path to a file that contains an access token with read and write access to the mount point.
+* `ca_path` is the path of the CA file used for TLS verification. This parameter is optional.
+
+A sixth `namespace` parameter is also accepted to select an OpenBao namespace. See [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
+
 ### Add or modify local key file providers
 
 This provider manages database keys using a local key file.
