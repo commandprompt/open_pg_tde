@@ -1,0 +1,89 @@
+/*
+ * Command Prompt brand theme for the open_pg_tde documentation.
+ * Palette and fonts taken from commandprompt.com. Loaded last in extra_css so
+ * it overrides the inherited palette in design.css.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Work+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+/* Brand primitives (commandprompt.com) */
+:root {
+  --cp-blue:        #014d80; /* primary */
+  --cp-blue-dark:   #022f51; /* hover / darker */
+  --cp-blue-mid:    #065a92;
+  --cp-blue-light:  #7fb3d5; /* readable link color on dark backgrounds */
+  --cp-gold:        #dba507; /* accent */
+  --cp-mist:        #e2e6ed; /* light section background */
+  --cp-ink:         #343a40; /* body text */
+
+  /* Repoint the inherited "sky" ramp to Command Prompt blues so any rule
+     that still references it picks up the brand color. */
+  --sky900: #022f51;
+  --sky800: #043f6a;
+  --sky700: #014d80;
+  --sky600: #065a92;
+  --sky500: #0075a1;
+  --sky400: #2f89b8;
+  --sky300: #5aa0c9;
+  --sky200: #93c7ff;
+}
+
+/* Light scheme */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        var(--cp-blue);
+  --md-primary-fg-color--light: var(--cp-blue-mid);
+  --md-primary-fg-color--dark:  var(--cp-blue-dark);
+  --md-accent-fg-color:         var(--cp-gold);
+  --md-typeset-a-color:         var(--cp-blue);
+  --md-typeset-color:           var(--cp-ink);
+}
+
+/* Dark scheme (Material "slate"): keep the brand blue header and gold accent,
+   lighten link text for contrast. */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color:        var(--cp-blue);
+  --md-primary-fg-color--light: var(--cp-blue-mid);
+  --md-primary-fg-color--dark:  var(--cp-blue-dark);
+  --md-accent-fg-color:         var(--cp-gold);
+  --md-typeset-a-color:         var(--cp-blue-light);
+}
+
+/* Body font is Work Sans (set via mkdocs font.text); headings use Manrope. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6,
+.md-header__title,
+.md-nav__title,
+.md-nav__item--section > .md-nav__link {
+  font-family: "Manrope", "Work Sans", sans-serif;
+  font-weight: 700;
+}
+
+/* Accent underline under the top-level page title, echoing the site. */
+.md-typeset h1 {
+  color: var(--cp-blue);
+  border-bottom: 3px solid var(--cp-gold);
+  padding-bottom: 0.2em;
+}
+
+/* Primary buttons in the brand blue, matching the site's rounded buttons. */
+.md-typeset .md-button--primary {
+  background-color: var(--cp-blue);
+  border-color: var(--cp-blue);
+  color: #ffffff;
+}
+.md-typeset .md-button--primary:hover,
+.md-typeset .md-button--primary:focus {
+  background-color: var(--cp-gold);
+  border-color: var(--cp-gold);
+  color: var(--cp-ink);
+}
+
+/* Slightly tint admonition/section backgrounds toward the brand mist. */
+[data-md-color-scheme="default"] .md-typeset :is(h2, h3) {
+  color: var(--cp-blue-dark);
+}
