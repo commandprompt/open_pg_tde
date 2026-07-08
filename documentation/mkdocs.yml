@@ -19,7 +19,7 @@ exclude_docs: |
 # Theme settings
 theme:
   name: material
-  logo: _images/open_pg_tde-logo/mark/icon-white.svg
+  logo: _images/open_pg_tde-logo/mark/icon-color.svg
   favicon: _images/open_pg_tde-logo/favicon/favicon.svg
   font:
     text: Work Sans
