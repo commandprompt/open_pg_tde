@@ -114,6 +114,5 @@ releases are built. All C code follows the
 
 ## License
 
-`open_pg_tde` is derived from Percona `pg_tde` and is distributed under the
-PostgreSQL License. It retains the original copyright for the derived work.
+`open_pg_tde` is distributed under the PostgreSQL License. It retains the original copyright for the derived work.
 Command Prompt, Inc. maintains `open_pg_tde` and is not affiliated with Percona.

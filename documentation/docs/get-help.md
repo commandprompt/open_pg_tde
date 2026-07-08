@@ -24,5 +24,5 @@ for how to report them privately.
 
 ## About the project
 
-`open_pg_tde` is an open fork of Percona's `pg_tde`, maintained by
+`open_pg_tde` is an open fork of `pg_tde`, maintained by
 [Command Prompt, Inc.](https://www.commandprompt.com)
