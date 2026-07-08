@@ -23,9 +23,9 @@ write-ahead log are encrypted on disk while remaining transparent to queries. It
 runs on **upstream PostgreSQL 16, 17, and 18**, with no vendor server fork
 required.
 
-> `open_pg_tde` is an open fork of [Percona `pg_tde`](https://github.com/percona/pg_tde),
+> `open_pg_tde` is an open fork of `pg_tde`,
 > maintained by [Command Prompt, Inc.](https://www.commandprompt.com/) See how
-> they differ in the [comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md).
+> they differ in the [comparison with pg_tde](documentation/docs/index/comparison-percona.md).
 
 ## Features
 
