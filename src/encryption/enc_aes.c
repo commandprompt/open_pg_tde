@@ -39,12 +39,32 @@ static const EVP_CIPHER *cipher_ctr_ecb_128 = NULL;
 static const EVP_CIPHER *cipher_gcm_256 = NULL;
 static const EVP_CIPHER *cipher_ctr_ecb_256 = NULL;
 
-static EVP_CIPHER_CTX *ctx_cbc_128 = NULL;
-static EVP_CIPHER_CTX *ctx_cbc_256 = NULL;
+/*
+ * A keyed cipher context together with the key and direction last loaded into
+ * it. Expanding an AES key schedule is expensive, and on the data-page path the
+ * key is constant for a whole relation while only the per-block IV/tweak
+ * changes. These four contexts are shared across all relations of a given
+ * cipher and key length, so caching the loaded key lets consecutive pages of
+ * one relation (a sequential scan) re-key once instead of once per 8 KB page;
+ * access that interleaves relations still re-keys per page but stays correct.
+ * aes_ctx_prepare() re-keys only when the key or direction changes and
+ * otherwise sets just the IV. The key copy lives no longer than the key
+ * schedule the context already retains.
+ */
+typedef struct AesCtxCache
+{
+	EVP_CIPHER_CTX *ctx;
+	unsigned char key[EVP_MAX_KEY_LENGTH];	/* last key loaded (XTS-256 = 64) */
+	int			key_len;		/* 0 until a key has been loaded */
+	int			enc;			/* last direction: 1 enc, 0 dec, -1 none */
+} AesCtxCache;
+
+static AesCtxCache ctx_cbc_128;
+static AesCtxCache ctx_cbc_256;
 
 /* AES-XTS uses a double-length key (two AES subkeys) and a 16-byte tweak. */
-static EVP_CIPHER_CTX *ctx_xts_128 = NULL;	/* AES-128-XTS, 32-byte key */
-static EVP_CIPHER_CTX *ctx_xts_256 = NULL;	/* AES-256-XTS, 64-byte key */
+static AesCtxCache ctx_xts_128; /* AES-128-XTS, 32-byte key */
+static AesCtxCache ctx_xts_256; /* AES-256-XTS, 64-byte key */
 
 static EVP_CIPHER_CTX *
 AesCbcInitCtx(const EVP_CIPHER *cipher, const char *name)
@@ -71,15 +91,19 @@ AesInit(void)
 
 	cipher_gcm_128 = EVP_aes_128_gcm();
 	cipher_ctr_ecb_128 = EVP_aes_128_ecb();
-	ctx_cbc_128 = AesCbcInitCtx(EVP_aes_128_cbc(), "AES-128-CBC");
+	ctx_cbc_128.ctx = AesCbcInitCtx(EVP_aes_128_cbc(), "AES-128-CBC");
+	ctx_cbc_128.enc = -1;
 
 	cipher_gcm_256 = EVP_aes_256_gcm();
 	cipher_ctr_ecb_256 = EVP_aes_256_ecb();
-	ctx_cbc_256 = AesCbcInitCtx(EVP_aes_256_cbc(), "AES-256-CBC");
+	ctx_cbc_256.ctx = AesCbcInitCtx(EVP_aes_256_cbc(), "AES-256-CBC");
+	ctx_cbc_256.enc = -1;
 
 	/* AesCbcInitCtx just wraps EVP_CipherInit_ex; it works for XTS too. */
-	ctx_xts_128 = AesCbcInitCtx(EVP_aes_128_xts(), "AES-128-XTS");
-	ctx_xts_256 = AesCbcInitCtx(EVP_aes_256_xts(), "AES-256-XTS");
+	ctx_xts_128.ctx = AesCbcInitCtx(EVP_aes_128_xts(), "AES-128-XTS");
+	ctx_xts_128.enc = -1;
+	ctx_xts_256.ctx = AesCbcInitCtx(EVP_aes_256_xts(), "AES-256-XTS");
+	ctx_xts_256.enc = -1;
 
 	/* Register the built-in cipher suites that wrap the primitives above. */
 	TdeCipherRegistryInit();
@@ -117,27 +141,61 @@ AesEcbEncrypt(EVP_CIPHER_CTX **ctxPtr, const unsigned char *key, int key_len, co
 }
 
 /*
+ * Load key, direction, and IV into a cached context. Re-keying (which re-expands
+ * the AES key schedule) happens only when the key or direction differs from what
+ * the context already holds; otherwise only the IV/tweak is set. The key is
+ * constant for a whole relation on the data-page path, so a sequential scan
+ * re-keys once per relation rather than once per page.
+ */
+static void
+aes_ctx_prepare(AesCtxCache *cc, int enc, const unsigned char *key, int key_len, const unsigned char *iv)
+{
+	/* The cached-key buffer is EVP_MAX_KEY_LENGTH; guard the memcmp/memcpy. */
+	if (key_len < 0 || key_len > (int) sizeof(cc->key))
+		ereport(ERROR,
+				errmsg("unsupported key length %d for cached cipher context", key_len));
+
+	if (cc->key_len == key_len && cc->enc == enc &&
+		memcmp(cc->key, key, key_len) == 0)
+	{
+		/* Same key and direction: keep the key schedule, set only the IV. */
+		if (EVP_CipherInit_ex(cc->ctx, NULL, NULL, NULL, iv, -1) == 0)
+			ereport(ERROR,
+					errmsg("EVP_CipherInit_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+		return;
+	}
+
+	if (EVP_CipherInit_ex(cc->ctx, NULL, NULL, key, iv, enc) == 0)
+		ereport(ERROR,
+				errmsg("EVP_CipherInit_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+
+	memcpy(cc->key, key, key_len);
+	cc->key_len = key_len;
+	cc->enc = enc;
+}
+
+/*
  * Used to encrypt or decrypt a page in shared buffers
  *
  * For performance reasons the cipher context is created once on startup and
- * re-used with different key and IV.
+ * re-used, re-keying only when the relation key changes (see aes_ctx_prepare).
  */
 static void
 AesRunCbc(int enc, const unsigned char *key, int key_len, const unsigned char *iv, const unsigned char *in, int in_len, unsigned char *out)
 {
 	int			out_len;
 	int			out_len_final;
+	AesCtxCache *cc;
 	EVP_CIPHER_CTX *ctx;
 
 	Assert(key_len == 16 || key_len == 32);
-	ctx = key_len == 32 ? ctx_cbc_256 : ctx_cbc_128;
+	cc = key_len == 32 ? &ctx_cbc_256 : &ctx_cbc_128;
+	ctx = cc->ctx;
 
 	Assert(ctx != NULL);
 	Assert(in_len % EVP_CIPHER_CTX_block_size(ctx) == 0);
 
-	if (EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, enc) == 0)
-		ereport(ERROR,
-				errmsg("EVP_CipherInit_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+	aes_ctx_prepare(cc, enc, key, key_len, iv);
 
 	if (EVP_CipherUpdate(ctx, out, &out_len, in, in_len) == 0)
 		ereport(ERROR,
@@ -167,14 +225,13 @@ AesRunXts(int enc, const unsigned char *key, int key_len, const unsigned char *i
 {
 	int			out_len;
 	int			out_len_final;
-	EVP_CIPHER_CTX *ctx = (key_len == 64) ? ctx_xts_256 : ctx_xts_128;
+	AesCtxCache *cc = (key_len == 64) ? &ctx_xts_256 : &ctx_xts_128;
+	EVP_CIPHER_CTX *ctx = cc->ctx;
 
 	Assert(key_len == 32 || key_len == 64);
 	Assert(ctx != NULL);
 
-	if (EVP_CipherInit_ex(ctx, NULL, NULL, key, iv, enc) == 0)
-		ereport(ERROR,
-				errmsg("EVP_CipherInit_ex failed. OpenSSL error: %s", ERR_error_string(ERR_get_error(), NULL)));
+	aes_ctx_prepare(cc, enc, key, key_len, iv);
 
 	if (EVP_CipherUpdate(ctx, out, &out_len, in, in_len) == 0)
 		ereport(ERROR,

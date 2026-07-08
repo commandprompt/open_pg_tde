@@ -46,7 +46,10 @@ setting and was left off in both configurations.
 - Encryption cost is CPU. A CPU with AES hardware acceleration (AES-NI on x86,
   the crypto extensions on ARM) keeps it low; confirm your build uses it.
 - AES-128-XTS (the default) is the least expensive data cipher. AES-256 variants
-  use a longer key schedule and cost slightly more.
+  use a longer key schedule and cost slightly more. The key schedule for a
+  relation is expanded once and reused across its pages rather than recomputed
+  per page, so the per-page cost is dominated by the cipher itself, not by key
+  setup.
 - Encrypt selectively. `tde_heap` is per table, so tables that do not hold
   sensitive data can stay on `heap` and avoid the cost entirely.
 - Size `shared_buffers` so the hot set stays resident, which keeps decryption off
