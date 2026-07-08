@@ -63,7 +63,7 @@ open_pg_tde uses [OpenBao](https://openbao.org/), the Apache 2.0 licensed fork o
 HashiCorp Vault, through its Key/Value version 2 secrets engine, rather than
 HashiCorp Vault directly. It also supports KMIP-compatible key management
 systems and a local keyring file. See the
-[key management overview](../global-key-provider-configuration/overview.md).
+[key management overview](../key-management/overview.md).
 
 ## Attribution
 

@@ -618,63 +618,6 @@ i[warning] [class*="moji"] {
     pointer-events: none;
 }
 
-/* Super Nav */
-
-.superNav {
-    font-family: var(--fHeading);
-    font-size: 0.5625rem;
-    line-height: 1;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.0625em;
-    color: var(--white);
-    background-color: var(--stone800);
-}
-.superNav a {
-    display: inline-block;
-    padding: 0.25rem 0.625rem !important;
-    transition: all 0.2s ease-out;
-}
-.superNav a:hover {
-    opacity: 0.7;
-}
-.superNav svg {
-    width: 1.375em;
-    height: 1.375em;
-    margin-right: 0.125em;
-    fill: currentColor;
-    vertical-align: -0.3125em;
-}
-
-/* Version Select */
-
-.version-select::after {
-    content: "\25BE";
-    display: inline-block;
-    margin-left: -1em;
-    transform: translate(-0.625em, -0.0625em);
-    pointer-events: none;
-}
-#versionSelect {
-    -webkit-appearance: none;
-       -moz-appearance: none;
-            appearance: none;
-    align-self: center;
-    font-family: var(--fHeading);
-    font-size: 0.9rem;
-    line-height: 1;
-    font-weight: 700;
-    padding: 0.5em 1.375em 0.5em 0.5em;
-    margin: 0 0.25em;
-    background-color: rgba(0,0,0,0.2);
-    color: inherit;
-    border: none;
-    border-radius: 0.1rem;
-}
-#versionSelect::-ms-expand {
-    display: none;
-}
-
 /* Mike Version Select */
 
 .md-version__current,

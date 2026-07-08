@@ -33,11 +33,18 @@ manager interface changes between PostgreSQL majors. See
 `patches/postgresql/README.md` in the source tree for the current status and the
 maintenance process.
 
+On a supported version, `open_pg_tde` provides the `tde_heap` access method and
+encrypts tables, indexes, and WAL data.
+
+!!! note
+    Support for the earlier `tde_heap_basic` access method has been removed.
+    Use `tde_heap`.
+
 ## Next steps
 
 After finishing the installation, you can proceed with:
 
 [Set up open_pg_tde](setup.md){.md-button}
-[Learn about key management](global-key-provider-configuration/overview.md){.md-button}
+[Learn about key management](key-management/overview.md){.md-button}
 [Validate your encryption setup](test.md){.md-button}
 [Enable WAL encryption](wal-encryption.md){.md-button}

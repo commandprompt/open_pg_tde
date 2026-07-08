@@ -106,4 +106,4 @@ This variable selects the cipher independently of the key length, which is what 
 
 A `boolean` variable that requires OpenSSL to be in FIPS mode. When on, `open_pg_tde` verifies at startup that the OpenSSL FIPS provider is active and raises a fatal error if it is not, so the server does not run with non-validated cryptography. It requires a server restart and can only be set at the server level.
 
-This variable does not put OpenSSL into FIPS mode; it enforces that OpenSSL is already configured for FIPS. See [FIPS compliance](index/fips.md) for how to configure the FIPS provider and what open_pg_tde does and does not certify.
+This variable does not put OpenSSL into FIPS mode; it enforces that OpenSSL is already configured for FIPS. See [FIPS compliance](concepts/fips.md) for how to configure the FIPS provider and what open_pg_tde does and does not certify.

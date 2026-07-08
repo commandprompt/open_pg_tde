@@ -1,28 +1,5 @@
 # open_pg_tde release notes
 
-This page lists all release notes for `open_pg_tde`, organized by year and version. Use it to track new features, fixes, and updates across major and minor versions.
+This page lists the release notes for `open_pg_tde`. Use it to track new features, fixes, and updates across versions.
 
-## 2026
-
-* [2.2.1](release-notes-v2.2.1.md) ({{date.2_2_1}})
-* [2.2.0](release-notes-v2.2.0.md) ({{date.2_2_0}})
-* [2.1.2](release-notes-v2.1.2.md) ({{date.2_1_2}})
-* [2.1.1](release-notes-v2.1.1.md) ({{date.2_1_1}})
-
-## 2025
-
-* [2.1.0](release-notes-v2.1.md) ({{date.2_1}})
-* [2.0.0](release-notes-v2.0.md) ({{date.GA20}})
-* [1.0.0](release-notes-v1.0.md) ({{date.GA10}})
-* [Release Candidate 2 (RC2)](rc2.md)  ({{date.RC2}})
-* [Release Candidate 1 (RC1)](rc.md) ({{date.RC}})
-
-## 2024
-
-* [Beta 2](beta2.md) (2024-12-16)
-* [Beta 1](beta.md) (2024-06-30)
-* [Alpha 1](alpha1.md) (2024-03-28)
-
-## 2023
-
-* [MVP](mvp.md) (2023-12-12)
+* [2.3.0](release-notes-v2.3.0.md)

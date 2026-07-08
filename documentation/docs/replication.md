@@ -1,6 +1,6 @@
 # Streaming Replication with tde_heap
 
-This section outlines how to set up PostgreSQL streaming replication when the `open_pg_tde` extension, specifically the [`tde_heap`](index/table-access-method.md) access method, is enabled on the primary server.
+This section outlines how to set up PostgreSQL streaming replication when the `open_pg_tde` extension, specifically the [`tde_heap`](concepts/table-access-method.md) access method, is enabled on the primary server.
 
 Before you begin, ensure you have followed the [`open_pg_tde` setup instructions](setup.md).
 

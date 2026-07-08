@@ -95,4 +95,4 @@ Maintainers cutting a release build one source tarball per supported PostgreSQL 
 
 ## Documentation contribution
 
-To contribute to the documentation, see the [documentation contributing guide](documentation/documentation-contributing.md).
+To contribute to the documentation, see the [contributing guide](documentation/docs/contribute.md).

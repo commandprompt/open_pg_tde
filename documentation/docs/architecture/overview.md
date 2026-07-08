@@ -10,7 +10,7 @@ The following sections break down the key architectural components of this desig
 **a. Customizable** means that `open_pg_tde` supports many different use cases:
 
 * Encrypting all tables in all databases, or only selected ones
-* Storing encryption keys in different external key storage servers, for a list of these see [Key management overview](../global-key-provider-configuration/overview.md)
+* Storing encryption keys in different external key storage servers, for a list of these see [Key management overview](../key-management/overview.md)
 * Using a single key for a clusters, or different keys for different clusters
 * Centralizing all keys in one provider, or splitting them across providers
 * Controlling permissions: who manages keys and who can create encrypted or unencrypted tables

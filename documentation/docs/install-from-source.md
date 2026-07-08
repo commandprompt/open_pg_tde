@@ -114,6 +114,6 @@ patches/postgresql/verify-gate.sh /path/to/postgresql-src /usr/local/pg-tde \
 ## Next steps
 
 [Set up open_pg_tde](setup.md){.md-button}
-[Learn about key management](global-key-provider-configuration/overview.md){.md-button}
+[Learn about key management](key-management/overview.md){.md-button}
 [Validate your encryption setup](test.md){.md-button}
 [Enable WAL encryption](wal-encryption.md){.md-button}

@@ -21,7 +21,7 @@ After enabling the `open_pg_tde` extension for a database, you can begin encrypt
     ) USING tde_heap;
     ```
 
-    Learn more about table access methods and how you can enable data encryption by default in the [Table Access Methods and TDE](index/table-access-method.md) section.
+    Learn more about table access methods and how you can enable data encryption by default in the [Table Access Methods and TDE](concepts/table-access-method.md) section.
 
 2. To check if the data is encrypted, run the following function:
 

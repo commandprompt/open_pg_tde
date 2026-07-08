@@ -6,12 +6,12 @@ WAL encryption requires a principal key. You can satisfy this requirement in one
 
 If a default principal key is already configured for the server, WAL encryption uses it automatically. No additional server key configuration is required.
 
-If you have not yet configured a default principal key, see [Default Principal Key configuration](global-key-provider-configuration/set-principal-key.md).
+If you have not yet configured a default principal key, see [Default Principal Key configuration](key-management/set-principal-key.md).
 
 ## Option 2: Configure a dedicated server principal key for WAL
 
 !!! note
-    For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](index/tde-limitations.md).
+    For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](concepts/tde-limitations.md).
 
 1. Create the `open_pg_tde` extension if it does not exist:
 
@@ -21,7 +21,7 @@ If you have not yet configured a default principal key, see [Default Principal K
 
 2. Configure a global key provider
 
-    Before creating the server (principal) key for WAL encryption, you must first configure a global key provider. See [Key management overview](global-key-provider-configuration/overview.md) for detailed instructions on configuring supported key providers.
+    Before creating the server (principal) key for WAL encryption, you must first configure a global key provider. See [Key management overview](key-management/overview.md) for detailed instructions on configuring supported key providers.
 
 3. Create the server (principal) key using the global key provider
 
@@ -60,4 +60,4 @@ If you have not yet configured a default principal key, see [Default Principal K
 Now WAL files start to be encrypted for both encrypted and unencrypted tables.
 
 For more technical references related to architecture, variables or functions, see:
-[Technical Reference](advanced-topics/tech-reference.md){.md-button}
+[Architecture overview](architecture/overview.md){.md-button}

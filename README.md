@@ -25,7 +25,7 @@ required.
 
 > `open_pg_tde` is an open fork of `pg_tde`,
 > maintained by [Command Prompt, Inc.](https://www.commandprompt.com/) See how
-> they differ in the [comparison with pg_tde](documentation/docs/index/comparison-percona.md).
+> they differ in the [comparison with pg_tde](documentation/docs/concepts/comparison-percona.md).
 
 ## Features
 
@@ -33,7 +33,7 @@ required.
   recorded per table, so encrypted and plain tables coexist.
 - **Encrypted at rest:** table data, indexes, TOAST, the WAL, and temporary
   (query-spill) files. System catalogs and statistics are not encrypted; see the
-  [threat model](documentation/docs/index/threat-model.md).
+  [threat model](documentation/docs/concepts/threat-model.md).
 - **Data ciphers:** AES-128-XTS (default), AES-256-XTS, AES-128-CBC, and
   AES-256-CBC, selected with [`open_pg_tde.data_cipher`](documentation/docs/variables.md).
   The WAL uses AES-CTR.
@@ -42,7 +42,7 @@ required.
   [OpenBao](https://openbao.org/) as providers, per database or cluster-wide.
 - **FIPS:** all cryptography runs through OpenSSL with FIPS-approved modes, and
   the server can be required to start only in OpenSSL FIPS mode. See
-  [FIPS compliance](documentation/docs/index/fips.md).
+  [FIPS compliance](documentation/docs/concepts/fips.md).
 - **Upstream PostgreSQL:** a gated core patch adds the storage-manager and WAL
   hooks. With the flag off, the tree builds as unmodified PostgreSQL.
 
@@ -53,7 +53,7 @@ required.
 | 18 | Supported |
 | 17 | Supported |
 | 16 | Supported (minimum) |
-| 19 | Beta port in progress ([roadmap](docs/design/encryption-roadmap.md#postgresql-version-support)) |
+| 19 | Beta port in progress ([roadmap](design/encryption-roadmap.md#postgresql-version-support)) |
 
 ## Installation
 
@@ -93,17 +93,19 @@ encryption, and enabling encryption by default.
 
 ## Documentation
 
-The full documentation source is in [`documentation/`](documentation/).
+The full documentation is published at
+**[commandprompt.github.io/open_pg_tde](https://commandprompt.github.io/open_pg_tde/)**.
+The Markdown source lives in the `documentation/` directory of this repository.
 
 | | |
 | --- | --- |
 | [Setup and configuration](documentation/docs/setup.md) | Install, key providers, encrypted tables |
-| [Key management](documentation/docs/global-key-provider-configuration/overview.md) | Keyring file, KMIP, OpenBao |
+| [Key management](documentation/docs/key-management/overview.md) | Keyring file, KMIP, OpenBao |
 | [GUC variables](documentation/docs/variables.md) | All settings |
 | [Functions](documentation/docs/functions.md) | Helper functions |
-| [Threat model](documentation/docs/index/threat-model.md) | What encryption at rest does and does not protect |
-| [FIPS compliance](documentation/docs/index/fips.md) | Approved algorithms and FIPS mode |
-| [Comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md) | How the fork differs |
+| [Threat model](documentation/docs/concepts/threat-model.md) | What encryption at rest does and does not protect |
+| [FIPS compliance](documentation/docs/concepts/fips.md) | Approved algorithms and FIPS mode |
+| [Comparison with Percona pg_tde](documentation/docs/concepts/comparison-percona.md) | How the fork differs |
 
 ## Contributing
 

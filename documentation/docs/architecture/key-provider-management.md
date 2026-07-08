@@ -42,7 +42,7 @@ When you configure a key provider, `open_pg_tde`:
 !!! note
     Each key provider requires a detailed configuration, including the service address and authentication information.
 
-For a complete list of supported providers and their configuration steps, see the [Key management overview](../global-key-provider-configuration/overview.md).
+For a complete list of supported providers and their configuration steps, see the [Key management overview](../key-management/overview.md).
 
 ## Key provider management
 
