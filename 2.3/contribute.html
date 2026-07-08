@@ -10,6 +10,10 @@
       
       
       
+        <link rel="prev" href="faq.html">
+      
+      
+        <link rel="next" href="release-notes/release-notes.html">
       
       
         
@@ -20,7 +24,7 @@
     
     
       
-        <title>Contributing guide - open_pg_tde - Transparent Data Encryption for PostgreSQL</title>
+        <title>Contributing - open_pg_tde - Transparent Data Encryption for PostgreSQL</title>
       
     
     
@@ -57,10 +61,6 @@
       <link rel="stylesheet" href="css/extra.css">
     
       <link rel="stylesheet" href="css/design.css">
-    
-      <link rel="stylesheet" href="css/postgresql.css">
-    
-      <link rel="stylesheet" href="css/rating.css">
     
       <link rel="stylesheet" href="css/commandprompt.css">
     
@@ -148,7 +148,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing guide
+              Contributing
             
           </span>
         </div>
@@ -401,6 +401,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -419,7 +429,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Concepts
   
 
     
@@ -435,7 +445,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Overview
+    Concepts
   
 
           </label>
@@ -448,7 +458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="index/about-tde.html" class="md-nav__link">
+      <a href="concepts/about-tde.html" class="md-nav__link">
         
   
   
@@ -475,71 +485,8 @@
   
   
   
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2">
-        
-          
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    About open_pg_tde
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    About open_pg_tde
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="index/how-tde-helps.html" class="md-nav__link">
+      <a href="concepts/how-tde-helps.html" class="md-nav__link">
         
   
   
@@ -567,7 +514,7 @@
   
   
     <li class="md-nav__item">
-      <a href="index/how-does-tde-work.html" class="md-nav__link">
+      <a href="concepts/how-does-tde-work.html" class="md-nav__link">
         
   
   
@@ -595,14 +542,14 @@
   
   
     <li class="md-nav__item">
-      <a href="index/what-tde-impacts.html" class="md-nav__link">
+      <a href="concepts/what-tde-impacts.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Impact of open_pg_tde on database operations
+    Impact on database operations
   
 
     
@@ -623,7 +570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="index/tde-encrypts.html" class="md-nav__link">
+      <a href="concepts/tde-encrypts.html" class="md-nav__link">
         
   
   
@@ -651,7 +598,35 @@
   
   
     <li class="md-nav__item">
-      <a href="index/threat-model.html" class="md-nav__link">
+      <a href="concepts/table-access-method.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table access methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="concepts/threat-model.html" class="md-nav__link">
         
   
   
@@ -679,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="index/fips.html" class="md-nav__link">
+      <a href="concepts/fips.html" class="md-nav__link">
         
   
   
@@ -707,50 +682,14 @@
   
   
     <li class="md-nav__item">
-      <a href="index/table-access-method.html" class="md-nav__link">
+      <a href="concepts/tde-limitations.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Table access methods and open_pg_tde
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="index/tde-limitations.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Limitations of open_pg_tde
+    Limitations
   
 
     
@@ -771,7 +710,7 @@
   
   
     <li class="md-nav__item">
-      <a href="index/comparison-percona.html" class="md-nav__link">
+      <a href="concepts/comparison-percona.html" class="md-nav__link">
         
   
   
@@ -792,34 +731,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="index/supported-versions.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Versions and supported PostgreSQL deployments
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -835,8 +746,6 @@
   
     
     
-      
-        
       
         
       
@@ -904,7 +813,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install open_pg_tde
+    Install open_pg_tde
   
 
     
@@ -932,7 +841,7 @@
   <span class="md-ellipsis">
     
   
-    1.1 Install from source
+    Install from source
   
 
     
@@ -960,7 +869,7 @@
   <span class="md-ellipsis">
     
   
-    2. Configure open_pg_tde
+    Configure open_pg_tde
   
 
     
@@ -982,8 +891,6 @@
   
     
     
-      
-        
       
         
       
@@ -1015,7 +922,7 @@
   <span class="md-ellipsis">
     
   
-    2.1 Configure key management (KMS)
+    Key management
   
 
     
@@ -1031,7 +938,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    2.1 Configure key management (KMS)
+    Key management
   
 
           </label>
@@ -1044,14 +951,14 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/overview.html" class="md-nav__link">
+      <a href="key-management/overview.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Key management overview
+    Overview
   
 
     
@@ -1072,7 +979,7 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/kmip-server.html" class="md-nav__link">
+      <a href="key-management/kmip-server.html" class="md-nav__link">
         
   
   
@@ -1100,14 +1007,14 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/kmip-fortanix.html" class="md-nav__link">
+      <a href="key-management/kmip-servers.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Fortanix configuration
+    KMIP-compatible servers
   
 
     
@@ -1128,63 +1035,7 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/kmip-thales.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Thales configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="global-key-provider-configuration/kmip-akeyless.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Akeyless configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="global-key-provider-configuration/openbao.html" class="md-nav__link">
+      <a href="key-management/openbao.html" class="md-nav__link">
         
   
   
@@ -1212,7 +1063,7 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/keyring.html" class="md-nav__link">
+      <a href="key-management/keyring.html" class="md-nav__link">
         
   
   
@@ -1220,6 +1071,34 @@
     
   
     Keyring file configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="key-management/set-principal-key.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Default principal key
   
 
     
@@ -1248,34 +1127,6 @@
   
   
     <li class="md-nav__item">
-      <a href="global-key-provider-configuration/set-principal-key.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2 Default Principal Key configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="test.html" class="md-nav__link">
         
   
@@ -1283,7 +1134,7 @@
   <span class="md-ellipsis">
     
   
-    3. Validate encryption with open_pg_tde
+    Validate encryption
   
 
     
@@ -1311,7 +1162,7 @@
   <span class="md-ellipsis">
     
   
-    4. Configure WAL encryption
+    Configure WAL encryption
   
 
     
@@ -1340,10 +1191,6 @@
   
     
     
-      
-        
-      
-        
       
         
       
@@ -1401,34 +1248,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="advanced-topics/tech-reference.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -1446,17 +1265,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1">
         
           
-          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
     
   
-    About open_pg_tde architecture
+    Architecture
   
 
     
@@ -1467,12 +1286,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
             <span class="md-nav__icon md-icon"></span>
             
   
-    About open_pg_tde architecture
+    Architecture
   
 
           </label>
@@ -1492,7 +1311,7 @@
   <span class="md-ellipsis">
     
   
-    Architecture overview
+    Overview
   
 
     
@@ -1577,34 +1396,6 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced-topics/usage-guide.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Usage reference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="variables.html" class="md-nav__link">
         
   
@@ -1633,14 +1424,14 @@
   
   
     <li class="md-nav__item">
-      <a href="advanced-topics/performance.html" class="md-nav__link">
+      <a href="functions.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Performance
+    Functions
   
 
     
@@ -1661,14 +1452,14 @@
   
   
     <li class="md-nav__item">
-      <a href="functions.html" class="md-nav__link">
+      <a href="reference/performance.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Functions
+    Performance
   
 
     
@@ -1738,8 +1529,6 @@
       
         
       
-        
-      
     
     
     
@@ -1758,7 +1547,7 @@
   <span class="md-ellipsis">
     
   
-    TDE operations
+    Operations
   
 
     
@@ -1774,7 +1563,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    TDE operations
+    Operations
   
 
           </label>
@@ -1788,6 +1577,8 @@
   
     
     
+      
+        
       
         
       
@@ -1819,7 +1610,7 @@
   <span class="md-ellipsis">
     
   
-    open_pg_tde CLI tools
+    CLI tools
   
 
     
@@ -1835,7 +1626,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    open_pg_tde CLI tools
+    CLI tools
   
 
           </label>
@@ -2009,6 +1800,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="command-line-tools/pg-tde-upgrade.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    open_pg_tde_upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2143,35 +1962,7 @@
   <span class="md-ellipsis">
     
   
-    Backup with WAL encryption enabled
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="how-to/restore-backups.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Restore an encrypted open_pg_tde backup
+    Backup and restore
   
 
     
@@ -2223,24 +2014,190 @@
       
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="contribute.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#coding-standards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coding standards
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#submit-a-pull-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Submit a pull request
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Submit a pull request">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#run-local-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run local tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contribute-to-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contribute to documentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contribute to documentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#write-the-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Write the docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-documentation-online-via-github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit documentation online via GitHub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-documentation-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit documentation locally
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Edit documentation locally">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#preview-the-documentation-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview the documentation locally
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
   
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -2254,10 +2211,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10">
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
             
   
   
@@ -2275,8 +2232,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2300,7 +2257,7 @@
   <span class="md-ellipsis">
     
   
-    Release notes index
+    Overview
   
 
     
@@ -2337,559 +2294,6 @@
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.2.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2.1 (2026-07-06)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.2.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2.0 (2026-05-20)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.1.2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.2 (2026-03-02)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.1.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.1 (2026-01-22)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_7">
-        
-          
-          <label class="md-nav__link" for="__nav_9_7" id="__nav_9_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2025
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2025
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.0 (2025-11-28)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v2.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.0.0 (2025-09-01)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/release-notes-v1.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    1.0.0 (2025-06-30)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/rc2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Release Candidate 2 (2025-05-29)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/rc.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Release Candidate 1 (2025-03-27)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_8">
-        
-          
-          <label class="md-nav__link" for="__nav_9_8" id="__nav_9_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2024 (Alpha 1 - Beta 2)
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2024 (Alpha 1 - Beta 2)
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/beta2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Beta 2 (2024-12-16)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/beta.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Beta (2024-06-30)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/alpha1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Alpha 1 (2024-03-28)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_9">
-        
-          
-          <label class="md-nav__link" for="__nav_9_9" id="__nav_9_9_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2023 (MVP)
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_9">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2023 (MVP)
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="release-notes/mvp.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MVP (2023-12-12)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
     </li>
   
 
@@ -3014,10 +2418,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#building-the-documentation" class="md-nav__link">
+  <a href="#preview-the-documentation-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Building the documentation
+        Preview the documentation locally
       
     </span>
   </a>
@@ -3134,16 +2538,15 @@ git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </s
 </li>
 <li>Open a pull request against <a href="https://github.com/commandprompt/open_pg_tde"><code>commandprompt/open_pg_tde</code></a>.</li>
 </ol>
-<h4 id="building-the-documentation">Building the documentation<a class="headerlink" href="#building-the-documentation" title="Permanent link">¶</a></h4>
-<p>Install Material for MkDocs and the plugins the site uses, then build:</p>
+<h4 id="preview-the-documentation-locally">Preview the documentation locally<a class="headerlink" href="#preview-the-documentation-locally" title="Permanent link">¶</a></h4>
+<p>Install Material for MkDocs and the plugins the site uses from <code>documentation/requirements.txt</code>, then build or serve the site:</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>.<span class="w"> </span>.venv/bin/activate
-pip<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="w"> </span>mkdocs-open-in-new-tab<span class="w"> </span>mkdocs-git-revision-date-localized-plugin<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>mkdocs-meta-descriptions-plugin<span class="w"> </span>mkdocs-section-index<span class="w"> </span>mkdocs-glightbox<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>mkdocs-macros-plugin<span class="w"> </span>mkdocs-print-site-plugin
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>documentation/requirements.txt
 <span class="nb">cd</span><span class="w"> </span>documentation
 mkdocs<span class="w"> </span>build<span class="w">      </span><span class="c1"># writes the static site to ./site</span>
 mkdocs<span class="w"> </span>serve<span class="w">      </span><span class="c1"># or serve locally at http://127.0.0.1:8000</span>
 </code></pre></div>
+<p>Open <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a> to review your changes. <code>mkdocs serve</code> rebuilds the site as you edit.</p>
 
 
 
@@ -3166,7 +2569,7 @@ mkdocs<span class="w"> </span>serve<span class="w">      </span><span class="c1"
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"></path></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 14:21:44 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 8, 2026 17:34:30 UTC">July 8, 2026</span>
   </span>
 
     
@@ -3246,12 +2649,6 @@ mkdocs<span class="w"> </span>serve<span class="w">      </span><span class="c1"
       <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="js/print-site.js"></script>
-      
-        <script src="js/version-select.js"></script>
-      
-        <script src="js/promptremover.js"></script>
-      
-        <script src="js/rating.js"></script>
       
         <script src="js/open_in_new_tab.js"></script>
       

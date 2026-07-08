@@ -3,17 +3,23 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A table access method is the way how PostgreSQL stores the data in a table. The default table access method is heap. PostgreSQL organizes data in a heap structure, meaning there is no particular order to the rows in the table. Each row is stored independently and identified by its unique row identifier (TID).">
+        <meta name="description" content="open_pg_tde is an open fork of Percona’s pg_tde, maintained by
+Command Prompt, Inc. It keeps the core
+Transparent Data Encryption design of the original project: a two-tier key
+hierarchy, the tde_heap access method, per-table encryption, WAL encryption,
+and pluggable key providers. This page describes how the two differ, so you can
+choose the one that fits your deployment. For the current state of Percona
+pg_tde, see the Percona pg_tde documentation.">
       
       
         <meta name="author" content="Command Prompt, Inc.">
       
       
       
-        <link rel="prev" href="fips.html">
+        <link rel="prev" href="tde-limitations.html">
       
       
-        <link rel="next" href="tde-limitations.html">
+        <link rel="next" href="../install.html">
       
       
         
@@ -24,7 +30,7 @@
     
     
       
-        <title>Table access methods and open_pg_tde - open_pg_tde - Transparent Data Encryption for PostgreSQL</title>
+        <title>Comparison with Percona pg_tde - open_pg_tde - Transparent Data Encryption for PostgreSQL</title>
       
     
     
@@ -61,10 +67,6 @@
       <link rel="stylesheet" href="../css/extra.css">
     
       <link rel="stylesheet" href="../css/design.css">
-    
-      <link rel="stylesheet" href="../css/postgresql.css">
-    
-      <link rel="stylesheet" href="../css/rating.css">
     
       <link rel="stylesheet" href="../css/commandprompt.css">
     
@@ -113,7 +115,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#table-access-methods-and-open_pg_tde" class="md-skip">
+        <a href="#comparison-with-percona-pg_tde" class="md-skip">
           Skip to content
         </a>
       
@@ -152,7 +154,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Table access methods and open_pg_tde
+              Comparison with Percona pg_tde
             
           </span>
         </div>
@@ -407,6 +409,16 @@
       
         
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
     
     
     
@@ -425,7 +437,7 @@
   <span class="md-ellipsis">
     
   
-    Overview
+    Concepts
   
 
     
@@ -441,7 +453,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    Overview
+    Concepts
   
 
           </label>
@@ -474,71 +486,6 @@
   
 
               
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked="">
-        
-          
-          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    About open_pg_tde
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_4_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    About open_pg_tde
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
             
               
                 
@@ -610,7 +557,7 @@
   <span class="md-ellipsis">
     
   
-    Impact of open_pg_tde on database operations
+    Impact on database operations
   
 
     
@@ -639,6 +586,34 @@
     
   
     Encrypted data scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="table-access-method.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Table access methods
   
 
     
@@ -712,6 +687,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="tde-limitations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -731,7 +734,7 @@
   <span class="md-ellipsis">
     
   
-    Table access methods and open_pg_tde
+    Comparison with Percona pg_tde
   
 
     
@@ -742,14 +745,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="table-access-method.html" class="md-nav__link md-nav__link--active">
+      <a href="comparison-percona.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Table access methods and open_pg_tde
+    Comparison with Percona pg_tde
   
 
     
@@ -775,10 +778,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#how-the-heap-access-method-works" class="md-nav__link">
+  <a href="#the-main-difference-the-postgresql-server" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the heap access method works
+        The main difference: the PostgreSQL server
       
     </span>
   </a>
@@ -786,38 +789,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-access-method" class="md-nav__link">
+  <a href="#comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Custom access method
+        Comparison
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Custom access method">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-tde_heap-works-with-open_pg_tde" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How tde_heap works with open_pg_tde
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#changing-the-default-table-access-method" class="md-nav__link">
+  <a href="#what-open_pg_tde-focuses-on" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changing the default table access method
+        What open_pg_tde focuses on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attribution
       
     </span>
   </a>
@@ -839,98 +847,6 @@
     </li>
   
 
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="tde-limitations.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Limitations of open_pg_tde
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="comparison-percona.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Comparison with Percona pg_tde
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="supported-versions.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Versions and supported PostgreSQL deployments
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
     
       
       
@@ -940,8 +856,6 @@
   
     
     
-      
-        
       
         
       
@@ -1009,7 +923,7 @@
   <span class="md-ellipsis">
     
   
-    1. Install open_pg_tde
+    Install open_pg_tde
   
 
     
@@ -1037,7 +951,7 @@
   <span class="md-ellipsis">
     
   
-    1.1 Install from source
+    Install from source
   
 
     
@@ -1065,7 +979,7 @@
   <span class="md-ellipsis">
     
   
-    2. Configure open_pg_tde
+    Configure open_pg_tde
   
 
     
@@ -1087,8 +1001,6 @@
   
     
     
-      
-        
       
         
       
@@ -1120,7 +1032,7 @@
   <span class="md-ellipsis">
     
   
-    2.1 Configure key management (KMS)
+    Key management
   
 
     
@@ -1136,7 +1048,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    2.1 Configure key management (KMS)
+    Key management
   
 
           </label>
@@ -1149,14 +1061,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/overview.html" class="md-nav__link">
+      <a href="../key-management/overview.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Key management overview
+    Overview
   
 
     
@@ -1177,7 +1089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/kmip-server.html" class="md-nav__link">
+      <a href="../key-management/kmip-server.html" class="md-nav__link">
         
   
   
@@ -1205,14 +1117,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/kmip-fortanix.html" class="md-nav__link">
+      <a href="../key-management/kmip-servers.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Fortanix configuration
+    KMIP-compatible servers
   
 
     
@@ -1233,63 +1145,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/kmip-thales.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Thales configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/kmip-akeyless.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Akeyless configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/openbao.html" class="md-nav__link">
+      <a href="../key-management/openbao.html" class="md-nav__link">
         
   
   
@@ -1317,7 +1173,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/keyring.html" class="md-nav__link">
+      <a href="../key-management/keyring.html" class="md-nav__link">
         
   
   
@@ -1325,6 +1181,34 @@
     
   
     Keyring file configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../key-management/set-principal-key.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Default principal key
   
 
     
@@ -1353,34 +1237,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../global-key-provider-configuration/set-principal-key.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2 Default Principal Key configuration
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../test.html" class="md-nav__link">
         
   
@@ -1388,7 +1244,7 @@
   <span class="md-ellipsis">
     
   
-    3. Validate encryption with open_pg_tde
+    Validate encryption
   
 
     
@@ -1416,7 +1272,7 @@
   <span class="md-ellipsis">
     
   
-    4. Configure WAL encryption
+    Configure WAL encryption
   
 
     
@@ -1445,10 +1301,6 @@
   
     
     
-      
-        
-      
-        
       
         
       
@@ -1506,34 +1358,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../advanced-topics/tech-reference.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -1551,17 +1375,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1">
         
           
-          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
     
   
-    About open_pg_tde architecture
+    Architecture
   
 
     
@@ -1572,12 +1396,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1">
             <span class="md-nav__icon md-icon"></span>
             
   
-    About open_pg_tde architecture
+    Architecture
   
 
           </label>
@@ -1597,7 +1421,7 @@
   <span class="md-ellipsis">
     
   
-    Architecture overview
+    Overview
   
 
     
@@ -1682,34 +1506,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced-topics/usage-guide.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Usage reference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../variables.html" class="md-nav__link">
         
   
@@ -1738,14 +1534,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced-topics/performance.html" class="md-nav__link">
+      <a href="../functions.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Performance
+    Functions
   
 
     
@@ -1766,14 +1562,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../functions.html" class="md-nav__link">
+      <a href="../reference/performance.html" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Functions
+    Performance
   
 
     
@@ -1843,8 +1639,6 @@
       
         
       
-        
-      
     
     
     
@@ -1863,7 +1657,7 @@
   <span class="md-ellipsis">
     
   
-    TDE operations
+    Operations
   
 
     
@@ -1879,7 +1673,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    TDE operations
+    Operations
   
 
           </label>
@@ -1893,6 +1687,8 @@
   
     
     
+      
+        
       
         
       
@@ -1924,7 +1720,7 @@
   <span class="md-ellipsis">
     
   
-    open_pg_tde CLI tools
+    CLI tools
   
 
     
@@ -1940,7 +1736,7 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    open_pg_tde CLI tools
+    CLI tools
   
 
           </label>
@@ -2114,6 +1910,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../command-line-tools/pg-tde-upgrade.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    open_pg_tde_upgrade
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -2248,35 +2072,7 @@
   <span class="md-ellipsis">
     
   
-    Backup with WAL encryption enabled
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../how-to/restore-backups.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Restore an encrypted open_pg_tde backup
+    Backup and restore
   
 
     
@@ -2330,22 +2126,35 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../contribute.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -2359,10 +2168,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10">
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
             
   
   
@@ -2380,8 +2189,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2405,7 +2214,7 @@
   <span class="md-ellipsis">
     
   
-    Release notes index
+    Overview
   
 
     
@@ -2447,559 +2256,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.2.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2.1 (2026-07-06)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.2.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.2.0 (2026-05-20)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.1.2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.2 (2026-03-02)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.1.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.1 (2026-01-22)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_7">
-        
-          
-          <label class="md-nav__link" for="__nav_9_7" id="__nav_9_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2025
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2025
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.1.0 (2025-11-28)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v2.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2.0.0 (2025-09-01)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/release-notes-v1.0.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    1.0.0 (2025-06-30)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/rc2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Release Candidate 2 (2025-05-29)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/rc.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Release Candidate 1 (2025-03-27)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_8">
-        
-          
-          <label class="md-nav__link" for="__nav_9_8" id="__nav_9_8_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2024 (Alpha 1 - Beta 2)
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_8">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2024 (Alpha 1 - Beta 2)
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/beta2.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Beta 2 (2024-12-16)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/beta.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Beta (2024-06-30)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/alpha1.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Alpha 1 (2024-03-28)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_9">
-        
-          
-          <label class="md-nav__link" for="__nav_9_9" id="__nav_9_9_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    2023 (MVP)
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_9">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    2023 (MVP)
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes/mvp.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MVP (2023-12-12)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -3034,10 +2290,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#how-the-heap-access-method-works" class="md-nav__link">
+  <a href="#the-main-difference-the-postgresql-server" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How the heap access method works
+        The main difference: the PostgreSQL server
       
     </span>
   </a>
@@ -3045,38 +2301,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-access-method" class="md-nav__link">
+  <a href="#comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Custom access method
+        Comparison
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Custom access method">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-tde_heap-works-with-open_pg_tde" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How tde_heap works with open_pg_tde
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#changing-the-default-table-access-method" class="md-nav__link">
+  <a href="#what-open_pg_tde-focuses-on" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Changing the default table access method
+        What open_pg_tde focuses on
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attribution
       
     </span>
   </a>
@@ -3104,77 +2365,111 @@
     
       
     
-    <a href="https://github.com/commandprompt/open_pg_tde/raw/main/documentation/docs/index/table-access-method.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/commandprompt/open_pg_tde/raw/main/documentation/docs/concepts/comparison-percona.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"></path></svg>
     </a>
   
 
 
-<h1 id="table-access-methods-and-open_pg_tde">Table Access Methods and open_pg_tde<a class="headerlink" href="#table-access-methods-and-open_pg_tde" title="Permanent link">¶</a></h1>
-<p>A table access method is the way how PostgreSQL stores the data in a table. The default table access method is <code>heap</code>. PostgreSQL organizes data in a heap structure, meaning there is no particular order to the rows in the table. Each row is stored independently and identified by its unique row identifier (TID).</p>
-<h2 id="how-the-heap-access-method-works">How the heap access method works<a class="headerlink" href="#how-the-heap-access-method-works" title="Permanent link">¶</a></h2>
-<p><strong>Insertion</strong>: When a new row is inserted, PostgreSQL finds a free space in the tablespace and stores the row there.</p>
-<p><strong>Deletion</strong>: When a row is deleted, PostgreSQL marks the space occupied by the row as free, but the data remains until it is overwritten by a new insertion.</p>
-<p><strong>Updates</strong>: PostgreSQL handles updates by deleting the old row and inserting a new row with the updated values.</p>
-<h2 id="custom-access-method">Custom access method<a class="headerlink" href="#custom-access-method" title="Permanent link">¶</a></h2>
-<p>Custom access methods allow you to implement and define your own way of organizing data in PostgreSQL. This is useful if the default table access method doesn’t meet your needs.</p>
-<p>Custom access methods are typically available with PostgreSQL extensions. When you install an extension and enable it in PostgreSQL, a custom access method is created.</p>
-<p>An example of such an approach is the <code>tde_heap</code> access method. It is automatically created <strong>only</strong> for the databases where you <a href="../setup.html">enabled the <code>open_pg_tde</code> extension</a> and configured the key provider, enabling you to encrypt the data.</p>
-<p>To use a custom access method, specify the <code>USING</code> clause for the <code>CREATE TABLE</code> command:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">table_name</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">column1</span><span class="w"> </span><span class="n">data_type</span><span class="p">,</span>
-<span class="w">    </span><span class="n">column2</span><span class="w"> </span><span class="n">data_type</span><span class="p">,</span>
-<span class="w">    </span><span class="p">...</span>
-<span class="p">)</span><span class="w"> </span><span class="k">USING</span><span class="w"> </span><span class="n">tde_heap</span><span class="p">;</span>
-</code></pre></div>
-<h3 id="how-tde_heap-works-with-open_pg_tde">How tde_heap works with open_pg_tde<a class="headerlink" href="#how-tde_heap-works-with-open_pg_tde" title="Permanent link">¶</a></h3>
-<p>The <code>tde_heap</code> access method works on top of the default <code>heap</code> access method and is a marker to point which tables require encryption. It uses the custom storage manager TDE SMGR, which becomes active only after you installed the <code>open_pg_tde</code> extension.</p>
-<p>Every data modification operation is first sent to the Buffer Manager, which updates the buffer cache. Then, it is passed to the storage manager, which then writes it to disk. When a table requires encryption, the data is sent to the TDE storage manager, where it is encrypted before written to disk.</p>
-<p>Similarly, when a client queries the database, the PostgreSQL core sends the request to the Buffer Manager which checks if the requested data is already in the buffer cache. If it’s not there, the Buffer Manager requests the data from the storage manager. The TDE storage manager  reads the encrypted data from disk, decrypts it and loads it to the buffer cache. The Buffer Manager sends the requested data to the PostgreSQL core and then to the client.</p>
-<p>Thus, the encryption is done at the storage manager level.</p>
-<h2 id="changing-the-default-table-access-method">Changing the default table access method<a class="headerlink" href="#changing-the-default-table-access-method" title="Permanent link">¶</a></h2>
-<p>You can change the default table access method so that every table in the entire database cluster is created using the custom access method. For example, you can enable data encryption by default by defining the <code>tde_heap</code> as the default table access method.</p>
-<p>However, consider the following before making this change:</p>
+<h1 id="comparison-with-percona-pg_tde">Comparison with Percona pg_tde<a class="headerlink" href="#comparison-with-percona-pg_tde" title="Permanent link">¶</a></h1>
+<p><code>open_pg_tde</code> is an open fork of Percona’s <code>pg_tde</code>, maintained by
+<a href="https://www.commandprompt.com/">Command Prompt, Inc.</a> It keeps the core
+Transparent Data Encryption design of the original project: a two-tier key
+hierarchy, the <code>tde_heap</code> access method, per-table encryption, WAL encryption,
+and pluggable key providers. This page describes how the two differ, so you can
+choose the one that fits your deployment. For the current state of Percona
+pg_tde, see the <a href="https://docs.percona.com/pg-tde/">Percona pg_tde documentation</a>.</p>
+<h2 id="the-main-difference-the-postgresql-server">The main difference: the PostgreSQL server<a class="headerlink" href="#the-main-difference-the-postgresql-server" title="Permanent link">¶</a></h2>
+<p>The two projects target different PostgreSQL builds.</p>
 <ul>
-<li>This is a global setting and applies across the entire database cluster and not just a single database.
-We recommend setting it with caution because all tables and materialized views created without an explicit access method in their <code>CREATE</code> statement will default to the specified table access method.</li>
-<li>You must create the <code>open_pg_tde</code> extension and configure the key provider for all databases before you modify the configuration. Otherwise PostgreSQL won’t find the specified access method and will throw an error.</li>
+<li>
+<p><strong>open_pg_tde runs on upstream PostgreSQL.</strong> It does not require a vendor fork
+  of the server. Encryption relies on storage-manager and WAL extensibility that
+  upstream PostgreSQL does not yet expose, so you apply the <code>open_pg_tde</code> core
+  patch to a stock PostgreSQL source tree and build the extension against it. The
+  patch is gated behind a build flag (<code>--enable-tde-hooks</code>); with the flag off,
+  the same tree builds as unmodified PostgreSQL. open_pg_tde supports PostgreSQL
+  16, 17, and 18.</p>
+</li>
+<li>
+<p><strong>Percona pg_tde requires Percona Server for PostgreSQL.</strong> Percona’s
+  documentation states that pg_tde is bundled as a component of Percona Server
+  for PostgreSQL and requires its patches to function.</p>
+</li>
 </ul>
-<p>Here is how you can set the new default table access method:</p>
-<ol>
-<li>
-<p>Add the access method to the <code>default_table_access_method</code> parameter:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><input id="__tabbed_1_3" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">via the <code>ALTER SYSTEM</code> command</label><label for="__tabbed_1_2">via the configuration file</label><label for="__tabbed_1_3">via the <code>SET</code> command</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Use <code>ALTER SYSTEM</code>, it requires superuser or <code>ALTER SYSTEM</code> privileges.</p>
-<div class="highlight"><pre><span></span><code><span class="k">ALTER</span><span class="w"> </span><span class="k">SYSTEM</span><span class="w"> </span><span class="k">SET</span><span class="w"> </span><span class="n">default_table_access_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tde_heap</span><span class="p">;</span>
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Edit the <code>postgresql.conf</code> configuration file and add the value for the <code>default_table_access_method</code> parameter.</p>
-<div class="highlight"><pre><span></span><code><span class="na">default_table_access_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'tde_heap'</span>
-</code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>You can use the SET command to change the default table access method temporarily, for the current session. </p>
-<p>Unlike modifying the <code>postgresql.conf</code> file or using the <code>ALTER SYSTEM</code> command, the changes you make via the <code>SET</code> command don’t persist after the session ends.</p>
-<p>You also don’t need to have the superuser privileges to run the <code>SET</code> command.</p>
-<p>You can run the SET command anytime during the session. </p>
-<div class="highlight"><pre><span></span><code><span class="k">SET</span><span class="w"> </span><span class="n">default_table_access_method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tde_heap</span><span class="p">;</span>
-</code></pre></div>
-</div>
-</div>
-</div>
-</li>
-<li>
-<p>Reload the configuration to apply the changes:</p>
-<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">pg_reload_conf</span><span class="p">();</span>
-</code></pre></div>
-</li>
-</ol>
-<p><a class="md-button" href="tde-limitations.html">Understand open_pg_tde’s limitations <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg></span></a></p>
+<p>If you run community PostgreSQL and do not want to adopt a vendor server
+distribution, open_pg_tde is built for that case. If you already run Percona
+Server for PostgreSQL, Percona pg_tde is integrated with it.</p>
+<h2 id="comparison">Comparison<a class="headerlink" href="#comparison" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>open_pg_tde</th>
+<th>Percona pg_tde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base server</td>
+<td>Upstream PostgreSQL 16, 17, 18, with the gated open_pg_tde core patch</td>
+<td>Percona Server for PostgreSQL</td>
+</tr>
+<tr>
+<td>Maintainer</td>
+<td>Command Prompt, Inc.</td>
+<td>Percona</td>
+</tr>
+<tr>
+<td>Relationship</td>
+<td>Open fork of Percona pg_tde</td>
+<td>Original project</td>
+</tr>
+<tr>
+<td>Access method</td>
+<td><code>tde_heap</code></td>
+<td><code>tde_heap</code></td>
+</tr>
+<tr>
+<td>Encrypted at rest</td>
+<td>Table data, indexes, TOAST, WAL, temporary files</td>
+<td>Table data, indexes, TOAST, WAL</td>
+</tr>
+<tr>
+<td>Key providers</td>
+<td>KMIP-compatible KMS (including Fortanix, Thales, Akeyless), OpenBao, keyring file</td>
+<td>KMIP, HashiCorp Vault, OpenBao, keyring file, and others</td>
+</tr>
+</tbody>
+</table>
+<p>Both projects continue to develop independently. Confirm current specifics in
+each project’s own documentation.</p>
+<h2 id="what-open_pg_tde-focuses-on">What open_pg_tde focuses on<a class="headerlink" href="#what-open_pg_tde-focuses-on" title="Permanent link">¶</a></h2>
+<p>Beyond running on upstream PostgreSQL, this fork has added:</p>
+<ul>
+<li><strong>Temporary file encryption.</strong> Query-spill files (external sorts, hash joins)
+  are encrypted with AES-128-XTS. See <a href="../variables.html#encrypt_temp_files"><code>encrypt_temp_files</code></a>.</li>
+<li><strong>AES-256-XTS data cipher</strong>, alongside AES-128-XTS and the CBC ciphers, for
+  deployments that require AES-256 keys, through a pluggable cipher registry. See
+  <a href="../variables.html#open_pg_tdedata_cipher"><code>open_pg_tde.data_cipher</code></a>.</li>
+<li><strong>FIPS enforcement.</strong> All cryptography runs through OpenSSL and uses
+  FIPS-approved modes, and the server can be required to start only when OpenSSL
+  is in FIPS mode. See <a href="fips.html">FIPS compliance</a>.</li>
+<li><strong>A documented threat model</strong> stating what encryption at rest does and does not
+  protect. See the <a href="threat-model.html">threat model</a>.</li>
+</ul>
+<h2 id="key-management">Key management<a class="headerlink" href="#key-management" title="Permanent link">¶</a></h2>
+<p>open_pg_tde uses <a href="https://openbao.org/">OpenBao</a>, the Apache 2.0 licensed fork of
+HashiCorp Vault, through its Key/Value version 2 secrets engine, rather than
+HashiCorp Vault directly. It also supports KMIP-compatible key management
+systems and a local keyring file. See the
+<a href="../key-management/overview.html">key management overview</a>.</p>
+<h2 id="attribution">Attribution<a class="headerlink" href="#attribution" title="Permanent link">¶</a></h2>
+<p>open_pg_tde is derived from Percona pg_tde, which is copyright Percona and
+released under the PostgreSQL License. open_pg_tde retains that copyright and
+license for the derived work. Command Prompt, Inc. maintains open_pg_tde and is
+not affiliated with Percona.</p>
 
 
 
@@ -3197,7 +2492,7 @@ We recommend setting it with caution because all tables and materialized views c
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"></path></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 03:02:30 UTC">July 7, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 22:46:54 UTC">July 7, 2026</span>
   </span>
 
     
@@ -3207,7 +2502,7 @@ We recommend setting it with caution because all tables and materialized views c
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"></path></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="November 13, 2024 13:04:22 UTC">November 13, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 7, 2026 22:34:14 UTC">July 7, 2026</span>
   </span>
 
     
@@ -3277,12 +2572,6 @@ We recommend setting it with caution because all tables and materialized views c
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="../js/print-site.js"></script>
-      
-        <script src="../js/version-select.js"></script>
-      
-        <script src="../js/promptremover.js"></script>
-      
-        <script src="../js/rating.js"></script>
       
         <script src="../js/open_in_new_tab.js"></script>
       
