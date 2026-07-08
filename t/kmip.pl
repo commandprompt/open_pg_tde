@@ -153,6 +153,31 @@ SQL
 		"negative path produced expected failure");
 }
 
+# ---------------------------------------------------------------------------
+# Negative path: a provider that trusts the WRONG CA must be rejected. The KMIP
+# server presents its real certificate (signed by ca.pem), but the provider is
+# configured to verify against an unrelated CA. With server-certificate
+# verification enabled the TLS handshake must fail; before verification was
+# enforced this connected to an untrusted (potentially MITM) peer.
+# ---------------------------------------------------------------------------
+{
+	PostgreSQL::Test::Utils::system_or_bail(
+		'openssl', 'req', '-x509', '-newkey', 'rsa:2048',
+		'-nodes', '-days', '1', '-keyout', "$tmpdir/wrong-ca.key",
+		'-out', "$tmpdir/wrong-ca.pem", '-subj', '/CN=open_pg_tde-wrong-ca');
+
+	my (undef, undef, $stderr) = $node->psql('postgres', <<SQL);
+SELECT open_pg_tde_add_database_key_provider_kmip(
+    'kmip-badca', '127.0.0.1', $kmip_port,
+    '$tmpdir/client.pem', '$tmpdir/client.key', '$tmpdir/wrong-ca.pem');
+SQL
+
+	like(
+		$stderr,
+		qr/SSL error|BIO_do_connect|verification failed/i,
+		"KMIP connection rejected when server cert is not signed by trusted CA");
+}
+
 $node->stop;
 
 done_testing();

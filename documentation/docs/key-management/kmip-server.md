@@ -29,6 +29,10 @@ SELECT open_pg_tde_add_global_key_provider_kmip(
 * `kmip_key_path` is the path to the client private key.
 * `kmip_ca_path` is the path to the CA certificate used to verify the KMIP server.
 
+## Certificate verification
+
+`open_pg_tde` verifies the KMIP server's TLS certificate on every connection. The server certificate must be signed by the CA supplied in `kmip_ca_path`, and the certificate identity must match the `kmip-IP` value (an IP address SAN when you connect by IP, or a DNS name SAN when you connect by host name). The connection also requires TLS 1.2 or newer. A connection to a server that presents an untrusted, expired, or mismatched certificate is refused, which prevents a network attacker from impersonating the KMIP server and capturing principal keys. Make sure `kmip_ca_path` points to the CA that issued the server certificate and that the certificate includes the host or address you connect to.
+
 The following example is for testing purposes only.
 
 ```sql
