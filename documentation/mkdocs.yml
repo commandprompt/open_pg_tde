@@ -15,8 +15,8 @@ use_directory_urls: false
 # Theme settings
 theme:
   name: material
-  logo: _images/mammoth.png
-  favicon: _images/mammoth-48.png
+  logo: _images/open_pg_tde-logo/mark/icon-white.svg
+  favicon: _images/open_pg_tde-logo/favicon/favicon.svg
   font:
     text: Work Sans
   palette:
