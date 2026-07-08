@@ -1,6 +1,6 @@
 # Design: encryption feature roadmap
 
-- Status: Proposed
+- Status: Living document
 - Date: 2026-07-07
 - Scope: candidate encryption features that `open_pg_tde` does not have today,
   with a rough assessment of value, effort, and fit with the current
@@ -11,17 +11,51 @@
 For reference, the current feature surface:
 
 - **Data at rest**: `tde_heap` tables and their indexes and TOAST, encrypted
-  through the storage manager. Ciphers: AES-128-CBC, AES-256-CBC, AES-128-XTS
-  (selected per table via `open_pg_tde.data_cipher`, backed by a pluggable
-  cipher registry).
+  through the storage manager. Ciphers: AES-128-XTS (default), AES-256-XTS,
+  AES-128-CBC, AES-256-CBC (selected per table via `open_pg_tde.data_cipher`,
+  backed by a pluggable cipher registry).
 - **WAL**: full WAL encryption with AES-CTR (`open_pg_tde.wal_encrypt`).
+- **Temporary files**: query-spill files encrypted with AES-128-XTS
+  (`encrypt_temp_files`), using a memory-only per-boot key.
 - **Keys**: two-tier hierarchy (principal key wraps per-relation internal
   keys). Providers: keyring file, KMIP, OpenBao. Per-database and global
   (server) providers. Manual principal key rotation.
+- **Compliance**: all cryptography runs through OpenSSL with FIPS-approved
+  modes; `open_pg_tde.require_fips` enforces OpenSSL FIPS mode.
 - **Controls**: `enforce_encryption`, `inherit_global_providers`.
 
-Known gaps that the documentation already calls out: temporary files and
-PostgreSQL statistics are not encrypted.
+Known gaps that the documentation already calls out: PostgreSQL system catalogs
+and statistics are not encrypted.
+
+## PostgreSQL version support
+
+`open_pg_tde` runs on upstream PostgreSQL through the gated core patch under
+`patches/postgresql/<major>/`.
+
+| PostgreSQL major | Status |
+| ---------------- | ------ |
+| 18 | Supported |
+| 17 | Supported |
+| 16 | Supported (minimum) |
+| 19 (Beta 1) | Port in progress, not released |
+
+**PostgreSQL 19.** The storage-manager core, which is the hardest part, ports
+cleanly, and the mechanical differences are worked out (an `off_t` to `pgoff_t`
+rename in the WAL I/O path, the new `BMR_GET_SMGR()` buffer accessor, an
+`index_create` argument type change, and a set of extension header and API
+adjustments). Two items remain and are deliberately being handled with care
+because they touch recovery and the asynchronous I/O data path, where a subtle
+error would write unencrypted data:
+
+- Re-porting sequence WAL redo. PostgreSQL 19 restructured `seq_redo` and removed
+  the helper the patch used to encrypt init-fork buffers during recovery.
+- Re-porting AIO key handling. PostgreSQL 19 refactored the AIO subsystem
+  (including the shmem sizing the extension relied on).
+
+These are scheduled for closer to the PostgreSQL 19 release candidate, since Beta
+internals still change. The port also confirmed that the per-major patch must be
+applied strictly rather than with fuzz, verified by comparing the gated hunk
+count against the PostgreSQL 18 tree.
 
 ## Candidate features
 
@@ -31,7 +65,7 @@ large or needs a different architecture.
 
 ### Data-at-rest coverage
 
-**1. Temporary file encryption (Tier 1).**
+**1. Temporary file encryption (Tier 1, done).**
 Queries that exceed `work_mem` spill to temporary files in plaintext, and these
 can persist after a crash. This is a real data-at-rest leak and a documented
 limitation. A prototype already exists (a `BufFile` hook gated by an
@@ -53,7 +87,7 @@ tracks the tablespace OID, so this is mostly a policy layer.
 
 ### Ciphers and cryptographic strength
 
-**4. AES-256-XTS for data files (Tier 2).**
+**4. AES-256-XTS for data files (Tier 2, done).**
 XTS is the recommended mode for storage encryption, but only AES-128-XTS is
 available today. AES-256-XTS needs a 64-byte key (two AES-256 subkeys), while
 the internal key is capped at 32 bytes (`INTERNAL_KEY_MAX_LEN`, the
@@ -115,7 +149,7 @@ architecture from the storage-manager approach (it needs type or expression
 level handling and query-path integration) and is a large effort, but it
 addresses a use case whole-relation encryption cannot.
 
-**12. FIPS 140-2/3 mode (Tier 3).**
+**12. FIPS enforcement (Tier 3, done).**
 Run crypto through the OpenSSL FIPS provider and restrict to approved ciphers
 and key sizes, for deployments with a FIPS requirement. Mostly a build and
 policy effort on top of the existing OpenSSL usage.

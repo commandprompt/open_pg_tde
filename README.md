@@ -1,58 +1,119 @@
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/commandprompt/open_pg_tde/badge)](https://scorecard.dev/viewer/?uri=github.com/commandprompt/open_pg_tde)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="documentation/docs/_images/open_pg_tde-logo/horizontal/horizontal-white.svg">
+    <img alt="open_pg_tde" width="460" src="documentation/docs/_images/open_pg_tde-logo/horizontal/horizontal-color.svg">
+  </picture>
+</p>
 
-# open_pg_tde: Transparent Data Encryption for PostgreSQL
+<p align="center">
+  <strong>Transparent Data Encryption for upstream PostgreSQL</strong>
+</p>
 
-`open_pg_tde` is a PostgreSQL extension that provides Transparent Data Encryption (TDE) to protect data at rest.
+<p align="center">
+  <a href="https://scorecard.dev/viewer/?uri=github.com/commandprompt/open_pg_tde"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/commandprompt/open_pg_tde/badge"></a>
+  <img alt="PostgreSQL 16 | 17 | 18" src="https://img.shields.io/badge/PostgreSQL-16%20%7C%2017%20%7C%2018-336791?logo=postgresql&logoColor=white">
+  <img alt="License: PostgreSQL" src="https://img.shields.io/badge/License-PostgreSQL-336791">
+</p>
 
-> `open_pg_tde` is an open fork of [Percona's `pg_tde`](https://github.com/percona/pg_tde), maintained by Command Prompt, Inc. It runs on upstream PostgreSQL 16, 17, and 18 (no vendor server fork), keeps the file and KMIP key providers, keeps OpenBao (the Apache-2.0 KV v2 provider) while dropping HashiCorp Vault, and adds pluggable ciphers (AES-128/256-XTS for data files, AES-CTR for WAL) selectable via the `open_pg_tde.data_cipher` GUC, temporary file encryption, and FIPS enforcement. See the [comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md).
+---
 
-## Table of Contents
+`open_pg_tde` is a PostgreSQL extension that encrypts data at rest. It provides
+the `tde_heap` access method, so tables, their indexes, TOAST, and the
+write-ahead log are encrypted on disk while remaining transparent to queries. It
+runs on **upstream PostgreSQL 16, 17, and 18**, with no vendor server fork
+required.
 
-1. [Overview](#overview)
-2. [Documentation](#documentation)
-3. [Installation](#installation)
-4. [Set up open_pg_tde](#set-up-open_pg_tde)
-5. [Additional functions](#additional-functions)
+> `open_pg_tde` is an open fork of [Percona `pg_tde`](https://github.com/percona/pg_tde),
+> maintained by [Command Prompt, Inc.](https://www.commandprompt.com/) See how
+> they differ in the [comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md).
 
-## Overview
+## Features
 
-Transparent Data Encryption offers encryption at the file level and solves the problem of protecting data at rest. The encryption is transparent for users allowing them to access and manipulate the data and not to worry about the encryption process. The extension supports [a keyring file and external Key Management Systems (KMS) through a Global Key Provider interface](documentation/docs/global-key-provider-configuration/overview.md).
+- **Per-table encryption** with the `tde_heap` access method. The cipher is
+  recorded per table, so encrypted and plain tables coexist.
+- **Encrypted at rest:** table data, indexes, TOAST, the WAL, and temporary
+  (query-spill) files. System catalogs and statistics are not encrypted; see the
+  [threat model](documentation/docs/index/threat-model.md).
+- **Data ciphers:** AES-128-XTS (default), AES-256-XTS, AES-128-CBC, and
+  AES-256-CBC, selected with [`open_pg_tde.data_cipher`](documentation/docs/variables.md).
+  The WAL uses AES-CTR.
+- **Key management:** a two-tier hierarchy (a principal key wraps per-relation
+  keys), with a keyring file, KMIP-compatible systems, or
+  [OpenBao](https://openbao.org/) as providers, per database or cluster-wide.
+- **FIPS:** all cryptography runs through OpenSSL with FIPS-approved modes, and
+  the server can be required to start only in OpenSSL FIPS mode. See
+  [FIPS compliance](documentation/docs/index/fips.md).
+- **Upstream PostgreSQL:** a gated core patch adds the storage-manager and WAL
+  hooks. With the flag off, the tree builds as unmodified PostgreSQL.
 
-### This extension provides the `tde_heap` access method
+## Supported PostgreSQL versions
 
-This access method:
-
-- Works with upstream PostgreSQL 16, 17, and 18, patched with the `open_pg_tde` core patch (see [Installation](#installation))
-- Uses extended Storage Manager and WAL APIs
-- Encrypts table data, indexes, TOAST, WAL, and temporary files
-- Does not encrypt system catalogs or statistics (see the [threat model](documentation/docs/index/threat-model.md))
-
-### Capabilities
-
-- Per-table encryption via `tde_heap`, with the cipher recorded per table
-- Data-file ciphers: AES-128-XTS (default), AES-256-XTS, AES-128-CBC, AES-256-CBC
-- WAL encryption (AES-CTR) for the whole cluster
-- Temporary file encryption ([`encrypt_temp_files`](documentation/docs/variables.md))
-- Key management through a keyring file, KMIP-compatible systems, or OpenBao
-- FIPS enforcement: all cryptography uses FIPS-approved modes, and the server can require OpenSSL FIPS mode ([FIPS compliance](documentation/docs/index/fips.md))
-- Runs on upstream PostgreSQL 16, 17, and 18 through a gated core patch
-
-## Documentation
-
-The documentation source is in [`documentation/`](documentation/). Start with the [installation guide](documentation/docs/install.md) and the [setup guide](documentation/docs/setup.md).
+| Version | Status |
+| ------- | ------ |
+| 18 | Supported |
+| 17 | Supported |
+| 16 | Supported (minimum) |
+| 19 | Beta port in progress ([roadmap](docs/design/encryption-roadmap.md#postgresql-version-support)) |
 
 ## Installation
 
-`open_pg_tde` runs on upstream PostgreSQL 16 and later. You apply the `open_pg_tde` core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See [Install from source](documentation/docs/install-from-source.md) for the step-by-step guide, and [`patches/postgresql/README.md`](patches/postgresql/README.md) for the patch series and per-version status.
+`open_pg_tde` builds against a PostgreSQL source tree patched with the
+`open_pg_tde` core patch. Apply the patch, build PostgreSQL with the hooks
+enabled, then build the extension against that install:
 
-## Set up open_pg_tde
+- [Install from source](documentation/docs/install-from-source.md), the
+  step-by-step guide.
+- [`patches/postgresql/README.md`](patches/postgresql/README.md), the per-version
+  patch series and status.
 
-For setting up and configuring `open_pg_tde`, see the [setup guide](documentation/docs/setup.md). It covers:
+Prebuilt source tarballs for each PostgreSQL major are attached to each
+[release](https://github.com/commandprompt/open_pg_tde/releases).
 
-- Installing and enabling the extension
-- Setting up key providers
-- Creating encrypted tables
+## Quick start
 
-## Additional functions
+After installing the extension and adding `open_pg_tde` to
+`shared_preload_libraries`:
 
-For the helper functions available in `open_pg_tde`, including how to check table encryption status with `open_pg_tde_is_encrypted`, see the [functions reference](documentation/docs/functions.md).
+```sql
+CREATE EXTENSION open_pg_tde;
+
+-- Configure a key provider and a principal key (a keyring file here; use a KMS
+-- in production, see the setup guide).
+SELECT open_pg_tde_add_database_key_provider_file('file-keyring', '/path/to/keyring');
+SELECT open_pg_tde_create_key_using_database_key_provider('my-key', 'file-keyring');
+SELECT open_pg_tde_set_key_using_database_key_provider('my-key', 'file-keyring');
+
+-- Create an encrypted table.
+CREATE TABLE secret (id int, data text) USING tde_heap;
+SELECT open_pg_tde_is_encrypted('secret');  -- t
+```
+
+See the [setup guide](documentation/docs/setup.md) for key management, WAL
+encryption, and enabling encryption by default.
+
+## Documentation
+
+The full documentation source is in [`documentation/`](documentation/).
+
+| | |
+| --- | --- |
+| [Setup and configuration](documentation/docs/setup.md) | Install, key providers, encrypted tables |
+| [Key management](documentation/docs/global-key-provider-configuration/overview.md) | Keyring file, KMIP, OpenBao |
+| [GUC variables](documentation/docs/variables.md) | All settings |
+| [Functions](documentation/docs/functions.md) | Helper functions |
+| [Threat model](documentation/docs/index/threat-model.md) | What encryption at rest does and does not protect |
+| [FIPS compliance](documentation/docs/index/fips.md) | Approved algorithms and FIPS mode |
+| [Comparison with Percona pg_tde](documentation/docs/index/comparison-percona.md) | How the fork differs |
+
+## Contributing
+
+Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for building,
+testing, and coding standards, and [`RELEASING.md`](RELEASING.md) for how
+releases are built. All C code follows the
+[PostgreSQL coding conventions](https://www.postgresql.org/docs/current/source.html).
+
+## License
+
+`open_pg_tde` is derived from Percona `pg_tde` and is distributed under the
+PostgreSQL License. It retains the original copyright for the derived work.
+Command Prompt, Inc. maintains `open_pg_tde` and is not affiliated with Percona.
