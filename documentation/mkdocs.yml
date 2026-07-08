@@ -12,6 +12,10 @@ edit_uri: edit/main/documentation/docs
 
 use_directory_urls: false
 
+# Brand-asset folder READMEs are reference material, not site pages.
+exclude_docs: |
+  _images/open_pg_tde-logo/README.md
+
 # Theme settings
 theme:
   name: material
