@@ -243,4 +243,18 @@ command_fails_like(
 	qr/error: wrong number of arguments for "openbao"/,
 	'gives error on missing arguments for openbao provider');
 
+# A provider parameter longer than the JSON buffer must be rejected cleanly
+# rather than overflowing the fixed-size stack buffer in build_json().
+command_fails_like(
+	[
+		'open_pg_tde_change_key_provider',
+		'-D' => $node->data_dir,
+		'1664',
+		'global-provider',
+		'file',
+		'A' x 5000,
+	],
+	qr/configuration too long/,
+	'rejects an over-long provider parameter without overflowing');
+
 done_testing();

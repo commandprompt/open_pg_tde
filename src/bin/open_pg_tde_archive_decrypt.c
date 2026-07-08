@@ -2,6 +2,7 @@
 
 #include "access/xlog_internal.h"
 #include "access/xlog_smgr.h"
+#include "common/file_perm.h"
 #include "common/logging.h"
 #include "common/percentrepl.h"
 
@@ -38,7 +39,13 @@ write_decrypted_segment(const char *segpath, const char *segname, const char *tm
 	if (segfd < 0)
 		pg_fatal("could not open file \"%s\": %m", segpath);
 
-	tmpfd = open(tmppath, O_CREAT | O_WRONLY | PG_BINARY, 0666);
+	/*
+	 * This file holds decrypted (plaintext) WAL. Create it owner-only (0600)
+	 * so the decrypted contents are never exposed to other local users; the
+	 * whole point of WAL encryption is to keep this data confidential at
+	 * rest.
+	 */
+	tmpfd = open(tmppath, O_CREAT | O_WRONLY | PG_BINARY, PG_FILE_MODE_OWNER);
 	if (tmpfd < 0)
 		pg_fatal("could not open file \"%s\": %m", tmppath);
 

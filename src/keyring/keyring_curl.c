@@ -46,7 +46,17 @@ curlSetupSession(const char *url, const char *caFile, CurlString *outStr)
 		if (curl_easy_setopt(keyringCurl, CURLOPT_CAINFO, caFile) != CURLE_OK)
 			return false;
 	}
-	if (curl_easy_setopt(keyringCurl, CURLOPT_FOLLOWLOCATION, 1) != CURLE_OK)
+
+	/*
+	 * Do not follow HTTP redirects. Requests to OpenBao carry the Vault token
+	 * in a custom X-Vault-Token header. curl strips the standard
+	 * Authorization header when a redirect crosses origins, but it does not
+	 * strip application-defined headers, so following a redirect could resend
+	 * the token to an attacker-controlled host. This is a client talking to a
+	 * known key-management endpoint and has no legitimate need to follow
+	 * redirects.
+	 */
+	if (curl_easy_setopt(keyringCurl, CURLOPT_FOLLOWLOCATION, 0) != CURLE_OK)
 		return false;
 	if (curl_easy_setopt(keyringCurl, CURLOPT_CONNECTTIMEOUT, 3) != CURLE_OK)
 		return false;
