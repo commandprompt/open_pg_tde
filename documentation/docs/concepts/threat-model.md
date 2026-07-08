@@ -33,6 +33,10 @@ running server:
 - **Data in memory.** Shared buffers hold decrypted pages; this is the
   "transparent" part of TDE. An attacker who can read server memory, or who has
   a live database connection with sufficient privileges, sees plaintext.
+  `open_pg_tde` wipes plaintext key material from its own transient buffers
+  after use and holds the principal key cache in locked (non-swappable) memory,
+  which narrows the window for key recovery from a core dump or the swap file
+  but does not protect decrypted page data held in shared buffers.
 - **A privileged user on a running server.** A superuser, or anyone who can run
   queries against the data, reads decrypted data through normal SQL. TDE does
   not protect data from the database administrator.

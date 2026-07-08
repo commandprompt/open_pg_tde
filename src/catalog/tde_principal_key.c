@@ -305,8 +305,16 @@ set_principal_key_with_keyring(const char *key_name,
 
 	LWLockRelease(lock_files);
 
+	/*
+	 * Wipe the plaintext key material before freeing.
+	 * push_principal_key_to_cache() copies the key into the (mlocked) cache
+	 * entry, so these transient buffers are no longer referenced and must not
+	 * linger in freed heap or swap.
+	 */
+	explicit_bzero(keyInfo, sizeof(KeyInfo));
 	pfree(keyInfo);
 	pfree(new_keyring);
+	explicit_bzero(new_principal_key, sizeof(TDEPrincipalKey));
 	pfree(new_principal_key);
 }
 
@@ -368,8 +376,11 @@ xl_tde_perform_rotate_key(XLogPrincipalKeyRotate *xlrec)
 
 	LWLockRelease(tde_lwlock_enc_keys());
 
+	/* Wipe the plaintext key material before freeing (see rotate above). */
+	explicit_bzero(keyInfo, sizeof(KeyInfo));
 	pfree(keyInfo);
 	pfree(new_keyring);
+	explicit_bzero(new_principal_key, sizeof(TDEPrincipalKey));
 	pfree(new_principal_key);
 }
 
