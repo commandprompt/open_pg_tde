@@ -1,6 +1,6 @@
 # open_pg_tde 2.3.0
 
-`open_pg_tde` brings [Transparent Data Encryption (TDE)](../index/about-tde.md) to upstream PostgreSQL and protects data at rest.
+`open_pg_tde` brings [Transparent Data Encryption (TDE)](../concepts/about-tde.md) to upstream PostgreSQL and protects data at rest.
 
 [Get Started](../install.md){.md-button}
 
@@ -8,7 +8,7 @@
 
 ### Runs on upstream PostgreSQL 16, 17, and 18
 
-`open_pg_tde` runs on community PostgreSQL through a gated core patch, with no vendor server fork required. The patch series is maintained per major version under `patches/postgresql/`. With the patch flag off, the tree builds as unmodified PostgreSQL. See the [comparison with Percona pg_tde](../index/comparison-percona.md).
+`open_pg_tde` runs on community PostgreSQL through a gated core patch, with no vendor server fork required. The patch series is maintained per major version under `patches/postgresql/`. With the patch flag off, the tree builds as unmodified PostgreSQL. See the [comparison with Percona pg_tde](../concepts/comparison-percona.md).
 
 ### Temporary file encryption
 
@@ -20,14 +20,14 @@ Query-spill files (external sorts and hash joins that exceed `work_mem`) can be 
 
 ### FIPS enforcement
 
-All cryptography runs through OpenSSL and uses FIPS-approved modes. The new [`open_pg_tde.require_fips`](../variables.md#open_pg_tderequire_fips) setting makes the server refuse to start unless OpenSSL is in FIPS mode. See [FIPS compliance](../index/fips.md).
+All cryptography runs through OpenSSL and uses FIPS-approved modes. The new [`open_pg_tde.require_fips`](../variables.md#open_pg_tderequire_fips) setting makes the server refuse to start unless OpenSSL is in FIPS mode. See [FIPS compliance](../concepts/fips.md).
 
 ### Documentation
 
-- A [threat model](../index/threat-model.md) describing what encryption at rest does and does not protect.
-- A [FIPS compliance](../index/fips.md) page.
-- A [comparison with Percona pg_tde](../index/comparison-percona.md).
-- A [performance](../advanced-topics/performance.md) baseline.
+- A [threat model](../concepts/threat-model.md) describing what encryption at rest does and does not protect.
+- A [FIPS compliance](../concepts/fips.md) page.
+- A [comparison with Percona pg_tde](../concepts/comparison-percona.md).
+- A [performance](../reference/performance.md) baseline.
 
 ### Durability
 

@@ -154,7 +154,7 @@ The following is an example configuration.
 
 Check which PostgreSQL versions and deployment types are compatible with `open_pg_tde` before planning your installation.
 
-[View the versions and supported deployments :material-arrow-right:](supported-versions.md){.md-button}
+[View the versions and supported deployments :material-arrow-right:](../install.md){.md-button}
 
 Begin the installation process when you're ready to set up encryption.
 

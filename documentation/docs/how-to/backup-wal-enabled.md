@@ -3,7 +3,7 @@
 !!! danger
     Do not rotate encryption keys while a backup is running. This may result in an inconsistent backup and restore failure. This applies to all backup tools.
 
-    For more details, see [Limitations of open_pg_tde](../index/tde-limitations.md#limitations-when-using-open_pg_tde).
+    For more details, see [Limitations of open_pg_tde](../concepts/tde-limitations.md#limitations-when-using-open_pg_tde).
 
 To create a backup with WAL encryption enabled:
 
@@ -48,6 +48,19 @@ When you want to restore a backup created with `open_pg_tde_basebackup -E`:
 
 1. Ensure all external files referenced by your providers configuration (such as certificates or key files) are also present and accessible at the same relative paths.
 2. Start PostgreSQL with the restored data directory.
+
+### Key availability when restoring encrypted backups
+
+A backup created with an earlier key stays encrypted on disk. To restore it, the principal key that was active when the backup was made must still be available in your Key Management System (KMS). `open_pg_tde` retrieves that principal key from the KMS and uses it to decrypt the internal keys, which then decrypt the table data.
+
+The internal keys are stored within the backup. The principal keys are not; they remain in the KMS.
+
+!!! note
+    If the required key or keys are missing, the backup cannot be read.
+
+    If the keys still exist but the KMS configuration has changed, use [`open_pg_tde_change_key_provider`](../command-line-tools/pg-tde-change-key-provider.md) to update the configuration.
+
+    If the keys were deleted from all accessible KMS sources, the encrypted backup is unrecoverable.
 
 ## Backup method compatibility with WAL encryption
 

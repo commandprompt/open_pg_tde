@@ -93,4 +93,4 @@ WARNING:  open_pg_tde is loaded but neither data checksums nor wal_log_hints is 
 
 ## Next steps
 
-[Configure Key Management (KMS) :material-arrow-right:](global-key-provider-configuration/overview.md){.md-button}
+[Configure Key Management (KMS) :material-arrow-right:](key-management/overview.md){.md-button}

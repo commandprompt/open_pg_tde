@@ -86,19 +86,19 @@ When you add a feature, document it for users. Cover:
 3. Make your changes and commit them.
 4. Open a pull request against [`commandprompt/open_pg_tde`](https://github.com/commandprompt/open_pg_tde).
 
-#### Building the documentation
+#### Preview the documentation locally
 
-Install Material for MkDocs and the plugins the site uses, then build:
+Install Material for MkDocs and the plugins the site uses from `documentation/requirements.txt`, then build or serve the site:
 
 ```sh
 python3 -m venv .venv && . .venv/bin/activate
-pip install mkdocs-material mkdocs-open-in-new-tab mkdocs-git-revision-date-localized-plugin \
-    mkdocs-meta-descriptions-plugin mkdocs-section-index mkdocs-glightbox \
-    mkdocs-macros-plugin mkdocs-print-site-plugin
+pip install -r documentation/requirements.txt
 cd documentation
 mkdocs build      # writes the static site to ./site
 mkdocs serve      # or serve locally at http://127.0.0.1:8000
 ```
+
+Open <http://127.0.0.1:8000> to review your changes. `mkdocs serve` rebuilds the site as you edit.
 
 [MkDocs]: https://www.mkdocs.org/
 [Markdown]: https://daringfireball.net/projects/markdown/

@@ -25,7 +25,7 @@ Using TDE helps you avoid the following risks:
 * Legal consequences and financial losses for non-compliance with data protection regulations
 * Internal threats by misusing unencrypted sensitive data
 
-If to translate sensitive data to files stored in your database, these are user data in tables, temporary files, WAL files. TDE has you covered encrypting all these files.
+Sensitive data stored in your database takes the form of user data in tables, temporary files, and WAL files. TDE encrypts all these files.
 
 `open_pg_tde` does not encrypt system catalogs yet. This means that statistics data and database metadata are not encrypted.
 
@@ -83,8 +83,8 @@ Thus, to protect your sensitive data, consider using TDE to encrypt it at the ta
 
 You can use the following KMSs:
 
-* KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management. For more information see [KMIP configuration](global-key-provider-configuration/kmip-server.md).
-* [OpenBao](https://openbao.org/), an Apache 2.0 licensed fork of HashiCorp Vault. `open_pg_tde` uses its Key/Value version 2 secrets engine. For more information see [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
+* KMIP-compatible servers. KMIP is a standardized protocol for handling cryptographic workloads and secrets management. For more information see [KMIP configuration](key-management/kmip-server.md).
+* [OpenBao](https://openbao.org/), an Apache 2.0 licensed fork of HashiCorp Vault. `open_pg_tde` uses its Key/Value version 2 secrets engine. For more information see [Using OpenBao as a key provider](key-management/openbao.md).
 
 For development and testing, keys can also be stored in a local keyring file instead of an external KMS.
 
@@ -92,23 +92,11 @@ Let's break the encryption down into two parts:
 
 ### Encryption of data files
 
-First, data files are encrypted with internal keys. Each file that has a different [Object Identifier (OID)](https://www.postgresql.org/docs/current/datatype-oid.html) has an internal key. For example, a table with 4 indexes will have 5 internal keys - one for the table and one for each index.
-
-The initial decision on what file to encrypt is based on the table access method in PostgreSQL. When you run a `CREATE` or `ALTER TABLE` statement with the `USING tde_heap` clause, the newly created data files are marked as encrypted, and then file operations encrypt or decrypt the data. Later, if an initial file is re-created as a result of a `TRUNCATE` or `VACUUM FULL` command, the newly created file inherits the encryption information and is either encrypted or not.
-
-The principal key is used to encrypt the internal keys. The principal key is stored in the key management store. When you query the table, the principal key is retrieved from the key store to decrypt the table. Then the internal key for that table is used to decrypt the data.
+Each data file is encrypted with its own internal key, and the internal key is wrapped by the principal key that is held in the key management store. For the full description of the key hierarchy and how files are marked for encryption, see [How open_pg_tde works](concepts/how-does-tde-work.md).
 
 ### WAL encryption
 
-WAL encryption is done globally for the entire database cluster. All modifications to any database within a PostgreSQL cluster are written to the same WAL to maintain data consistency and integrity and ensure that PostgreSQL cluster can be restored to a consistent state. Therefore, WAL is encrypted globally.
-
-When you turn on WAL encryption, `open_pg_tde` encrypts entire WAL files starting from the first WAL write after the server was started with the encryption turned on.
-
-The same 2-key approach is used with WAL as with the table data: WAL pages are first encrypted with the internal key. Then the internal key is encrypted with the global principal key.
-
-You can turn WAL encryption on and off so WAL can contain both encrypted and unencrypted data. The WAL encryption GUC variable influences only writes.
-
-Whenever the WAL is being read (by the recovery process or tools), the decision on what should be decrypted is based solely on the metadata of WAL encryption keys.
+WAL is encrypted globally for the entire database cluster using the same two-key approach. For details, including how to enable it, see [WAL encryption](wal-encryption.md).
 
 ## Should I encrypt all my data?
 
@@ -122,13 +110,14 @@ We advise encrypting the whole database only if all your data is sensitive, like
 
 `open_pg_tde` currently uses the following encryption algorithms:
 
-* `AES-128-CBC`, `AES-256-CBC` for encrypting database files; encrypted with internal keys
-* `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
-* `AES-128-GCM`, `AES-256-GCM` for encrypting internal keys; encrypted with the principal key
+* Database files: `AES-128-XTS` by default. You can select `AES-256-XTS`, `AES-128-CBC`, or `AES-256-CBC` with the `open_pg_tde.data_cipher` setting.
+* WAL: `AES-CTR`.
+* Internal keys: wrapped by the principal key with `AES-256-GCM`.
+* Temporary and query-spill files: `AES-128-XTS` when enabled.
 
 ## Is post-quantum encryption supported?
 
-No, it's not yet supported. In our implementation we reply on OpenSSL libraries that don't yet support post-quantum encryption.
+No, it's not yet supported. In our implementation we rely on OpenSSL libraries that don't yet support post-quantum encryption.
 
 ## Can I encrypt an existing table?
 
@@ -147,7 +136,7 @@ You must restart the database in the following cases to apply the changes:
 * after you enabled the `open_pg_tde` extension
 * when enabling WAL encryption
 
-After that, no database restart is required. When you create or alter the table using the `tde_heap` access method, the files are marked as those that require encryption. The encryption happens at the storage manager level, before a transaction is written to disk. Read more about [how tde_heap works](index/table-access-method.md#how-tde_heap-works-with-open_pg_tde).
+After that, no database restart is required. When you create or alter the table using the `tde_heap` access method, the files are marked as those that require encryption. The encryption happens at the storage manager level, before a transaction is written to disk. Read more about [how tde_heap works](concepts/table-access-method.md#how-tde_heap-works-with-open_pg_tde).
 
 ## What happens to my data if I lose a principal key?
 
@@ -173,7 +162,7 @@ To restore from an encrypted backup, you must have the same principal encryption
 
 ## I'm using OpenSSL in FIPS mode and need to use open_pg_tde. Does open_pg_tde comply with FIPS requirements? Can I use my own FIPS-mode OpenSSL library with open_pg_tde?
 
-Yes. `open_pg_tde` works with the FIPS-compliant version of OpenSSL, whether it is provided by your operating system or if you use your own OpenSSL libraries. If you use your own libraries, make sure they are FIPS certified.
+Yes. `open_pg_tde` works with a FIPS-compliant OpenSSL, whether it comes from your operating system or from your own libraries. For details, see [FIPS compliance](concepts/fips.md).
 
 ## How do I rotate internal encryption keys in open_pg_tde?
 
@@ -183,4 +172,4 @@ If you're concerned about internal keys being leaked, the best way to address it
 
 ## What tools are supported with `open_pg_tde` WAL encryption?
 
-For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](index/tde-limitations.md).
+For a comprehensive list of supported `open_pg_tde` WAL encryption tools see [Limitations of open_pg_tde](concepts/tde-limitations.md).

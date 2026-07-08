@@ -26,7 +26,7 @@ Load the `open_pg_tde` at startup time. The extension requires additional shared
     * On Debian and Ubuntu:
 
        ```sh
-       sudo systemctl restart postgresql-17
+       sudo systemctl restart postgresql
        ```
 
     * On RHEL and derivatives
@@ -53,7 +53,7 @@ Load the `open_pg_tde` at startup time. The extension requires additional shared
 
 ## Key provider configuration
 
-You must do these steps for every database where you have created the extension. For more information on configurations, please see the [Configure Key Management (KMS) :octicons-link-external-16:](../global-key-provider-configuration/overview.md) topic.
+You must do these steps for every database where you have created the extension. For more information on configurations, please see the [Configure Key Management (KMS) :octicons-link-external-16:](../key-management/overview.md) topic.
 
 1. Set up a key provider.
 
@@ -137,7 +137,7 @@ You must do these steps for every database where you have created the extension.
     ```sql
     SELECT open_pg_tde_create_key_using_database_key_provider(
         'test-db-master-key', 
-        'file-vault'
+        'file-keyring'
     );
     ```
 
@@ -163,6 +163,6 @@ You must do these steps for every database where you have created the extension.
     ```sql
     SELECT open_pg_tde_set_key_using_database_key_provider(
         'test-db-master-key',
-        'file-vault'
+        'file-keyring'
     );
     ```

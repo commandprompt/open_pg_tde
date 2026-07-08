@@ -3,7 +3,7 @@
 This setup is intended for development and stores the keys, unencrypted, in a data file you specify.
 
 !!! note
-     While keyring files may be acceptable for **local** or **testing environments**, proper [KMS providers](../global-key-provider-configuration/overview.md) are the recommended approach for production deployments.
+     While keyring files may be acceptable for **local** or **testing environments**, proper [KMS providers](../key-management/overview.md) are the recommended approach for production deployments.
 
 You can configure key providers either at the database level (for development and testing) or at the global level (for production).
 
@@ -43,7 +43,7 @@ The steps below provide an example on how to add a [database-scoped key provider
         SELECT open_pg_tde_default_key_info();
         ```
 
-4. Now, create a table using [tde_heap](../index/table-access-method.md#how-tde_heap-works-with-open_pg_tde):
+4. Now, create a table using [tde_heap](../concepts/table-access-method.md#how-tde_heap-works-with-open_pg_tde):
 
     ```sql
     CREATE TABLE customer_table (a INT) USING tde_heap;
@@ -55,14 +55,14 @@ The steps below provide an example on how to add a [database-scoped key provider
         To check if your created table is encrypted with tde_heap, run:
 
         ```sql
-        \d+ test1
+        \d+ customer_table
         ```
 
         If `Access method: tde_heap`, then your table is encrypted.
 
         ??? "Example output"
-                postgres=# \d+ test1
-                                                    Table "public.test1"
+                postgres=# \d+ customer_table
+                                                Table "public.customer_table"
                 Column |  Type   | Collation | Nullable | Default | Storage | Compression | Stats target | Description
                 --------+---------+-----------+----------+---------+---------+-------------+--------------+-------------
                 a      | integer |           |          |         | plain   |             |              |
@@ -70,7 +70,7 @@ The steps below provide an example on how to add a [database-scoped key provider
 
 ## Further reading
 
-Next, for production deployments, [configure a global principal key](set-principal-key.md) using a proper [KMS provider](../global-key-provider-configuration/overview.md).
+Next, for production deployments, [configure a global principal key](set-principal-key.md) using a proper [KMS provider](../key-management/overview.md).
 
 Alternatively, you can skip directly to [validating encryption with open_pg_tde](../test.md) or [configuring WAL encryption](../wal-encryption.md).
 

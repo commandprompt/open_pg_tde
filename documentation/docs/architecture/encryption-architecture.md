@@ -27,7 +27,7 @@ A table with 4 indexes will have at least 5 internal keys, one for the table and
 * `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
 * `AES-128-GCM`, `AES-256-GCM` for encrypting internal keys; encrypted with the principal key
 
-Temporary files produced by query execution (for example, sorts and hashes that spill to disk) are not encrypted. Encrypting them requires a hook in the PostgreSQL temporary file path that the current server does not provide.
+Temporary files produced by query execution, such as external sorts and hash joins that exceed `work_mem` and spill to disk, are encrypted with `AES-128-XTS` when the core [`encrypt_temp_files`](../variables.md#encrypt_temp_files) GUC is on. The key is generated per boot, held only in memory, and never written to disk, so temporary files cannot be recovered once the server stops.
 
 ## Pluggable cipher providers
 

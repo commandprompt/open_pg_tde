@@ -4,7 +4,7 @@ You can configure a default principal key for the server using a global key prov
 
 Configuring the default principal key is a multi-step process that uses the following functions:
 
-- [open_pg_tde_add_global_key_provider_<TYPE>()](../advanced-topics/usage-guide.md#add-providers) adds a global key provider
+- [open_pg_tde_add_global_key_provider_<TYPE>()](../functions.md#add-a-key-provider) adds a global key provider
 - [open_pg_tde_create_key_using_global_key_provider()](../functions.md#open_pg_tde_create_key_using_global_key_provider) creates a principal key at a global key provider
 - [open_pg_tde_set_default_key_using_global_key_provider()](../functions.md#open_pg_tde_set_default_key_using_global_key_provider) sets the default principal key and rotates the internal encryption key if one is already configured
 
@@ -30,7 +30,7 @@ SELECT open_pg_tde_create_key_using_global_key_provider(
     ```sql
         postgres=# SELECT open_pg_tde_create_key_using_global_key_provider(
             'keytest1',
-            'file-keyring'
+            'global_kmip_provider'
         );
         open_pg_tde_create_key_using_global_key_provider
         ---------------------------------------------
@@ -53,7 +53,7 @@ SELECT open_pg_tde_set_default_key_using_global_key_provider(
     ```sql
         postgres=# SELECT open_pg_tde_set_default_key_using_global_key_provider(
             'keytest1',
-            'file-keyring'
+            'global_kmip_provider'
         );
         open_pg_tde_set_default_key_using_global_key_provider 
         --------------------------------------------------

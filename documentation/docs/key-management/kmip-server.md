@@ -5,7 +5,7 @@ To use a Key Management Interoperability Protocol (KMIP) server with `open_pg_td
 !!! note
     You need the root certificate of the KMIP server and a client key/certificate pair with permissions to create and read keys on the server.
 
-For testing purposes, you can use a Eviden KMS server, which enables easy certificate generation and basic KMIP behavior. If you're using a production-grade KMIP server, ensure you obtain valid, trusted certificates from the key management appliance.
+For testing purposes, you can use an Eviden KMS server, which enables easy certificate generation and basic KMIP behavior. If you're using a production-grade KMIP server, ensure you obtain valid, trusted certificates from the key management appliance.
 
 ## Example usage
 
@@ -13,10 +13,10 @@ For testing purposes, you can use a Eviden KMS server, which enables easy certif
 SELECT open_pg_tde_add_global_key_provider_kmip(
     'provider-name',
     'kmip-IP', 
-    `port`,
-    '/path_to/server_certificate.pem', 
-    '/path_to/client_cert.pem',
-    '/path_to/client_key.pem'
+    port,
+    '/path_to/client_cert.pem', 
+    '/path_to/client_key.pem',
+    '/path_to/ca_cert.pem'
 );
 ```
 
@@ -25,9 +25,9 @@ SELECT open_pg_tde_add_global_key_provider_kmip(
 * `provider-name` is the name of the provider. You can specify any name, it's for you to identify the provider
 * `kmip-IP` is the IP address of a domain name of the KMIP server
 * `port` is the port to communicate with the KMIP server. Typically used port is 5696
-* `server-certificate` is the path to the certificate file for the KMIP server
-* `client_cert` is the path to the client certificate.
-* `client_key` is the path to the client key.
+* `kmip_cert_path` is the path to the client certificate.
+* `kmip_key_path` is the path to the client private key.
+* `kmip_ca_path` is the path to the CA certificate used to verify the KMIP server.
 
 The following example is for testing purposes only.
 
@@ -35,9 +35,9 @@ The following example is for testing purposes only.
 SELECT open_pg_tde_add_global_key_provider_kmip(
     'kmip','127.0.0.1', 
     5696, 
-    '/tmp/server_certificate.pem', 
     '/tmp/client_cert_jane_doe.pem',
-    '/tmp/client_key_jane_doe.pem'
+    '/tmp/client_key_jane_doe.pem',
+    '/tmp/ca_certificate.pem'
 );
 ```
 

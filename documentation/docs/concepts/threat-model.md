@@ -19,7 +19,7 @@ against an attacker who obtains the stored bytes but not a running server:
 
 The encryption keys are not stored with the data. Each relation's internal key
 is wrapped by a principal key held in a key management system or a key file that
-the operator controls (see [key management](../global-key-provider-configuration/overview.md)).
+the operator controls (see [key management](../key-management/overview.md)).
 An attacker with the data files but not the principal key cannot decrypt them.
 For temporary files the key is generated per boot and held only in memory, so
 temporary data on a stolen disk cannot be recovered at all.

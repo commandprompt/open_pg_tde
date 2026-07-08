@@ -7,7 +7,7 @@ The `open_pg_tde` extension provides functions for managing different aspects of
 
 ## Key provider management
 
-A key provider is a system or service responsible for managing encryption keys. For more information on the key providers `open_pg_tde` supports see the [Key management overview](global-key-provider-configuration/overview.md).
+A key provider is a system or service responsible for managing encryption keys. For more information on the key providers `open_pg_tde` supports see the [Key management overview](key-management/overview.md).
 
 Key provider management includes the following operations:
 
@@ -27,6 +27,10 @@ There are two functions to add a key provider: one function adds it for the curr
 
 When you add a new provider, the provider name must be unique in the scope. But a local database provider and a global provider can have the same name.
 
+Global provider visibility depends on the `open_pg_tde.inherit_global_providers` GUC. When it is `on`, global providers are visible to all databases and can be used for database keys. When it is `off`, global providers are used only for WAL encryption.
+
+If you run with `open_pg_tde.inherit_global_providers = on`, reference global providers or the global default principal key in databases, and then change the setting to `off`, the existing references keep working. New references to the global scope cannot be made while the setting is `off`.
+
 ### Change an existing provider
 
 You can change an existing key provider using the provided functions, which are implemented for each provider type.
@@ -40,7 +44,9 @@ When you change a provider, the referred name must exist in the database local o
 
 The `change` functions require the same parameters as the `add` functions. They overwrite the setting for every parameter except for the name, which can't be changed.
 
-Provider specific parameters differ for each implementation. Refer to the  respective subsection for details.
+The `change` functions can also change the type of a provider, but they do not migrate any data. They are intended for infrastructure migration, for example when the address of a server changes.
+
+Provider specific parameters differ for each implementation. Refer to the respective subsection for details.
 
 !!! note
     The updated provider must be able to retrieve the same principal keys as the original configuration.
@@ -55,20 +61,20 @@ Use these functions to add a KMIP provider:
 ```sql
 SELECT open_pg_tde_add_database_key_provider_kmip(
   'provider-name',
-  'kmip-addr',
+  'kmip-host',
   port,
-  '/path_to/client_cert.pem',
+  '/path_to/client_certificate.pem',
   '/path_to/client_key.pem',
-  '/path_to/server_certificate.pem'
+  '/path_to/ca_certificate.pem'
 );
 
 SELECT open_pg_tde_add_global_key_provider_kmip(
   'provider-name',
-  'kmip-addr',
+  'kmip-host',
   port,
   '/path_to/client_certificate.pem',
   '/path_to/client_key.pem',
-  '/path_to/server_certificate.pem'
+  '/path_to/ca_certificate.pem'
 );
 ```
 
@@ -77,32 +83,32 @@ These functions change the KMIP provider:
 ```sql
 SELECT open_pg_tde_change_database_key_provider_kmip(
   'provider-name',
-  'kmip-addr',
+  'kmip-host',
   port,
-  '/path_to/client_cert.pem',
+  '/path_to/client_certificate.pem',
   '/path_to/client_key.pem',
-  '/path_to/server_certificate.pem'
+  '/path_to/ca_certificate.pem'
 );
 
 SELECT open_pg_tde_change_global_key_provider_kmip(
   'provider-name',
-  'kmip-addr',
+  'kmip-host',
   port,
   '/path_to/client_certificate.pem',
   '/path_to/client_key.pem',
-  '/path_to/server_certificate.pem'
+  '/path_to/ca_certificate.pem'
 );
 ```
 
-where:
+The parameters are supplied in the following order:
 
-* `provider-name` is the name of the provider
-* `kmip-addr` is the IP address or domain name of the KMIP server
-* `port` is the port to communicate with the KMIP server.
+* `provider_name` is the name of the provider.
+* `kmip_host` is the IP address or domain name of the KMIP server.
+* `kmip_port` is the port used to communicate with the KMIP server.
   Most KMIP servers use port 5696.
-* `server-certificate` is the path to the certificate file for the KMIP server.
-* `client-certificate` is the path to the client certificate.
-* `client-key` is the path to the client key.
+* `kmip_cert_path` is the path to the client certificate.
+* `kmip_key_path` is the path to the client private key.
+* `kmip_ca_path` is the path to the CA certificate used to verify the KMIP server.
 
 !!! note
     The specified access parameters require permission to read and write keys at the server.
@@ -159,7 +165,7 @@ where:
 * `token_path` is the path to a file that contains an access token with read and write access to the mount point.
 * `ca_path` is the path of the CA file used for TLS verification. This parameter is optional.
 
-A sixth `namespace` parameter is also accepted to select an OpenBao namespace. See [Using OpenBao as a key provider](global-key-provider-configuration/openbao.md).
+A sixth `namespace` parameter is also accepted to select an OpenBao namespace. See [Using OpenBao as a key provider](key-management/openbao.md).
 
 ### Add or modify local key file providers
 
@@ -207,12 +213,12 @@ where:
 
 These functions delete an existing provider in the current database or in the global scope:
 
-* `open_pg_tde_delete_database_key_provider('provider-name)`
-* `open_pg_tde_delete_global_key_provider('provider-name)`
+* `open_pg_tde_delete_database_key_provider('provider-name')`
+* `open_pg_tde_delete_global_key_provider('provider-name')`
 
 You can only delete key providers that are not currently in use. An error is returned if the current principal key is using the provider you are trying to delete.
 
-If the use of global key providers is enabled via the `open_pg_tde.inherit_global` GUC, you can delete a global key provider only if it isn't used anywhere, including any databases. If it is used in any database, an error is returned instead.
+If the use of global key providers is enabled via the `open_pg_tde.inherit_global_providers` GUC, you can delete a global key provider only if it isn't used anywhere, including any databases. If it is used in any database, an error is returned instead.
 
 ### List key providers
 
@@ -220,6 +226,26 @@ These functions list the details of all key providers for the current database o
 
 * `open_pg_tde_list_all_database_key_providers()`
 * `open_pg_tde_list_all_global_key_providers()`
+
+### Change a provider from the command line
+
+`open_pg_tde` provides the `open_pg_tde_change_key_provider` command line tool to change a provider while the PostgreSQL server is stopped. It works like the `change` functions, with the following syntax:
+
+```sh
+open_pg_tde_change_key_provider <dbOid> <providerType> ... details ...
+```
+
+!!! note
+    Because this tool is intended to run while the server is stopped, it bypasses all permission checks. It requires a database OID (`dbOid`) rather than a database name, because it cannot access the system catalogs. It does not validate any parameters.
+
+### Key management permissions
+
+`open_pg_tde` implements access control based on execute rights on the administration functions. These functions grant or revoke the permission to manage database keys for a role:
+
+* `open_pg_tde_grant_database_key_management_to_role('role-name')`
+* `open_pg_tde_revoke_database_key_management_from_role('role-name')`
+
+A role with database key management permission can change the key for the database and call the current key functions, including creating keys using global providers when `open_pg_tde.inherit_global_providers` is enabled. This permission does not allow the role to modify the provider configuration.
 
 ## Principal key management
 
@@ -288,7 +314,7 @@ SELECT open_pg_tde_set_server_key_using_global_key_provider(
 
 Sets or rotates the default principal key for the server using the specified global key provider.
 
-The default key is automatically used as a principal key by any database that doesn't have an individual key provider and key configuration.
+The default key is automatically used as a principal key by any database that has the `open_pg_tde` extension enabled but doesn't have an individual key provider and key configuration. This lets the whole server use the same principal key for all databases, which disables multi-tenancy. It requires `open_pg_tde.inherit_global_providers` to be enabled.
 
 ```sql
 SELECT open_pg_tde_set_default_key_using_global_key_provider(
@@ -297,6 +323,8 @@ SELECT open_pg_tde_set_default_key_using_global_key_provider(
 );
 ```
 
+Changing the default principal key rotates the encryption of internal keys for all databases that use the current default principal key.
+
 ### open_pg_tde_delete_key
 
 Unsets the principal key for the current database. If the current database has any encrypted tables, and there isn’t a default principal key configured, it reports an error instead. If there are encrypted tables, but there’s also a default principal key, internal keys will be encrypted with the default key.
@@ -304,6 +332,9 @@ Unsets the principal key for the current database. If the current database has a
 ```sql
 SELECT open_pg_tde_delete_key();
 ```
+
+!!! note
+    WAL keys cannot be unset, because server keys are managed separately.
 
 ### open_pg_tde_delete_default_key
 
