@@ -3954,6 +3954,8 @@ emits a warning at server start:</p>
 <li><code>kmip_key_path</code> is the path to the client private key.</li>
 <li><code>kmip_ca_path</code> is the path to the CA certificate used to verify the KMIP server.</li>
 </ul>
+<h2 id="key-management-kmip-server-certificate-verification">Certificate verification<a class="headerlink" href="#key-management-kmip-server-certificate-verification" title="Permanent link">¶</a></h2>
+<p><code>open_pg_tde</code> verifies the KMIP server’s TLS certificate on every connection. The server certificate must be signed by the CA supplied in <code>kmip_ca_path</code>, and the certificate identity must match the <code>kmip-IP</code> value (an IP address SAN when you connect by IP, or a DNS name SAN when you connect by host name). The connection also requires TLS 1.2 or newer. A connection to a server that presents an untrusted, expired, or mismatched certificate is refused, which prevents a network attacker from impersonating the KMIP server and capturing principal keys. Make sure <code>kmip_ca_path</code> points to the CA that issued the server certificate and that the certificate includes the host or address you connect to.</p>
 <p>The following example is for testing purposes only.</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">open_pg_tde_add_global_key_provider_kmip</span><span class="p">(</span>
 <span class="w">    </span><span class="s1">'kmip'</span><span class="p">,</span><span class="s1">'127.0.0.1'</span><span class="p">,</span><span class="w"> </span>
