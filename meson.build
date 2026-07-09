@@ -331,12 +331,14 @@ executable('open_pg_tde_waldump',
 )
 
 tap_tests = [
+  't/base_iv_migration.pl',
   't/basic.pl',
   't/change_key_provider.pl',
   't/cipher_selection.pl',
   't/crash_recovery.pl',
   't/default_principal_key.pl',
   't/key_rotate_tablespace.pl',
+  't/key_map_auth.pl',
   't/keys_update.pl',
   't/key_validation.pl',
   't/kmip.pl',
