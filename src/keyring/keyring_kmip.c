@@ -6,6 +6,7 @@
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 
 #include "keyring/keyring_api.h"
 #include "keyring/keyring_kmip.h"
@@ -43,9 +44,26 @@ static bool
 kmipSslConnect(KmipCtx *ctx, KmipKeyring *kmip_keyring, bool throw_error)
 {
 	SSL		   *ssl = NULL;
+	X509_VERIFY_PARAM *vpm;
 	int			level = throw_error ? ERROR : WARNING;
 
 	ctx->ssl = SSL_CTX_new(SSLv23_method());
+
+	/*
+	 * Require TLS 1.2 or newer. The principal key travels over this
+	 * connection, so the obsolete SSLv3/TLS1.0/1.1 protocols must not be
+	 * negotiated.
+	 */
+	SSL_CTX_set_min_proto_version(ctx->ssl, TLS1_2_VERSION);
+
+	/*
+	 * Verify the KMIP server's certificate against the configured CA. Without
+	 * this OpenSSL defaults to SSL_VERIFY_NONE, which completes the handshake
+	 * with any certificate and lets a network man-in-the-middle impersonate
+	 * the KMIP server and capture or serve principal keys. The hostname/IP
+	 * check below is only meaningful once SSL_VERIFY_PEER is set.
+	 */
+	SSL_CTX_set_verify(ctx->ssl, SSL_VERIFY_PEER, NULL);
 
 	if (SSL_CTX_use_certificate_file(ctx->ssl, kmip_keyring->kmip_cert_path, SSL_FILETYPE_PEM) != 1)
 	{
@@ -78,13 +96,52 @@ kmipSslConnect(KmipCtx *ctx, KmipKeyring *kmip_keyring, bool throw_error)
 
 	BIO_get_ssl(ctx->bio, &ssl);
 	SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+
+	/*
+	 * Bind the expected identity so OpenSSL rejects a valid certificate
+	 * issued for a different host. kmip_host may be an IP literal (the common
+	 * case) or a DNS name: X509_VERIFY_PARAM_set1_ip_asc() parses and matches
+	 * IP address SANs, and only when the value is not a valid IP do we fall
+	 * back to DNS name matching. Exactly one of the two is applied because
+	 * the value is either an IP address or a name; the if/else below sets
+	 * only the matching check (they are stored in independent fields, so a
+	 * stray call to both would require the certificate to satisfy both at
+	 * once).
+	 */
+	vpm = SSL_get0_param(ssl);
+	if (X509_VERIFY_PARAM_set1_ip_asc(vpm, kmip_keyring->kmip_host) != 1)
+	{
+		if (X509_VERIFY_PARAM_set1_host(vpm, kmip_keyring->kmip_host, 0) != 1)
+		{
+			BIO_free_all(ctx->bio);
+			SSL_CTX_free(ctx->ssl);
+			ereport(level, errmsg("SSL error: could not set expected KMIP host name"));
+			return false;
+		}
+	}
+
 	BIO_set_conn_hostname(ctx->bio, kmip_keyring->kmip_host);
 	BIO_set_conn_port(ctx->bio, kmip_keyring->kmip_port);
+
+	/*
+	 * With SSL_VERIFY_PEER set, BIO_do_connect() already fails if the
+	 * certificate chain or the host identity does not verify. The explicit
+	 * SSL_get_verify_result() check below is defense in depth against a
+	 * future refactor that might weaken the handshake path.
+	 */
 	if (BIO_do_connect(ctx->bio) != 1)
 	{
 		BIO_free_all(ctx->bio);
 		SSL_CTX_free(ctx->ssl);
 		ereport(level, errmsg("SSL error: BIO_do_connect failed"));
+		return false;
+	}
+
+	if (SSL_get_verify_result(ssl) != X509_V_OK)
+	{
+		BIO_free_all(ctx->bio);
+		SSL_CTX_free(ctx->ssl);
+		ereport(level, errmsg("SSL error: KMIP server certificate verification failed"));
 		return false;
 	}
 
