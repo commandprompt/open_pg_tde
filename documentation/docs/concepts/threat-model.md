@@ -44,7 +44,7 @@ running server:
   encryption keys: the keys live in the `open_pg_tde` key files wrapped by the
   principal key, not in the catalog, so reading or altering catalog entries does
   not reveal key material.
-- **Tampering (integrity).** The data-file ciphers (XTS and CBC) provide
+- **Tampering (integrity).** The data-file cipher (XTS) provides
   confidentiality, not authentication. `open_pg_tde` does not currently detect
   deliberate modification of ciphertext on disk. Authenticated page encryption
   is a separate, larger initiative; see the design note on authenticated pages.

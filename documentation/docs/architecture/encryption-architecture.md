@@ -23,7 +23,7 @@ A table with 4 indexes will have at least 5 internal keys, one for the table and
 
 `open_pg_tde` currently uses the following encryption algorithms:
 
-* `AES-128-XTS` (default) or `AES-128-CBC` / `AES-256-CBC` for encrypting database files, selected by [`open_pg_tde.data_cipher`](../variables.md#open_pg_tdedata_cipher); encrypted with internal keys
+* `AES-128-XTS` (default) or `AES-256-XTS` for encrypting database files, selected by [`open_pg_tde.data_cipher`](../variables.md#open_pg_tdedata_cipher); encrypted with internal keys
 * `AES-128-CTR`, `AES-256-CTR` for WAL encryption; encrypted with internal keys
 * `AES-128-GCM`, `AES-256-GCM` for encrypting internal keys; encrypted with the principal key
 

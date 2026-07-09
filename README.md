@@ -34,9 +34,9 @@ required.
 - **Encrypted at rest:** table data, indexes, TOAST, the WAL, and temporary
   (query-spill) files. System catalogs and statistics are not encrypted; see the
   [threat model](documentation/docs/concepts/threat-model.md).
-- **Data ciphers:** AES-128-XTS (default), AES-256-XTS, AES-128-CBC, and
-  AES-256-CBC, selected with [`open_pg_tde.data_cipher`](documentation/docs/variables.md).
-  The WAL uses AES-CTR.
+- **Data ciphers:** AES-128-XTS (default) and AES-256-XTS, selected with
+  [`open_pg_tde.data_cipher`](documentation/docs/variables.md). XTS is the
+  tweakable mode designed for storage. The WAL uses AES-CTR.
 - **Key management:** a two-tier hierarchy (a principal key wraps per-relation
   keys), with a keyring file, KMIP-compatible systems, or
   [OpenBao](https://openbao.org/) as providers, per database or cluster-wide.

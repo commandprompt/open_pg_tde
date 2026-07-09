@@ -5,8 +5,8 @@
 # with data checksums: after hint bits are set and the pages are written and the
 # server restarts, the data reads back correctly and no page fails checksum
 # verification (the checksum is computed on the plaintext page, then the page is
-# encrypted, so verification runs on the decrypted page). Both the XTS and the
-# CBC data ciphers are exercised, since their torn-page behavior differs.
+# encrypted, so verification runs on the decrypted page). Both the AES-128-XTS
+# and AES-256-XTS data ciphers are exercised.
 #
 # Data checksums also cause PostgreSQL to WAL-log hint-bit changes, which is
 # what gives torn-page safety for hint-bit updates under whole-page encryption.
@@ -43,16 +43,16 @@ $node->safe_psql(
 	CREATE TABLE t_xts (id int PRIMARY KEY, s text) USING tde_heap;
 	INSERT INTO t_xts SELECT g, 'xts-' || g FROM generate_series(1, 5000) g;
 
-	SET open_pg_tde.data_cipher = 'aes_256';
-	CREATE TABLE t_cbc (id int PRIMARY KEY, s text) USING tde_heap;
-	INSERT INTO t_cbc SELECT g, 'cbc-' || g FROM generate_series(1, 5000) g;
+	SET open_pg_tde.data_cipher = 'aes_256_xts';
+	CREATE TABLE t_xts256 (id int PRIMARY KEY, s text) USING tde_heap;
+	INSERT INTO t_xts256 SELECT g, 'xts256-' || g FROM generate_series(1, 5000) g;
 });
 
 # The first read after a committed insert sets HEAP_XMIN_COMMITTED hint bits,
 # dirtying the pages; CHECKPOINT then writes the hint-bit-modified, re-encrypted
 # pages to disk.
 $node->safe_psql('postgres', 'SELECT count(*) FROM t_xts');
-$node->safe_psql('postgres', 'SELECT count(*) FROM t_cbc');
+$node->safe_psql('postgres', 'SELECT count(*) FROM t_xts256');
 $node->safe_psql('postgres', 'CHECKPOINT');
 
 # Restart forces the pages to be read from disk again: decrypt the hint-bit
@@ -63,17 +63,17 @@ is($node->safe_psql('postgres', 'SELECT count(*) FROM t_xts'),
 	'5000', 'XTS table reads back after hint bits, checksums, and restart');
 is($node->safe_psql('postgres', "SELECT s FROM t_xts WHERE id = 4999"),
 	'xts-4999', 'XTS row content is correct after restart');
-is($node->safe_psql('postgres', 'SELECT count(*) FROM t_cbc'),
-	'5000', 'CBC table reads back after hint bits, checksums, and restart');
-is($node->safe_psql('postgres', "SELECT s FROM t_cbc WHERE id = 4999"),
-	'cbc-4999', 'CBC row content is correct after restart');
+is($node->safe_psql('postgres', 'SELECT count(*) FROM t_xts256'),
+	'5000', 'XTS-256 table reads back after hint bits, checksums, and restart');
+is($node->safe_psql('postgres', "SELECT s FROM t_xts256 WHERE id = 4999"),
+	'xts256-4999', 'XTS-256 row content is correct after restart');
 
 # A full scan verifies the checksum of every page of each table; if any page
 # failed verification the query would error.
 is($node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_xts'),
 	't', 'full scan of the XTS table passes page checksum verification');
-is($node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_cbc'),
-	't', 'full scan of the CBC table passes page checksum verification');
+is($node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_xts256'),
+	't', 'full scan of the XTS-256 table passes page checksum verification');
 
 # No checksum-verification failures were logged.
 my $log = slurp_file($node->logfile);
