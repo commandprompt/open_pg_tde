@@ -75,6 +75,28 @@ sub configure
 	$node->append_conf('postgresql.conf', "encrypt_temp_files = $mode");
 }
 
+# encrypt_temp_files is a core GUC added by the open_pg_tde temp-file patch. On a
+# server that carries the storage/WAL hooks but not the temp-file hook (for
+# example Percona Server for PostgreSQL, which the CI matrix builds against), the
+# GUC does not exist and setting it would make startup fail. Probe for it with a
+# node that does not set it, and skip the whole test if the feature is absent.
+{
+	my $probe = PostgreSQL::Test::Cluster->new('temp_probe');
+	$probe->init;
+	$probe->append_conf('postgresql.conf',
+		"shared_preload_libraries = 'open_pg_tde'");
+	$probe->start;
+	my $have = $probe->safe_psql('postgres',
+		"SELECT count(*) FROM pg_settings WHERE name = 'encrypt_temp_files'");
+	$probe->stop;
+
+	if ($have eq '0')
+	{
+		plan skip_all =>
+		  'encrypt_temp_files not available (server built without the open_pg_tde temp-file hook)';
+	}
+}
+
 # Control node: encryption off, canary must be present.
 my $off = PostgreSQL::Test::Cluster->new('temp_plain');
 $off->init;
