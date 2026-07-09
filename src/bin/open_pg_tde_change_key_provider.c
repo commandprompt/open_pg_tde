@@ -109,6 +109,14 @@ main(int argc, char *argv[])
 	Oid			db_oid;
 	char	   *provider_name;
 	char	   *new_provider_type;
+
+	/*
+	 * The assembled JSON is ultimately stored in record.provider.options, so
+	 * build_json() is bounded by that field's size (below), not by
+	 * sizeof(json). The scratch buffer is a little larger so build_json() can
+	 * detect and reject an over-long configuration rather than have it
+	 * silently truncated on the way into the smaller destination.
+	 */
 	char		json[BUFFER_SIZE * 2] = {0};
 	ControlFileData *controlfile;
 	bool		crc_ok;
@@ -181,7 +189,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, sizeof(json), 1, "path", argv[optind]))
+		if (!build_json(json, sizeof(record.provider.options), 1, "path", argv[optind]))
 		{
 			exit(1);
 		}
@@ -195,7 +203,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, sizeof(json), 4,
+		if (!build_json(json, sizeof(record.provider.options), 4,
 						"url", argv[optind],
 						"mountPath", argv[optind + 1],
 						"tokenPath", argv[optind + 2],
@@ -213,7 +221,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, sizeof(json), 5,
+		if (!build_json(json, sizeof(record.provider.options), 5,
 						"host", argv[optind],
 						"port", argv[optind + 1],
 						"certPath", argv[optind + 2],
