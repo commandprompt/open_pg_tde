@@ -137,12 +137,28 @@ sub bao_setup
 	my $temp = PostgreSQL::Test::Utils::tempdir('openbao');
 	my $port = PostgreSQL::Test::Cluster::get_free_port;
 
+	# bao -dev writes the root token to $HOME/.vault-token, and the bao CLI reads
+	# it from there. The test may run as a user whose real $HOME is not writable
+	# (for example HOME=/root while running as an unprivileged user), in which
+	# case dev-mode init fails with a permission error and never writes
+	# -dev-cluster-json, hanging wait_for_file() below. Point HOME at the test's
+	# temp dir for the server and every bao CLI call so the token file is
+	# writable and consistently located. This local also flows into the %ENV copy
+	# taken for the CLI commands further down.
+	local $ENV{HOME} = $temp;
+
+	# Send the server's stdout/stderr to files so its verbose -dev logging stays
+	# out of the TAP stream and, importantly, so its startup errors are captured
+	# for diagnosis (this is how the HOME issue above was found). Without a
+	# redirect the child would inherit the test's stdout/stderr.
 	$baoh = IPC::Run::start(
 		[
 			$bao_bin, 'server', '-dev', '-dev-tls',
 			"-dev-listen-address=127.0.0.1:$port",
 			"-dev-cluster-json=$temp/info"
-		]);
+		],
+		'>', "$temp/bao.log",
+		'2>', "$temp/bao.err");
 
 	wait_for_file("$temp/info", '.');
 
