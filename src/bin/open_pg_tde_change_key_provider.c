@@ -29,59 +29,64 @@ usage(void)
 
 #define BUFFER_SIZE 1024
 
+/*
+ * Append src to buffer (capacity bufsize) and report whether it still fits.
+ * strlcat never overflows and always NUL-terminates; it returns the length the
+ * result would have had, so a return >= bufsize means the value was truncated
+ * and the caller must treat the configuration as too long. Checking after every
+ * append (rather than once at the end, as the previous strcat-based code did)
+ * is what prevents a single over-long argument from overrunning the buffer
+ * before the bound is tested.
+ */
 static bool
-build_json(char *buffer, int count,...)
+json_append(char *buffer, size_t bufsize, const char *src)
+{
+	return strlcat(buffer, src, bufsize) < bufsize;
+}
+
+static bool
+build_json(char *buffer, size_t bufsize, int count,...)
 {
 	va_list		args;
-	char	   *ptr;
+	bool		ok = true;
 
 	va_start(args, count);
 
-	ptr = strcat(buffer, "{");
+	buffer[0] = '\0';
+	ok = json_append(buffer, bufsize, "{");
 
-	for (int i = 0; i < count; ++i)
+	for (int i = 0; ok && i < count; ++i)
 	{
-		/* TODO: no validation about the paramters at all... */
-		/* not much we can do without a proper JSON library */
-		/* If the JSON is incorrect, it will fail a bit later when */
-		/* we try to backread it */
+		/*
+		 * The key/value pairs are not JSON-escaped: the values are file paths
+		 * and endpoints supplied by the operator running this offline tool,
+		 * and a malformed result is rejected when the provider file is read
+		 * back.
+		 */
 		const char *key = va_arg(args, const char *);
 		const char *value = va_arg(args, const char *);
 
 		bool		addQuotes = value == NULL || (value[0] != '{' && value[0] != '"');
 
 		if (i != 0)
-		{
-			ptr = strcat(ptr, ",");
-		}
+			ok = ok && json_append(buffer, bufsize, ",");
 
-		ptr = strcat(ptr, "\"");
-		ptr = strcat(ptr, key);
-		ptr = strcat(ptr, "\":");
+		ok = ok && json_append(buffer, bufsize, "\"");
+		ok = ok && json_append(buffer, bufsize, key);
+		ok = ok && json_append(buffer, bufsize, "\":");
 
 		if (addQuotes)
-		{
-			ptr = strcat(ptr, "\"");
-		}
+			ok = ok && json_append(buffer, bufsize, "\"");
 		if (value != NULL)
-		{
-			ptr = strcat(ptr, value);
-		}
+			ok = ok && json_append(buffer, bufsize, value);
 		if (addQuotes)
-		{
-			ptr = strcat(ptr, "\"");
-		}
-		if (ptr - buffer > BUFFER_SIZE)
-		{
-			pg_log_error("configuration too long");
-			return false;
-		}
+			ok = ok && json_append(buffer, bufsize, "\"");
 	}
 	va_end(args);
 
-	ptr = strcat(ptr, "}");
+	ok = ok && json_append(buffer, bufsize, "}");
 
-	if (ptr - buffer > BUFFER_SIZE)
+	if (!ok)
 	{
 		pg_log_error("configuration too long");
 		return false;
@@ -104,6 +109,14 @@ main(int argc, char *argv[])
 	Oid			db_oid;
 	char	   *provider_name;
 	char	   *new_provider_type;
+
+	/*
+	 * The assembled JSON is ultimately stored in record.provider.options, so
+	 * build_json() is bounded by that field's size (below), not by
+	 * sizeof(json). The scratch buffer is a little larger so build_json() can
+	 * detect and reject an over-long configuration rather than have it
+	 * silently truncated on the way into the smaller destination.
+	 */
 	char		json[BUFFER_SIZE * 2] = {0};
 	ControlFileData *controlfile;
 	bool		crc_ok;
@@ -176,7 +189,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, 1, "path", argv[optind]))
+		if (!build_json(json, sizeof(record.provider.options), 1, "path", argv[optind]))
 		{
 			exit(1);
 		}
@@ -190,7 +203,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, 4,
+		if (!build_json(json, sizeof(record.provider.options), 4,
 						"url", argv[optind],
 						"mountPath", argv[optind + 1],
 						"tokenPath", argv[optind + 2],
@@ -208,7 +221,7 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-		if (!build_json(json, 5,
+		if (!build_json(json, sizeof(record.provider.options), 5,
 						"host", argv[optind],
 						"port", argv[optind + 1],
 						"certPath", argv[optind + 2],

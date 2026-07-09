@@ -2,6 +2,7 @@
 
 #include "access/xlog_internal.h"
 #include "access/xlog_smgr.h"
+#include "common/file_perm.h"
 #include "common/logging.h"
 #include "common/percentrepl.h"
 
@@ -45,7 +46,13 @@ write_encrypted_segment(const char *segpath, const char *segname, const char *tm
 	if (tmpfd < 0)
 		pg_fatal("could not open file \"%s\": %m", tmppath);
 
-	segfd = open(segpath, O_CREAT | O_WRONLY | PG_BINARY, 0666);
+	/*
+	 * Create the WAL segment owner-only (0600), matching how PostgreSQL
+	 * creates files under pg_wal. The previous 0666 (minus umask) left WAL
+	 * segments group/world-readable, inconsistent with the cluster
+	 * file-permission model.
+	 */
+	segfd = open(segpath, O_CREAT | O_WRONLY | PG_BINARY, PG_FILE_MODE_OWNER);
 	if (segfd < 0)
 		pg_fatal("could not open file \"%s\": %m", segpath);
 

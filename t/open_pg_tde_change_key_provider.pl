@@ -243,4 +243,33 @@ command_fails_like(
 	qr/error: wrong number of arguments for "openbao"/,
 	'gives error on missing arguments for openbao provider');
 
+# A provider parameter far larger than any buffer must be rejected cleanly
+# rather than overflowing the fixed-size stack buffer in build_json().
+command_fails_like(
+	[
+		'open_pg_tde_change_key_provider',
+		'-D' => $node->data_dir,
+		'1664',
+		'global-provider',
+		'file',
+		'A' x 5000,
+	],
+	qr/configuration too long/,
+	'rejects an over-long provider parameter without overflowing');
+
+# A parameter that fits the scratch buffer but would exceed the stored
+# provider.options field (MAX_KEYRING_OPTION_LEN = 1024) must also be rejected,
+# not silently truncated on the way to disk. 1500 bytes lands in that window.
+command_fails_like(
+	[
+		'open_pg_tde_change_key_provider',
+		'-D' => $node->data_dir,
+		'1664',
+		'global-provider',
+		'file',
+		'A' x 1500,
+	],
+	qr/configuration too long/,
+	'rejects a configuration that would overflow the stored options field');
+
 done_testing();
