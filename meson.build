@@ -331,6 +331,7 @@ executable('open_pg_tde_waldump',
 )
 
 tap_tests = [
+  't/base_iv_migration.pl',
   't/basic.pl',
   't/change_key_provider.pl',
   't/cipher_selection.pl',
