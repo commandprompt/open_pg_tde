@@ -446,18 +446,6 @@
  	}
  
  	/*
-@@ -869,9 +903,11 @@
- 	{
- 		Form_pg_attribute attr = TupleDescAttr(tupdesc, i);
- 
-+#ifndef USE_TDE_HOOKS
- 		if (attr->attisdropped)
- 			continue;
- 
-+#endif							/* ! USE_TDE_HOOKS */
- 		/* Add dependency info */
- 		ObjectAddressSubSet(myself, RelationRelationId, new_rel_oid, i + 1);
- 		ObjectAddressSet(referenced, TypeRelationId, attr->atttypid);
 @@ -1164,6 +1200,10 @@
  	Oid			existing_relid;
  	Oid			old_type_oid;
@@ -790,45 +778,8 @@
  		log_smgrcreate(&rel->rd_locator, INIT_FORKNUM);
  		fill_seq_fork_with_data(rel, tuple, INIT_FORKNUM);
  		FlushRelationBuffers(rel);
-@@ -1933,7 +1937,9 @@
- 
- 	memcpy(page, localpage, BufferGetPageSize(buffer));
- 	MarkBufferDirty(buffer);
-+#ifndef USE_TDE_HOOKS
- 	XLogFlushBufferForRedoIfInit(record, 0, buffer);
-+#endif							/* ! USE_TDE_HOOKS */
- 	UnlockReleaseBuffer(buffer);
- 
- 	pfree(localpage);
 --- a/src/backend/commands/tablecmds.c
 +++ b/src/backend/commands/tablecmds.c
-@@ -12262,12 +12262,14 @@
- 				errcode(ERRCODE_WRONG_OBJECT_TYPE),
- 				errmsg("constraint \"%s\" of relation \"%s\" is not a not-null constraint",
- 					   cmdcon->conname, RelationGetRelationName(rel)));
-+#ifndef USE_TDE_HOOKS
- 	if (cmdcon->alterInheritability &&
- 		cmdcon->noinherit && rel->rd_rel->relkind == RELKIND_PARTITIONED_TABLE)
- 		ereport(ERROR,
- 				errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
- 				errmsg("not-null constraint \"%s\" on partitioned table \"%s\" cannot be NO INHERIT",
- 					   cmdcon->conname, RelationGetRelationName(rel)));
-+#endif							/* ! USE_TDE_HOOKS */
- 
- 	/* Refuse to modify inheritability of inherited constraints */
- 	if (cmdcon->alterInheritability &&
-@@ -13011,9 +13013,11 @@
- 	HeapTuple	copyTuple;
- 	Form_pg_constraint copy_con;
- 
-+#ifndef USE_TDE_HOOKS
- 	/* since this function recurses, it could be driven to stack overflow */
- 	check_stack_depth();
- 
-+#endif							/* ! USE_TDE_HOOKS */
- 	con = (Form_pg_constraint) GETSTRUCT(contuple);
- 	Assert(con->contype == CONSTRAINT_FOREIGN);
- 	Assert(!con->convalidated);
 @@ -17174,7 +17178,11 @@
  	 * NOTE: any conflict in relfilenumber value will be caught in
  	 * RelationCreateStorage().

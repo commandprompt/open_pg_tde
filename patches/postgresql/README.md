@@ -100,6 +100,13 @@ recorded:
   index-AM redo needs.
 - The md storage manager must register via `register_builtin_dynamic_managers()`
   in `miscinit.c`, or `smgropen` trips `Assert(NSmgr > 0)`.
+- Gate only storage/WAL-relevant changes behind `USE_TDE_HOOKS`. A rebase can
+  accidentally wrap unrelated core code in `#ifndef USE_TDE_HOOKS`, silently
+  removing it from the hooks-on build (past examples: `check_stack_depth()` in a
+  recursive constraint routine, `XLogFlushBufferForRedoIfInit()` in `seq_redo`,
+  the dropped-attribute dependency guard in `AddNewAttributeTuples`, and the
+  partitioned-table NO-INHERIT not-null check). These are correctness/DoS
+  regressions that only appear with hooks on; keep such guards unconditional.
 
 ## Status
 
