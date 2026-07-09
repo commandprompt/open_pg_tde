@@ -64,6 +64,16 @@ typedef struct TDEMapEntry
 	uint32		type;			/* Part of AAD */
 
 	/*
+	 * key_base_iv is the per-relation IV/tweak base for the data files. It is
+	 * placed here, before entry_iv, so that it falls within the AEAD
+	 * additional authenticated data (offsetof(TDEMapEntry, entry_iv)). In the
+	 * v5 format it lived after aead_tag and was therefore unauthenticated,
+	 * which let an actor with write access to the key file alter every block
+	 * IV undetected. See the v5 migration reader below.
+	 */
+	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
+
+	/*
 	 * IV and tag used when encrypting the key itself
 	 *
 	 * TODO: should we extend MAP_ENTRY_IV_SIZE to 192(?) bit and add an
@@ -72,7 +82,6 @@ typedef struct TDEMapEntry
 	unsigned char entry_iv[MAP_ENTRY_IV_SIZE];
 	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
 
-	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
 	uint8		encrypted_key_data[INTERNAL_KEY_MAX_LEN];
 } TDEMapEntry;
 
@@ -1073,6 +1082,85 @@ map_from_disk_entry_v4(int fd, off_t *entry_offset, const TDEPrincipalKey *princ
 	return true;
 }
 
+/*
+ * Version 5 key map entry: same fields as the current entry, but key_base_iv is
+ * stored after the AEAD tag, so it was not covered by the AEAD additional
+ * authenticated data. Retained to migrate version-5 files to the current
+ * format, which authenticates key_base_iv.
+ */
+typedef struct TDEMapEntryV5
+{
+	uint32		cipher;
+	Oid			spcOid;
+	RelFileNumber relNumber;
+	uint32		type;
+	unsigned char entry_iv[MAP_ENTRY_IV_SIZE];
+	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
+	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
+	uint8		encrypted_key_data[INTERNAL_KEY_MAX_LEN];
+} TDEMapEntryV5;
+
+static bool
+read_one_map_entry_v5(int fd, TDEMapEntryV5 *entry, off_t *offset)
+{
+	int			bytes_read = pg_pread(fd, entry, sizeof(TDEMapEntryV5), *offset);
+
+	if (bytes_read == 0)
+		return false;
+	if (bytes_read != sizeof(TDEMapEntryV5))
+		ereport(ERROR,
+				errmsg("keys migration: could not read map entry"));
+	*offset += bytes_read;
+	return true;
+}
+
+static void
+ikey_from_map_entry_v5(TDEMapEntryV5 *entry, const TDEPrincipalKey *principal_key, InternalKey *out)
+{
+	out->key_len = open_pg_tde_cipher_key_length(entry->cipher);
+	out->cipher = entry->cipher;
+
+	memcpy(out->base_iv, entry->key_base_iv, sizeof(entry->key_base_iv));
+
+	/* v5 excluded key_base_iv from the AAD (offsetof entry_iv). */
+	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,
+					   entry->entry_iv, sizeof(entry->entry_iv),
+					   (unsigned char *) entry, offsetof(TDEMapEntryV5, entry_iv),
+					   entry->encrypted_key_data, out->key_len,
+					   out->key,
+					   entry->aead_tag, sizeof(entry->aead_tag)))
+		ereport(ERROR,
+				errmsg("failed to decrypt key, incorrect principal key or corrupted key file"));
+}
+
+static bool
+map_from_disk_entry_v5(int fd, off_t *entry_offset, const TDEPrincipalKey *principal_key, TDEMapEntry *out)
+{
+	TDEMapEntryV5 disk_entry;
+	InternalKey key;
+	RelFileLocator rloc;
+
+	if (!read_one_map_entry_v5(fd, &disk_entry, entry_offset))
+		return false;
+
+	/* Decrypting empty entries would fail, so just return an empty entry. */
+	if (disk_entry.type == MAP_ENTRY_TYPE_EMPTY)
+	{
+		memset(out, 0, sizeof(TDEMapEntry));
+		return true;
+	}
+
+	ikey_from_map_entry_v5(&disk_entry, principal_key, &key);
+
+	rloc.spcOid = disk_entry.spcOid;
+	rloc.dbOid = principal_key->keyInfo.databaseId;
+	rloc.relNumber = disk_entry.relNumber;
+
+	open_pg_tde_initialize_map_entry(out, principal_key, &rloc, &key);
+
+	return true;
+}
+
 void
 open_pg_tde_migrate_smgr_keys_file(void)
 {
@@ -1135,6 +1223,8 @@ open_pg_tde_migrate_smgr_keys_file(void)
 			read_map_entry = map_from_disk_entry_v3;
 		else if (FILEMAGIC_VERSION(fheader.file_version) == 4)
 			read_map_entry = map_from_disk_entry_v4;
+		else if (FILEMAGIC_VERSION(fheader.file_version) == 5)
+			read_map_entry = map_from_disk_entry_v5;
 		else
 			elog(ERROR, "keys migration: unsupported or corrupted version %d of file \"%s\"", FILEMAGIC_VERSION(fheader.file_version), db_map_path);
 
