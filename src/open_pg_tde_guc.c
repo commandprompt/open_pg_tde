@@ -34,10 +34,20 @@ static const struct config_enum_entry cipher_options[] = {
 	{NULL, 0, false}
 };
 
+/*
+ * Ciphers selectable for NEW data-file (relation) keys. Only the XTS variants
+ * are offered: XTS is the tweakable mode designed for random-access block
+ * storage. The non-tweakable AES-CBC modes are intentionally not selectable
+ * here because, for a whole page at rest, their deterministic per-block IV
+ * leaks the length of an unchanged leading prefix across successive versions of
+ * a page and CBC is malleable. 'inherit' follows open_pg_tde.cipher for the key
+ * strength (128 vs 256) but always maps to the XTS variant for data files (see
+ * tde_smgr_data_cipher()). The CBC cipher implementations remain registered (see
+ * cipher_provider.c) so relations already encrypted with a CBC data cipher
+ * continue to decrypt; this list only governs the cipher chosen for a new key.
+ */
 static const struct config_enum_entry data_cipher_options[] = {
 	{"inherit", DATA_CIPHER_INHERIT, false},
-	{"aes_128", CIPHER_AES_128, false},
-	{"aes_256", CIPHER_AES_256, false},
 	{"aes_xts", CIPHER_AES_128_XTS, false},
 	{"aes_256_xts", CIPHER_AES_256_XTS, false},
 	{NULL, 0, false}

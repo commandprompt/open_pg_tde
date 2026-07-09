@@ -48,8 +48,8 @@ Beyond running on upstream PostgreSQL, this fork has added:
 
 - **Temporary file encryption.** Query-spill files (external sorts, hash joins)
   are encrypted with AES-128-XTS. See [`encrypt_temp_files`](../variables.md#encrypt_temp_files).
-- **AES-256-XTS data cipher**, alongside AES-128-XTS and the CBC ciphers, for
-  deployments that require AES-256 keys, through a pluggable cipher registry. See
+- **AES-256-XTS data cipher**, alongside AES-128-XTS, for deployments that
+  require AES-256 keys, through a pluggable cipher registry. See
   [`open_pg_tde.data_cipher`](../variables.md#open_pg_tdedata_cipher).
 - **FIPS enforcement.** All cryptography runs through OpenSSL and uses
   FIPS-approved modes, and the server can be required to start only when OpenSSL

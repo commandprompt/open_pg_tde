@@ -45,10 +45,14 @@ TdeCipherRegistryInit(void)
 		return;
 
 	/*
-	 * Built-in AES suites. Data pages use AES-CBC (AesEncrypt/AesDecrypt) and
-	 * the WAL/stream path uses AES-CTR (AesCtrEncryptedZeroBlocks). The key
-	 * length selects AES-128 vs AES-256; the underlying primitives pick the
-	 * matching OpenSSL cipher from the key length as well.
+	 * Built-in AES suites. The non-XTS suites below pair an AES-CBC block
+	 * cipher (AesEncrypt/AesDecrypt) with an AES-CTR keystream
+	 * (AesCtrEncryptedZeroBlocks); the WAL/stream path uses the CTR
+	 * keystream. The CBC block cipher is retained so data files written by
+	 * older versions with a CBC data cipher still decrypt, but new data files
+	 * use XTS (see open_pg_tde.data_cipher). The key length selects AES-128
+	 * vs AES-256; the underlying primitives pick the matching OpenSSL cipher
+	 * from the key length.
 	 *
 	 * To add another algorithm, register it here with its own name/key length
 	 * and block/keystream implementations -- the enc_tde.c call sites resolve

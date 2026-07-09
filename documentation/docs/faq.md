@@ -110,7 +110,7 @@ We advise encrypting the whole database only if all your data is sensitive, like
 
 `open_pg_tde` currently uses the following encryption algorithms:
 
-* Database files: `AES-128-XTS` by default. You can select `AES-256-XTS`, `AES-128-CBC`, or `AES-256-CBC` with the `open_pg_tde.data_cipher` setting.
+* Database files: `AES-128-XTS` by default. You can select `AES-256-XTS` with the `open_pg_tde.data_cipher` setting. Data files use the tweakable XTS mode designed for storage.
 * WAL: `AES-CTR`.
 * Internal keys: wrapped by the principal key with `AES-256-GCM`.
 * Temporary and query-spill files: `AES-128-XTS` when enabled.

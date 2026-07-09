@@ -105,7 +105,22 @@ tde_smgr_log_delete_leftover_key(const RelFileLocator *rlocator)
 static CipherType
 tde_smgr_data_cipher(void)
 {
-	return (CipherType) (DataCipher < 0 ? Cipher : DataCipher);
+	CipherType	cipher = (CipherType) (DataCipher < 0 ? Cipher : DataCipher);
+
+	/*
+	 * Data files must use a tweakable (XTS) cipher. When data_cipher inherits
+	 * from open_pg_tde.cipher (which also selects the principal key length),
+	 * that GUC can resolve to a non-XTS AES cipher; map it to the XTS variant
+	 * of the same strength so a new relation is never created with CBC.
+	 * Relations already encrypted with CBC keep decrypting via their recorded
+	 * cipher.
+	 */
+	if (cipher == CIPHER_AES_128)
+		cipher = CIPHER_AES_128_XTS;
+	else if (cipher == CIPHER_AES_256)
+		cipher = CIPHER_AES_256_XTS;
+
+	return cipher;
 }
 
 static InternalKey *

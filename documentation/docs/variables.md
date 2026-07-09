@@ -91,11 +91,11 @@ Selects the cipher used to encrypt the data files of **new** encrypted tables (`
 
 * `aes_xts` - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.
 * `aes_256_xts` - AES-256-XTS. AES-256 key strength with the XTS storage mode. Intended for deployments that require AES-256 keys; for others, `aes_xts` remains the recommended default.
-* `aes_256` - AES-256-CBC.
-* `aes_128` - AES-128-CBC.
-* `inherit` - follow the [`open_pg_tde.cipher`](#open_pg_tdecipher) setting.
+* `inherit` - follow the [`open_pg_tde.cipher`](#open_pg_tdecipher) setting for the key strength (128 or 256), using the XTS storage mode.
 
-The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `open_pg_tde.data_cipher` therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.
+Only the XTS variants are available for data files. XTS is the tweakable mode designed for random-access block storage; the non-tweakable AES-CBC modes are not offered for data files because their deterministic per-block IV leaks the length of an unchanged leading prefix across successive versions of a page and CBC ciphertext is malleable.
+
+The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing `open_pg_tde.data_cipher` therefore only affects tables created afterwards, and different tables in the same cluster may use different ciphers.
 
 This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the [cipher provider registry](architecture/encryption-architecture.md#pluggable-cipher-providers) without changing the on-disk format. WAL is always encrypted with AES-CTR and is not affected by this setting.
 

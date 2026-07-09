@@ -28,7 +28,6 @@ Every algorithm `open_pg_tde` uses is FIPS-approved:
 | Purpose | Algorithm | Standard |
 | ------- | --------- | -------- |
 | Table and index data files | AES-128-XTS, AES-256-XTS | NIST SP 800-38E |
-| Table data files (alternative) | AES-128-CBC, AES-256-CBC | NIST SP 800-38A |
 | WAL | AES-CTR (128 or 256) | NIST SP 800-38A |
 | Temporary files | AES-128-XTS, with AES-128-CTR for sub-block tails | NIST SP 800-38E, 800-38A |
 | Internal key wrapping | AES-256-GCM | NIST SP 800-38D |
