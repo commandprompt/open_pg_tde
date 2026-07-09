@@ -224,6 +224,7 @@ tde_smgr_resolve_encryption_status(TDESMgrRelation *tdereln)
 	{
 		tdereln->relKey = *key;
 		tdereln->encryption_status = RELATION_ENCRYPTED;
+		explicit_bzero(key, sizeof(InternalKey));
 		pfree(key);
 	}
 	else
@@ -462,6 +463,7 @@ tde_mdcreate(RelFileLocator relold, SMgrRelation reln, ForkNumber forknum, bool 
 
 	tdereln->encryption_status = RELATION_ENCRYPTED;
 	tdereln->relKey = *key;
+	explicit_bzero(key, sizeof(InternalKey));
 	pfree(key);
 }
 
@@ -535,7 +537,16 @@ tde_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data)
 	InternalKey *int_key = &tde_io_handle_keys[pgaio_io_get_id(ioh)];
 
 	if (prior_result.status != PGAIO_RS_OK)
+	{
+		/*
+		 * Not a fully successful read (an error, or a partial read that will
+		 * be retried on a fresh handle). Wipe the plaintext key staged for
+		 * this IO handle before returning so it does not linger in the shared
+		 * slot.
+		 */
+		explicit_bzero(int_key, sizeof(InternalKey));
 		return prior_result;
+	}
 
 	io_data = pgaio_io_get_handle_data(ioh, &handle_data_len);
 
@@ -550,6 +561,16 @@ tde_readv_complete(PgAioHandle *ioh, PgAioResult prior_result, uint8 cb_data)
 
 		tde_decrypt_smgr_block(int_key, td->smgr.forkNum, bn, ((unsigned char *) buf_ptr), ((unsigned char *) buf_ptr));
 	}
+
+	/*
+	 * Wipe the plaintext relation key from the shared-memory slot now that
+	 * the pages are decrypted. tde_io_handle_keys is process-shared and its
+	 * slots are reused by later IOs, so a key left resident here would
+	 * accumulate the plaintext keys of every encrypted relation any backend
+	 * has read and expose them to core dumps or cross-backend memory
+	 * disclosure.
+	 */
+	explicit_bzero(int_key, sizeof(InternalKey));
 
 	return prior_result;
 }
@@ -603,7 +624,15 @@ tde_mdclose(SMgrRelation reln, ForkNumber forknum)
 	mdclose(reln, forknum);
 
 	if (forknum == MAIN_FORKNUM)
+	{
+		/*
+		 * Wipe the cached plaintext relation key on close. The next access
+		 * re-resolves the encryption status and re-derives the key, so
+		 * nothing relies on it surviving the close.
+		 */
+		explicit_bzero(&tdereln->relKey, sizeof(InternalKey));
 		tdereln->encryption_status = RELATION_ENCRYPTION_UNKNOWN;
+	}
 }
 
 static const struct f_smgr tde_smgr = {
