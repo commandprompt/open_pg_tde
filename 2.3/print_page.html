@@ -3176,7 +3176,11 @@ running server:</p>
 <ul>
 <li><strong>Data in memory.</strong> Shared buffers hold decrypted pages; this is the
   “transparent” part of TDE. An attacker who can read server memory, or who has
-  a live database connection with sufficient privileges, sees plaintext.</li>
+  a live database connection with sufficient privileges, sees plaintext.
+  <code>open_pg_tde</code> wipes plaintext key material from its own transient buffers
+  after use and holds the principal key cache in locked (non-swappable) memory,
+  which narrows the window for key recovery from a core dump or the swap file
+  but does not protect decrypted page data held in shared buffers.</li>
 <li><strong>A privileged user on a running server.</strong> A superuser, or anyone who can run
   queries against the data, reads decrypted data through normal SQL. TDE does
   not protect data from the database administrator.</li>
@@ -3188,7 +3192,7 @@ running server:</p>
   encryption keys: the keys live in the <code>open_pg_tde</code> key files wrapped by the
   principal key, not in the catalog, so reading or altering catalog entries does
   not reveal key material.</li>
-<li><strong>Tampering (integrity).</strong> The data-file ciphers (XTS and CBC) provide
+<li><strong>Tampering (integrity).</strong> The data-file cipher (XTS) provides
   confidentiality, not authentication. <code>open_pg_tde</code> does not currently detect
   deliberate modification of ciphertext on disk. Authenticated page encryption
   is a separate, larger initiative; see the design note on authenticated pages.</li>
@@ -3294,11 +3298,6 @@ certificate.</p>
 <td>Table and index data files</td>
 <td>AES-128-XTS, AES-256-XTS</td>
 <td>NIST SP 800-38E</td>
-</tr>
-<tr>
-<td>Table data files (alternative)</td>
-<td>AES-128-CBC, AES-256-CBC</td>
-<td>NIST SP 800-38A</td>
 </tr>
 <tr>
 <td>WAL</td>
@@ -3586,8 +3585,8 @@ each project’s own documentation.</p>
 <ul>
 <li><strong>Temporary file encryption.</strong> Query-spill files (external sorts, hash joins)
   are encrypted with AES-128-XTS. See <a href="#variables-encrypt_temp_files"><code>encrypt_temp_files</code></a>.</li>
-<li><strong>AES-256-XTS data cipher</strong>, alongside AES-128-XTS and the CBC ciphers, for
-  deployments that require AES-256 keys, through a pluggable cipher registry. See
+<li><strong>AES-256-XTS data cipher</strong>, alongside AES-128-XTS, for deployments that
+  require AES-256 keys, through a pluggable cipher registry. See
   <a href="#variables-open_pg_tdedata_cipher"><code>open_pg_tde.data_cipher</code></a>.</li>
 <li><strong>FIPS enforcement.</strong> All cryptography runs through OpenSSL and uses
   FIPS-approved modes, and the server can be required to start only when OpenSSL
@@ -4384,7 +4383,7 @@ Access method: tde_heap
 <h2 id="architecture-encryption-architecture-encryption-algorithm">Encryption algorithm<a class="headerlink" href="#architecture-encryption-architecture-encryption-algorithm" title="Permanent link">¶</a></h2>
 <p><code>open_pg_tde</code> currently uses the following encryption algorithms:</p>
 <ul>
-<li><code>AES-128-XTS</code> (default) or <code>AES-128-CBC</code> / <code>AES-256-CBC</code> for encrypting database files, selected by <a href="#variables-open_pg_tdedata_cipher"><code>open_pg_tde.data_cipher</code></a>; encrypted with internal keys</li>
+<li><code>AES-128-XTS</code> (default) or <code>AES-256-XTS</code> for encrypting database files, selected by <a href="#variables-open_pg_tdedata_cipher"><code>open_pg_tde.data_cipher</code></a>; encrypted with internal keys</li>
 <li><code>AES-128-CTR</code>, <code>AES-256-CTR</code> for WAL encryption; encrypted with internal keys</li>
 <li><code>AES-128-GCM</code>, <code>AES-256-GCM</code> for encrypting internal keys; encrypted with the principal key</li>
 </ul>
@@ -4548,11 +4547,10 @@ Do not store these credentials in the <code>$PGDATA</code> directory alongside t
 <ul>
 <li><code>aes_xts</code> - AES-128-XTS. This is the default and the recommended mode for data files. XTS is a tweakable block cipher intended for storage encryption.</li>
 <li><code>aes_256_xts</code> - AES-256-XTS. AES-256 key strength with the XTS storage mode. Intended for deployments that require AES-256 keys; for others, <code>aes_xts</code> remains the recommended default.</li>
-<li><code>aes_256</code> - AES-256-CBC.</li>
-<li><code>aes_128</code> - AES-128-CBC.</li>
-<li><code>inherit</code> - follow the <a href="#variables-open_pg_tdecipher"><code>open_pg_tde.cipher</code></a> setting.</li>
+<li><code>inherit</code> - follow the <a href="#variables-open_pg_tdecipher"><code>open_pg_tde.cipher</code></a> setting for the key strength (128 or 256), using the XTS storage mode.</li>
 </ul>
-<p>The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing <code>open_pg_tde.data_cipher</code> therefore only affects tables created afterwards. Existing tables continue to decrypt with the cipher they were created with, and different tables in the same cluster may use different ciphers.</p>
+<p>Only the XTS variants are available for data files. XTS is the tweakable mode designed for random-access block storage; the non-tweakable AES-CBC modes are not offered for data files because their deterministic per-block IV leaks the length of an unchanged leading prefix across successive versions of a page and CBC ciphertext is malleable.</p>
+<p>The chosen cipher is recorded per table when its internal key is created, and reads always use the recorded cipher regardless of the current value of this variable. Changing <code>open_pg_tde.data_cipher</code> therefore only affects tables created afterwards, and different tables in the same cluster may use different ciphers.</p>
 <p>This variable selects the cipher independently of the key length, which is what allows additional algorithms to be added to the <a href="#architecture-encryption-architecture-pluggable-cipher-providers">cipher provider registry</a> without changing the on-disk format. WAL is always encrypted with AES-CTR and is not affected by this setting.</p>
 <h2 id="variables-open_pg_tderequire_fips">open_pg_tde.require_fips<a class="headerlink" href="#variables-open_pg_tderequire_fips" title="Permanent link">¶</a></h2>
 <p><strong>Type</strong> - boolean <br>
@@ -4959,7 +4957,10 @@ setting and was left off in both configurations.</p>
 <li>Encryption cost is CPU. A CPU with AES hardware acceleration (AES-NI on x86,
   the crypto extensions on ARM) keeps it low; confirm your build uses it.</li>
 <li>AES-128-XTS (the default) is the least expensive data cipher. AES-256 variants
-  use a longer key schedule and cost slightly more.</li>
+  use a longer key schedule and cost slightly more. The key schedule for a
+  relation is expanded once and reused across its pages rather than recomputed
+  per page, so the per-page cost is dominated by the cipher itself, not by key
+  setup.</li>
 <li>Encrypt selectively. <code>tde_heap</code> is per table, so tables that do not hold
   sensitive data can stay on <code>heap</code> and avoid the cost entirely.</li>
 <li>Size <code>shared_buffers</code> so the hot set stays resident, which keeps decryption off
@@ -5774,7 +5775,7 @@ open_pg_tde_restore_encrypt<span class="w"> </span>SOURCE-NAME<span class="w"> <
 <h2 id="faq-what-cipher-mechanisms-are-used-by-open_pg_tde">What cipher mechanisms are used by open_pg_tde?<a class="headerlink" href="#faq-what-cipher-mechanisms-are-used-by-open_pg_tde" title="Permanent link">¶</a></h2>
 <p><code>open_pg_tde</code> currently uses the following encryption algorithms:</p>
 <ul>
-<li>Database files: <code>AES-128-XTS</code> by default. You can select <code>AES-256-XTS</code>, <code>AES-128-CBC</code>, or <code>AES-256-CBC</code> with the <code>open_pg_tde.data_cipher</code> setting.</li>
+<li>Database files: <code>AES-128-XTS</code> by default. You can select <code>AES-256-XTS</code> with the <code>open_pg_tde.data_cipher</code> setting. Data files use the tweakable XTS mode designed for storage.</li>
 <li>WAL: <code>AES-CTR</code>.</li>
 <li>Internal keys: wrapped by the principal key with <code>AES-256-GCM</code>.</li>
 <li>Temporary and query-spill files: <code>AES-128-XTS</code> when enabled.</li>
