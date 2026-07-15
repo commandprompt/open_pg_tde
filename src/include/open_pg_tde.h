@@ -14,8 +14,10 @@
  * Only numeric version (the most left byte) should be changed when updating
  * file format. Otherwise, it will break the migration process.
  */
-#define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x024B4557	/* version ID value = WEK
-													 * 02 */
+#define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x034B4557	/* version ID value = WEK
+													 * 03; v3 authenticates
+													 * key_base_iv in the AEAD
+													 * AAD (was excluded in v2) */
 #define OPEN_PG_TDE_SMGR_FILE_MAGIC		  0x06454454	/* version ID value =
 														 * TDE 06; v6
 														 * authenticates

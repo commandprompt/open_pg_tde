@@ -33,9 +33,25 @@ typedef struct WalKeyFileHeader
 
 typedef struct WalKeyFileEntry
 {
-	uint32		cipher;			/* Cipher type. We support only AES_128 and
-								 * AES_256 for now. */
-	uint32		range_type;		/* WalEncryptionRangeType */
+	uint32		cipher;			/* Part of AAD. Cipher type. We support only
+								 * AES_128 and AES_256 for now. */
+	uint32		range_type;		/* Part of AAD. WalEncryptionRangeType */
+
+	/*
+	 * key_base_iv is the base IV for the WAL data (AES-CTR). It is placed
+	 * here, ahead of range_start, so that it falls within the AEAD additional
+	 * authenticated data (offsetof(WalKeyFileEntry, range_start)). In the v2
+	 * format it lived after aead_tag and was therefore unauthenticated, which
+	 * let an actor with write access to the WAL key file alter the WAL IV
+	 * undetected. See the v2 migration reader below.
+	 */
+	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
+
+	/*
+	 * range_start is deliberately outside the AAD: it is zero at key creation
+	 * and updated in place by the first WAL write, so it must not be covered
+	 * by the AEAD tag.
+	 */
 	WalLocation range_start;
 
 	/*
@@ -47,11 +63,9 @@ typedef struct WalKeyFileEntry
 	unsigned char entry_iv[MAP_ENTRY_IV_SIZE];
 	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
 
-	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
-
 	/*
 	 * WAL keys are AES-CTR (16 or 32 bytes), never AES-256-XTS, so this stays
-	 * at the pre-AES-256-XTS size to keep the WAL key file format unchanged.
+	 * at the pre-AES-256-XTS size.
 	 */
 	uint8		encrypted_key_data[32];
 } WalKeyFileEntry;
@@ -690,10 +704,10 @@ open_pg_tde_initialize_wal_key_file_entry(WalKeyFileEntry *entry,
 				errmsg("could not generate iv for wal key file entry: %s", ERR_error_string(ERR_get_error(), NULL)));
 
 	/*
-	 * TODO: we may want to include `range_start` in AAD. But now it is zero
-	 * on the key (range) creation and later gets updated by the first WAL
-	 * write. The current AAD has a little sense now, so we might want not to
-	 * calculate it at all.
+	 * The AAD runs to range_start, so it authenticates cipher, range_type,
+	 * and key_base_iv. range_start itself is excluded: it is zero at key
+	 * creation and updated in place by the first WAL write, so it cannot be
+	 * under the AEAD tag.
 	 */
 	AesGcmEncrypt(principal_key->keyData, principal_key->keyLength,
 				  entry->entry_iv, MAP_ENTRY_IV_SIZE,
@@ -1007,6 +1021,85 @@ range_from_disk_entry_v1(int fd, off_t *entry_offset, const TDEPrincipalKey *pri
 	return true;
 }
 
+/*
+ * v2 is the layout that shipped before key_base_iv was authenticated: it sits
+ * after aead_tag, so the AAD (offsetof(range_start)) covers only cipher and
+ * range_type. Unlike v1, a v2 entry records its cipher and may hold a 16 or
+ * 32 byte key.
+ */
+typedef struct WalKeyFileEntryV2
+{
+	uint32		cipher;
+	uint32		range_type;
+	WalLocation range_start;
+
+	unsigned char entry_iv[MAP_ENTRY_IV_SIZE];
+	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
+
+	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
+
+	uint8		encrypted_key_data[32];
+} WalKeyFileEntryV2;
+
+static bool
+open_pg_tde_read_one_wal_key_file_entry_v2(int fd,
+										   WalKeyFileEntryV2 *entry,
+										   off_t *offset)
+{
+	off_t		bytes_read = 0;
+
+	Assert(entry);
+	Assert(offset);
+
+	bytes_read = pg_pread(fd, entry, sizeof(WalKeyFileEntryV2), *offset);
+
+	/* We've reached the end of the file. */
+	if (bytes_read != sizeof(WalKeyFileEntryV2))
+		return false;
+
+	*offset += bytes_read;
+
+	return true;
+}
+
+static void
+wal_range_from_entry_v2(WalKeyFileEntryV2 *entry, const TDEPrincipalKey *principal_key, WalEncryptionRange *range)
+{
+	Assert(principal_key);
+
+	range->type = entry->range_type;
+	range->start = entry->range_start;
+	range->end.tli = MaxTimeLineID;
+	range->end.lsn = MaxXLogRecPtr;
+	range->key.key_len = open_pg_tde_cipher_key_length(entry->cipher);
+	range->key.cipher = entry->cipher;
+
+	memcpy(range->key.base_iv, entry->key_base_iv, INTERNAL_KEY_IV_LEN);
+	if (!AesGcmDecrypt(principal_key->keyData, principal_key->keyLength,
+					   entry->entry_iv, MAP_ENTRY_IV_SIZE,
+					   (unsigned char *) entry, offsetof(WalKeyFileEntryV2, range_start),
+					   entry->encrypted_key_data, range->key.key_len,
+					   range->key.key,
+					   entry->aead_tag, MAP_ENTRY_AEAD_TAG_SIZE))
+		ereport(ERROR,
+				errmsg("failed to decrypt key, incorrect principal key or corrupted key file"));
+}
+
+static bool
+range_from_disk_entry_v2(int fd, off_t *entry_offset, const TDEPrincipalKey *principal_key, WalKeyFileEntry *out)
+{
+	WalKeyFileEntryV2 disk_entry;
+	WalEncryptionRange range;
+
+	if (!open_pg_tde_read_one_wal_key_file_entry_v2(fd, &disk_entry, entry_offset))
+		return false;
+
+	wal_range_from_entry_v2(&disk_entry, principal_key, &range);
+	open_pg_tde_initialize_wal_key_file_entry(out, principal_key, &range);
+
+	return true;
+}
+
 void
 open_pg_tde_update_wal_keys_file(void)
 {
@@ -1040,6 +1133,8 @@ open_pg_tde_update_wal_keys_file(void)
 	/* The type check later, when extracting the principal key */
 	if (FILEMAGIC_VERSION(fheader.file_version) == 1)
 		read_range = range_from_disk_entry_v1;
+	else if (FILEMAGIC_VERSION(fheader.file_version) == 2)
+		read_range = range_from_disk_entry_v2;
 	else
 		elog(ERROR, "wal_keys migration: unsupported or corrupted old file version %d", FILEMAGIC_VERSION(fheader.file_version));
 
