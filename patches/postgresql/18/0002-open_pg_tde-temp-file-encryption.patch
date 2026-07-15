@@ -1,16 +1,145 @@
 --- a/src/backend/storage/file/buffile.c
 +++ b/src/backend/storage/file/buffile.c
-@@ -52,6 +52,9 @@
+@@ -52,6 +52,10 @@
  #include "storage/buffile.h"
  #include "storage/bufmgr.h"
  #include "storage/fd.h"
 +#ifdef USE_TDE_HOOKS
++#include "common/hashfn.h"
 +#include "storage/tempfile_crypt.h"
 +#endif
  #include "utils/resowner.h"
  
  /*
-@@ -479,6 +482,17 @@
+@@ -95,6 +99,16 @@
+ 	off_t		curOffset;		/* offset part of current pos */
+ 	int			pos;			/* next read/write position in buffer */
+ 	int			nbytes;			/* total # of valid bytes in buffer */
++#ifdef USE_TDE_HOOKS
++
++	/*
++	 * Per-BufFile salt mixed into the temporary-file encryption IV so that
++	 * two different BufFiles never encrypt under the same (key, IV/tweak)
++	 * pair. Filled once at create/open time when encrypt_temp_files is on.
++	 * See BufFileInitCryptSalt.
++	 */
++	unsigned char crypt_salt[TEMPFILE_CRYPT_SALT_LEN];
++#endif
+ 
+ 	/*
+ 	 * XXX Should ideally use PGIOAlignedBlock, but might need a way to avoid
+@@ -110,6 +124,9 @@
+ static void BufFileDumpBuffer(BufFile *file);
+ static void BufFileFlush(BufFile *file);
+ static File MakeNewFileSetSegment(BufFile *buffile, int segment);
++#ifdef USE_TDE_HOOKS
++static void BufFileInitCryptSalt(BufFile *file);
++#endif
+ 
+ /*
+  * Create BufFile and perform the common initialization.
+@@ -131,6 +148,70 @@
+ 	return file;
+ }
+ 
++#ifdef USE_TDE_HOOKS
++/*
++ * Assign this BufFile's temporary-file encryption salt. Two BufFiles must
++ * never share a salt: with a cluster-global key, a repeated salt would repeat
++ * the (key, IV/tweak) pair, which is an equality oracle across files for the
++ * XTS body and a two-time pad for any sub-block CTR tail. Only meaningful when
++ * encrypt_temp_files is on.
++ *
++ * A private temp file is read back only by the backend that created it, so a
++ * random salt is unique and never has to be shared. A fileset based BufFile
++ * can be written by one backend and read by others (for example parallel
++ * workers sharing a hash-join spill), so its salt is derived deterministically
++ * from the fileset identity and the BufFile name -- values every participant
++ * already knows -- so the writer and every reader arrive at the same salt
++ * without communicating it.
++ */
++static void
++BufFileInitCryptSalt(BufFile *file)
++{
++	if (!encrypt_temp_files)
++		return;
++
++	if (file->fileset == NULL)
++	{
++		/* Private temp file: a random salt is unique and never shared. */
++		if (!pg_strong_random(file->crypt_salt, TEMPFILE_CRYPT_SALT_LEN))
++			elog(ERROR, "could not generate temporary file encryption salt");
++	}
++	else
++	{
++		FileSet    *fileset = file->fileset;
++		char		idbuf[MAXPGPATH + sizeof(fileset->creator_pid) +
++						  sizeof(fileset->number)];
++		size_t		idlen = 0;
++		size_t		namelen = strlen(file->name);
++		uint64		h1;
++		uint64		h2;
++
++		/*
++		 * (creator_pid, number) identifies the fileset across the cluster and
++		 * name identifies the BufFile within it. Two independent 64-bit
++		 * hashes of that identity give a 128-bit salt.
++		 */
++		if (namelen > MAXPGPATH)
++			namelen = MAXPGPATH;
++		memcpy(idbuf + idlen, &fileset->creator_pid,
++			   sizeof(fileset->creator_pid));
++		idlen += sizeof(fileset->creator_pid);
++		memcpy(idbuf + idlen, &fileset->number, sizeof(fileset->number));
++		idlen += sizeof(fileset->number);
++		memcpy(idbuf + idlen, file->name, namelen);
++		idlen += namelen;
++
++		StaticAssertStmt(TEMPFILE_CRYPT_SALT_LEN == sizeof(h1) + sizeof(h2),
++						 "temp-file salt must hold two 64-bit hashes");
++		h1 = hash_bytes_extended((const unsigned char *) idbuf, idlen, 0);
++		h2 = hash_bytes_extended((const unsigned char *) idbuf, idlen,
++								 UINT64CONST(0x9e3779b97f4a7c15));
++		memcpy(file->crypt_salt, &h1, sizeof(h1));
++		memcpy(file->crypt_salt + sizeof(h1), &h2, sizeof(h2));
++	}
++}
++#endif
++
+ /*
+  * Create a BufFile given the first underlying physical file.
+  * NOTE: caller must set isInterXact if appropriate.
+@@ -145,6 +226,9 @@
+ 	file->readOnly = false;
+ 	file->fileset = NULL;
+ 	file->name = NULL;
++#ifdef USE_TDE_HOOKS
++	BufFileInitCryptSalt(file);
++#endif
+ 
+ 	return file;
+ }
+@@ -274,6 +358,9 @@
+ 	file->files = (File *) palloc(sizeof(File));
+ 	file->files[0] = MakeNewFileSetSegment(file, 0);
+ 	file->readOnly = false;
++#ifdef USE_TDE_HOOKS
++	BufFileInitCryptSalt(file);
++#endif
+ 
+ 	return file;
+ }
+@@ -344,6 +431,9 @@
+ 	file->readOnly = (mode == O_RDONLY);
+ 	file->fileset = fileset;
+ 	file->name = pstrdup(name);
++#ifdef USE_TDE_HOOKS
++	BufFileInitCryptSalt(file);
++#endif
+ 
+ 	return file;
+ }
+@@ -479,6 +569,18 @@
  
  	/* we choose not to advance curOffset here */
  
@@ -21,14 +150,15 @@
 +		int64		blocknum = (int64) file->curFile * BUFFILE_SEG_SIZE +
 +			file->curOffset / BLCKSZ;
 +
-+		temp_file_decrypt_hook(file->buffer.data, file->nbytes, blocknum);
++		temp_file_decrypt_hook(file->buffer.data, file->nbytes, blocknum,
++							   file->crypt_salt);
 +	}
 +#endif
 +
  	if (file->nbytes > 0)
  		pgBufferUsage.temp_blks_read++;
  }
-@@ -496,6 +510,26 @@
+@@ -496,6 +598,27 @@
  	int			wpos = 0;
  	int			bytestowrite;
  	File		thisfile;
@@ -48,14 +178,15 @@
 +			file->curOffset / BLCKSZ;
 +
 +		memcpy(cryptbuf.data, file->buffer.data, file->nbytes);
-+		temp_file_encrypt_hook(cryptbuf.data, file->nbytes, blocknum);
++		temp_file_encrypt_hook(cryptbuf.data, file->nbytes, blocknum,
++							   file->crypt_salt);
 +		srcdata = cryptbuf.data;
 +	}
 +#endif
  
  	/*
  	 * Unlike BufFileLoadBuffer, we must dump the whole buffer even if it
-@@ -535,7 +569,11 @@
+@@ -535,7 +658,11 @@
  			INSTR_TIME_SET_ZERO(io_start);
  
  		bytestowrite = FileWrite(thisfile,
@@ -148,7 +279,7 @@
 +#endif							/* USE_TDE_HOOKS */
 --- a/src/include/storage/tempfile_crypt.h
 +++ b/src/include/storage/tempfile_crypt.h
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,48 @@
 +/*-------------------------------------------------------------------------
 + *
 + * tempfile_crypt.h
@@ -176,12 +307,20 @@
 +/* GUC: master switch for temporary file encryption (default off). */
 +extern PGDLLIMPORT bool encrypt_temp_files;
 +
++/* Length of the per-BufFile salt the hooks mix into the IV (bytes). */
++#define TEMPFILE_CRYPT_SALT_LEN 16
++
 +/*
 + * Encrypt or decrypt one temporary-file buffer in place. blocknum is the
-+ * logical block position of the buffer within the BufFile; an implementation
-+ * uses it to derive a per-block IV. The transformation must preserve length.
++ * logical block position of the buffer within the BufFile; file_iv_salt is a
++ * per-BufFile value (TEMPFILE_CRYPT_SALT_LEN bytes) that is unique to each
++ * BufFile. An implementation must mix both into the IV: blocknum distinguishes
++ * blocks within one file, and file_iv_salt keeps two different BufFiles from
++ * ever repeating an (IV/tweak), which would otherwise leak equality across
++ * files. The transformation must preserve length.
 + */
-+typedef void (*TempFileCryptHook) (char *data, int nbytes, int64 blocknum);
++typedef void (*TempFileCryptHook) (char *data, int nbytes, int64 blocknum,
++								   const unsigned char *file_iv_salt);
 +
 +extern PGDLLIMPORT TempFileCryptHook temp_file_encrypt_hook;
 +extern PGDLLIMPORT TempFileCryptHook temp_file_decrypt_hook;
