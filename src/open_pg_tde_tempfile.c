@@ -17,14 +17,19 @@
  * the cluster stops, even with access to the storage media.
  *
  * The buffer transformation is AES-128-XTS, keyed by the block's logical
- * position through the XTS tweak. XTS is length-preserving for any buffer of at
- * least one AES block (it uses ciphertext stealing for a non-block-multiple
- * length) and is safe when a block position is rewritten in place, which
- * temporary-file space reuse does. A buffer shorter than one AES block cannot
- * use XTS; such a tail is masked with an AES-128-CTR keystream instead. Both
- * XTS (NIST SP 800-38E) and CTR (SP 800-38A) are FIPS-approved modes, so with a
- * FIPS build of OpenSSL every temporary-file operation uses approved
- * cryptography. See documentation/docs/index/fips.md.
+ * position through the XTS tweak. The tweak combines a per-BufFile salt that
+ * core supplies (unique to each temporary file) with the block position, so
+ * two different BufFiles never reuse an (IV/tweak) even though every file
+ * shares the cluster-global key; without that salt the block position alone
+ * resets to zero in each new file and would repeat the keystream across
+ * files. XTS is length-preserving for any buffer of at least one AES block
+ * (it uses ciphertext stealing for a non-block-multiple length) and is safe
+ * when a block position is rewritten in place, which temporary-file space
+ * reuse does. A buffer shorter than one AES block cannot use XTS; such a tail
+ * is masked with an AES-128-CTR keystream instead. Both XTS (NIST SP
+ * 800-38E) and CTR (SP 800-38A) are FIPS-approved modes, so with a FIPS build
+ * of OpenSSL every temporary-file operation uses approved cryptography. See
+ * documentation/docs/index/fips.md.
  *
  *-------------------------------------------------------------------------
  */
@@ -45,13 +50,19 @@
 #define TEMPFILE_IV_LEN 16
 #define AES_BLOCK_LEN 16
 
+/* Core hands us a salt of this width; it must fill the whole IV/tweak. */
+StaticAssertDecl(TEMPFILE_CRYPT_SALT_LEN == TEMPFILE_IV_LEN,
+				 "temp-file salt length must match the IV length");
+
 static bool tempfile_key_ready = false;
 static unsigned char tempfile_xts_key[TEMPFILE_XTS_KEY_LEN];
 static unsigned char tempfile_ctr_key[TEMPFILE_CTR_KEY_LEN];
 static unsigned char tempfile_base_iv[TEMPFILE_IV_LEN];
 
-static void tempfile_encrypt(char *data, int nbytes, int64 blocknum);
-static void tempfile_decrypt(char *data, int nbytes, int64 blocknum);
+static void tempfile_encrypt(char *data, int nbytes, int64 blocknum,
+							 const unsigned char *file_iv_salt);
+static void tempfile_decrypt(char *data, int nbytes, int64 blocknum,
+							 const unsigned char *file_iv_salt);
 
 static void
 tempfile_ssl_error(const char *what)
@@ -78,11 +89,20 @@ tempfile_init_key(void)
 	tempfile_key_ready = true;
 }
 
-/* Derive a per-block IV (XTS tweak) by mixing the block position into the base. */
+/*
+ * Derive a per-block IV (XTS tweak) from the base IV, the per-file salt, and
+ * the block position. The salt is mixed in first so that two different
+ * BufFiles never derive the same IV/tweak (which would repeat the keystream
+ * under our cluster-global key); the block position, XORed in next, only has
+ * to be unique within a single file.
+ */
 static void
-tempfile_block_iv(int64 blocknum, unsigned char *iv)
+tempfile_block_iv(const unsigned char *file_iv_salt, int64 blocknum,
+				  unsigned char *iv)
 {
 	memcpy(iv, tempfile_base_iv, TEMPFILE_IV_LEN);
+	for (int i = 0; i < TEMPFILE_IV_LEN; i++)
+		iv[i] ^= file_iv_salt[i];
 	for (int i = 0; i < 8; i++)
 		iv[TEMPFILE_IV_LEN - 1 - i] ^= (unsigned char) (blocknum >> (8 * i));
 }
@@ -148,7 +168,8 @@ tempfile_run_ctr(const unsigned char *iv, unsigned char *buf, int len)
  * at the length it was written.
  */
 static void
-tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum)
+tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum,
+					  const unsigned char *file_iv_salt)
 {
 	unsigned char iv[TEMPFILE_IV_LEN];
 
@@ -157,7 +178,7 @@ tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum)
 	if (!tempfile_key_ready)
 		tempfile_init_key();
 
-	tempfile_block_iv(blocknum, iv);
+	tempfile_block_iv(file_iv_salt, blocknum, iv);
 
 	if (nbytes >= AES_BLOCK_LEN)
 		tempfile_run_xts(enc, iv, (unsigned char *) data, nbytes);
@@ -166,15 +187,17 @@ tempfile_crypt_buffer(int enc, char *data, int nbytes, int64 blocknum)
 }
 
 static void
-tempfile_encrypt(char *data, int nbytes, int64 blocknum)
+tempfile_encrypt(char *data, int nbytes, int64 blocknum,
+				 const unsigned char *file_iv_salt)
 {
-	tempfile_crypt_buffer(1, data, nbytes, blocknum);
+	tempfile_crypt_buffer(1, data, nbytes, blocknum, file_iv_salt);
 }
 
 static void
-tempfile_decrypt(char *data, int nbytes, int64 blocknum)
+tempfile_decrypt(char *data, int nbytes, int64 blocknum,
+				 const unsigned char *file_iv_salt)
 {
-	tempfile_crypt_buffer(0, data, nbytes, blocknum);
+	tempfile_crypt_buffer(0, data, nbytes, blocknum, file_iv_salt);
 }
 
 /*
