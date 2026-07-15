@@ -4387,7 +4387,7 @@ Access method: tde_heap
 <li><code>AES-128-CTR</code>, <code>AES-256-CTR</code> for WAL encryption; encrypted with internal keys</li>
 <li><code>AES-128-GCM</code>, <code>AES-256-GCM</code> for encrypting internal keys; encrypted with the principal key</li>
 </ul>
-<p>Temporary files produced by query execution, such as external sorts and hash joins that exceed <code>work_mem</code> and spill to disk, are encrypted with <code>AES-128-XTS</code> when the core <a href="#variables-encrypt_temp_files"><code>encrypt_temp_files</code></a> GUC is on. The key is generated per boot, held only in memory, and never written to disk, so temporary files cannot be recovered once the server stops.</p>
+<p>Temporary files produced by query execution, such as external sorts and hash joins that exceed <code>work_mem</code> and spill to disk, are encrypted with <code>AES-128-XTS</code> when the core <a href="#variables-encrypt_temp_files"><code>encrypt_temp_files</code></a> GUC is on. The key is generated per boot, held only in memory, and never written to disk, so temporary files cannot be recovered once the server stops. Each temporary file mixes a value unique to that file into the cipher tweak, so two files that hold the same data do not produce the same ciphertext.</p>
 <h2 id="architecture-encryption-architecture-pluggable-cipher-providers">Pluggable cipher providers<a class="headerlink" href="#architecture-encryption-architecture-pluggable-cipher-providers" title="Permanent link">¶</a></h2>
 <p>The ciphers used for data files and WAL are supplied through an internal <strong>cipher provider registry</strong> (<code>src/encryption/cipher_provider.{c,h}</code>). Each entry, a <code>TdeCipher</code>, bundles:</p>
 <ul>
