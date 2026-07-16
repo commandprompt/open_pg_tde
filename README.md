@@ -10,9 +10,14 @@
 </p>
 
 <p align="center">
+  <a href="https://commandprompt.github.io/open_pg_tde/"><img alt="Documentation" src="https://img.shields.io/badge/Documentation-commandprompt.github.io-336791?logo=readthedocs&logoColor=white"></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/commandprompt/open_pg_tde"><img alt="OpenSSF Scorecard" src="https://api.scorecard.dev/projects/github.com/commandprompt/open_pg_tde/badge"></a>
   <img alt="PostgreSQL 16 | 17 | 18" src="https://img.shields.io/badge/PostgreSQL-16%20%7C%2017%20%7C%2018-336791?logo=postgresql&logoColor=white">
   <img alt="License: PostgreSQL" src="https://img.shields.io/badge/License-PostgreSQL-336791">
+</p>
+
+<p align="center">
+  <a href="https://commandprompt.github.io/open_pg_tde/"><strong>📖 Read the documentation →</strong></a>
 </p>
 
 ---
