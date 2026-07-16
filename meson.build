@@ -384,6 +384,8 @@ tap_tests = [
   't/checksum_hint_bits.pl',
   't/checksum_startup_warning.pl',
   't/wal_encrypt.pl',
+  't/wal_key_auth.pl',
+  't/wal_key_base_iv_migration.pl',
   't/wal_key_tli.pl',
 ]
 
