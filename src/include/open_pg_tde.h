@@ -13,9 +13,9 @@
 /*
  * File format magics. Only the numeric version (the most significant byte)
  * should change when the format changes; otherwise migration breaks. The
- * current formats (WAL key file v3, SMGR key map file v6) authenticate
- * key_base_iv in the AEAD additional authenticated data; it was unauthenticated
- * in the previous formats (WAL v2, map v5).
+ * current formats (WAL key file v3, map file v6) authenticate key_base_iv in
+ * the AEAD additional authenticated data; the previous formats (WAL v2, map
+ * v5) did not.
  */
 #define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x034B4557	/* "WEK", version 3 */
 #define OPEN_PG_TDE_SMGR_FILE_MAGIC 0x06454454	/* "TDE", version 6 */
