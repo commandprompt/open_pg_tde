@@ -190,4 +190,5 @@ nav:
   - "Contributing": contribute.md
   - "Release notes":
     - "Overview": release-notes/release-notes.md
+    - "2.4.0": release-notes/release-notes-v2.4.0.md
     - "2.3.0": release-notes/release-notes-v2.3.0.md

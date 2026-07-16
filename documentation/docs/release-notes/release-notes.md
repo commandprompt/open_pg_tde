@@ -2,4 +2,5 @@
 
 This page lists the release notes for `open_pg_tde`. Use it to track new features, fixes, and updates across versions.
 
+* [2.4.0](release-notes-v2.4.0.md)
 * [2.3.0](release-notes-v2.3.0.md)
