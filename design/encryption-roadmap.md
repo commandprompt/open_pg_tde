@@ -1,31 +1,46 @@
 # Design: encryption feature roadmap
 
 - Status: Living document
-- Date: 2026-07-07
+- Date: 2026-07-16 (updated after the 2.4.0 release)
 - Scope: candidate encryption features that `open_pg_tde` does not have today,
   with a rough assessment of value, effort, and fit with the current
   architecture. This is a planning document. It proposes no code.
+
+Releases so far: 2.3.0 shipped native PostgreSQL 16/17/18, temporary file
+encryption, AES-256-XTS, and FIPS enforcement. 2.4.0 was a security hardening
+release (authenticated key metadata, XTS-only data ciphers, per-file
+temporary-file salt, KMIP server certificate verification, key-management
+hardening, key-material zeroization). The near-term plan (the de facto 2.5 line)
+is in [Suggested sequencing](#suggested-sequencing).
 
 ## What exists today
 
 For reference, the current feature surface:
 
 - **Data at rest**: `tde_heap` tables and their indexes and TOAST, encrypted
-  through the storage manager. Ciphers: AES-128-XTS (default), AES-256-XTS,
-  AES-128-CBC, AES-256-CBC (selected per table via `open_pg_tde.data_cipher`,
-  backed by a pluggable cipher registry).
+  through the storage manager. Ciphers: AES-128-XTS (default) and AES-256-XTS,
+  selected per table via `open_pg_tde.data_cipher`, backed by a pluggable cipher
+  registry. The AES-CBC data ciphers were removed in 2.4.0; data files are XTS
+  only.
 - **WAL**: full WAL encryption with AES-CTR (`open_pg_tde.wal_encrypt`).
 - **Temporary files**: query-spill files encrypted with AES-128-XTS
-  (`encrypt_temp_files`), using a memory-only per-boot key.
+  (`encrypt_temp_files`), using a memory-only per-boot key and a per-file salt
+  in the tweak so two files never reuse an IV.
 - **Keys**: two-tier hierarchy (principal key wraps per-relation internal
   keys). Providers: keyring file, KMIP, OpenBao. Per-database and global
   (server) providers. Manual principal key rotation.
+- **Key metadata integrity**: internal keys are wrapped with AES-GCM, and
+  `key_base_iv` is authenticated in the AEAD additional authenticated data (map
+  file v6, WAL key file v3), so tampering with the key files is detected on
+  read.
 - **Compliance**: all cryptography runs through OpenSSL with FIPS-approved
   modes; `open_pg_tde.require_fips` enforces OpenSSL FIPS mode.
 - **Controls**: `enforce_encryption`, `inherit_global_providers`.
 
 Known gaps that the documentation already calls out: PostgreSQL system catalogs
-and statistics are not encrypted.
+and statistics are not encrypted. Data pages are confidentiality-only (XTS has
+no integrity tag), and an unlogged table's init and main forks share the
+data-file tweak; both are documented in the threat model.
 
 ## PostgreSQL version support
 
@@ -101,7 +116,7 @@ keep their ciphers. See the dedicated design doc,
 [`aes-256-xts.md`](aes-256-xts.md).
 
 **5. Authenticated page encryption, AES-GCM (Tier 2).**
-Data pages use XTS/CBC, which provide confidentiality but not integrity, so
+Data pages use XTS, which provides confidentiality but not integrity, so
 tampering with an encrypted page on disk is not detected. AES-GCM would add a
 per-page authentication tag and detect tampering. This is a **separate and much
 larger** change from the AES-256-XTS key-map bump: the cost is in the page
@@ -122,8 +137,30 @@ the registry if a use case appears.
 **7. Cloud KMS providers: AWS KMS, GCP KMS, Azure Key Vault (Tier 1).**
 Today external keys go through KMIP or OpenBao. Native integrations with the
 major cloud KMS services are a common requirement for managed deployments and
-extend the existing key-provider interface rather than changing the core. High
-commercial value.
+have high commercial value.
+
+There are two integration models, and the choice matters:
+
+- **Secret-store model.** Store the principal key as a secret in the cloud
+  provider's secret manager (AWS Secrets Manager, GCP Secret Manager, Azure Key
+  Vault secrets) and fetch it. This maps directly onto the current provider
+  interface (`keyring_get_key` returns the key material, exactly as the file,
+  KMIP, and OpenBao providers do today), so it is a provider addition with no
+  core change. The tradeoff is that the principal key still leaves the cloud
+  boundary and lives in server memory while in use.
+- **Envelope model.** Use the cloud KMS keys (AWS KMS, GCP KMS, Azure Key Vault
+  keys) as a wrapping layer: the KMS master key never leaves the service. The
+  principal key is stored wrapped (ciphertext), and open_pg_tde calls the KMS
+  Decrypt API to unwrap it at startup. This is the idiomatic and more defensible
+  KMS design, but it needs the provider interface extended with a wrap/unwrap
+  operation (`keyring_get_key` returns raw bytes today; envelope mode needs
+  "here is ciphertext, return plaintext"). The two-tier hierarchy already fits
+  this: the KMS wraps the principal key, the principal key wraps the internal
+  keys.
+
+Recommended: add the envelope model, since it is what these services are
+designed for and what compliance regimes expect, and expose the secret-store
+model only where a provider offers no key-wrapping primitive.
 
 **8. Automatic principal key rotation (Tier 2).**
 Rotation is manual today. A scheduled or policy-driven rotation (interval or
@@ -156,22 +193,27 @@ policy effort on top of the existing OpenSSL usage.
 
 ## Suggested sequencing
 
-1. **Temporary file encryption** (done): closed a known gap, reuses the
-   existing key hierarchy (temp files use AES-CBC, so the 32-byte internal key
-   is enough, with no format change).
-2. **AES-256-XTS**: a contained key-map format bump for compliance regimes that
-   mandate AES-256 with the XTS storage mode. See `aes-256-xts.md`.
-3. **Cloud KMS providers**: high demand, extends the provider interface.
-4. **Tablespace-level encryption**: per its own design doc.
-5. **Automatic key rotation** and **key-access audit logging**: compliance
-   features on top of the existing key hierarchy.
-6. **Statistics encryption**: catalog change to stop `pg_statistic` leaking
+Shipped: temporary file encryption, AES-256-XTS, and FIPS enforcement (2.3.0);
+the security-review hardening (2.4.0). The near-term plan, the de facto 2.5
+line, is:
+
+1. **Cloud KMS providers** (AWS KMS, GCP KMS, Azure Key Vault): high demand,
+   extends the key-provider interface. Prefer the envelope model (see feature 7).
+2. **Tablespace-level encryption**: per its own design doc.
+3. **Automatic key rotation** and **key-access audit logging**: compliance
+   features on top of the existing key hierarchy; the re-wrap machinery already
+   exists.
+4. **Statistics encryption**: catalog change to stop `pg_statistic` leaking
    sampled values.
-7. **Authenticated page encryption (AES-GCM)**: a large standalone project
+5. **Authenticated page encryption (AES-GCM)**: a large standalone project
    (page-format change plus nonce management). Scoped separately in
    `aes-gcm-authenticated-pages.md`; not near-term.
-8. **HSM/PKCS#11**, **FIPS mode**, and **column-level encryption**: larger or
-   more specialized, scheduled by demand.
+6. **HSM/PKCS#11**, **ChaCha20-Poly1305**, and **column-level encryption**:
+   larger or more specialized, scheduled by demand.
+
+In parallel, on its own track: the **PostgreSQL 19** port, targeted near the
+PostgreSQL 19 release candidate (see [PostgreSQL version
+support](#postgresql-version-support)).
 
 ## Notes
 
