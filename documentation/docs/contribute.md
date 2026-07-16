@@ -1,6 +1,6 @@
 # Contributing guide
 
-Welcome to `open_pg_tde`, the Transparent Data Encryption extension for PostgreSQL, maintained by Command Prompt, Inc.
+Welcome to `open_pg_tde`, the Transparent Data Encryption extension for PostgreSQL, maintained by [Command Prompt, Inc.](https://commandprompt.com/)
 
 You can contribute in one of the following ways:
 

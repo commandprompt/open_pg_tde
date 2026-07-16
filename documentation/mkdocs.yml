@@ -4,7 +4,7 @@ site_name: open_pg_tde - Transparent Data Encryption for PostgreSQL
 site_description: Documentation
 site_author: Command Prompt, Inc.
 copyright: >
-  <a href="https://www.commandprompt.com/">Command Prompt, Inc.</a> © 2026
+  <a href="https://commandprompt.com/">Command Prompt, Inc.</a> © 2026
 
 repo_name: commandprompt/open_pg_tde
 repo_url: https://github.com/commandprompt/open_pg_tde

@@ -29,7 +29,7 @@ runs on **upstream PostgreSQL 16, 17, and 18**, with no vendor server fork
 required.
 
 > `open_pg_tde` is an open fork of `pg_tde`,
-> maintained by [Command Prompt, Inc.](https://www.commandprompt.com/) See how
+> maintained by [Command Prompt, Inc.](https://commandprompt.com/) See how
 > they differ in the [comparison with pg_tde](documentation/docs/concepts/comparison-percona.md).
 
 ## Features
@@ -122,4 +122,4 @@ releases are built. All C code follows the
 ## License
 
 `open_pg_tde` is distributed under the PostgreSQL License. It retains the original copyright for the derived work.
-Command Prompt, Inc. maintains `open_pg_tde` and is not affiliated with Percona.
+[Command Prompt, Inc.](https://commandprompt.com/) maintains `open_pg_tde` and is not affiliated with Percona.
