@@ -10,7 +10,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql('postgres', 'CREATE EXTENSION open_pg_tde;');
@@ -35,7 +36,8 @@ is( $stdout,
 	'only whitelisted functions are callable by public');
 
 $stdout = $node->safe_psql('postgres',
-	"SELECT extname, extversion FROM pg_extension WHERE extname = 'open_pg_tde';");
+	"SELECT extname, extversion FROM pg_extension WHERE extname = 'open_pg_tde';"
+);
 is($stdout, 'open_pg_tde|2.2', 'is installed with right version');
 
 (undef, undef, $stderr) = $node->psql('postgres',

@@ -37,7 +37,8 @@ END
 # ---------------------------------------------------------------------------
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql('postgres', 'CREATE EXTENSION open_pg_tde;');
@@ -162,9 +163,13 @@ SQL
 # ---------------------------------------------------------------------------
 {
 	PostgreSQL::Test::Utils::system_or_bail(
-		'openssl', 'req', '-x509', '-newkey', 'rsa:2048',
-		'-nodes', '-days', '1', '-keyout', "$tmpdir/wrong-ca.key",
-		'-out', "$tmpdir/wrong-ca.pem", '-subj', '/CN=open_pg_tde-wrong-ca');
+		'openssl', 'req',
+		'-x509', '-newkey',
+		'rsa:2048', '-nodes',
+		'-days', '1',
+		'-keyout', "$tmpdir/wrong-ca.key",
+		'-out', "$tmpdir/wrong-ca.pem",
+		'-subj', '/CN=open_pg_tde-wrong-ca');
 
 	my (undef, undef, $stderr) = $node->psql('postgres', <<SQL);
 SELECT open_pg_tde_add_database_key_provider_kmip(
@@ -175,7 +180,8 @@ SQL
 	like(
 		$stderr,
 		qr/SSL error|BIO_do_connect|verification failed/i,
-		"KMIP connection rejected when server cert is not signed by trusted CA");
+		"KMIP connection rejected when server cert is not signed by trusted CA"
+	);
 }
 
 $node->stop;

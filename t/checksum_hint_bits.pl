@@ -64,7 +64,8 @@ is($node->safe_psql('postgres', 'SELECT count(*) FROM t_xts'),
 is($node->safe_psql('postgres', "SELECT s FROM t_xts WHERE id = 4999"),
 	'xts-4999', 'XTS row content is correct after restart');
 is($node->safe_psql('postgres', 'SELECT count(*) FROM t_xts256'),
-	'5000', 'XTS-256 table reads back after hint bits, checksums, and restart');
+	'5000',
+	'XTS-256 table reads back after hint bits, checksums, and restart');
 is($node->safe_psql('postgres', "SELECT s FROM t_xts256 WHERE id = 4999"),
 	'xts256-4999', 'XTS-256 row content is correct after restart');
 
@@ -72,8 +73,9 @@ is($node->safe_psql('postgres', "SELECT s FROM t_xts256 WHERE id = 4999"),
 # failed verification the query would error.
 is($node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_xts'),
 	't', 'full scan of the XTS table passes page checksum verification');
-is($node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_xts256'),
-	't', 'full scan of the XTS-256 table passes page checksum verification');
+is( $node->safe_psql('postgres', 'SELECT sum(length(s)) > 0 FROM t_xts256'),
+	't',
+	'full scan of the XTS-256 table passes page checksum verification');
 
 # No checksum-verification failures were logged.
 my $log = slurp_file($node->logfile);

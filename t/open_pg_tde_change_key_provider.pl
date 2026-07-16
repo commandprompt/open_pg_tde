@@ -16,7 +16,8 @@ command_like(
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', q{shared_preload_libraries = 'open_pg_tde'});
+$node->append_conf('postgresql.conf',
+	q{shared_preload_libraries = 'open_pg_tde'});
 $node->start;
 
 $node->safe_psql('postgres', q{CREATE EXTENSION open_pg_tde});
@@ -96,7 +97,8 @@ $options = decode_json(
 		'postgres',
 		q{SELECT options FROM open_pg_tde_list_all_database_key_providers() WHERE name = 'database-provider'}
 	));
-is($options->{url}, 'https://openbao-server.example:8200/',
+is( $options->{url},
+	'https://openbao-server.example:8200/',
 	'url is set correctly for openbao provider');
 is($options->{mountPath}, 'mount-path',
 	'mount path is set correctly for openbao provider');

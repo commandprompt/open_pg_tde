@@ -25,7 +25,8 @@ my ($ret, $stdout, $stderr);
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 my $bao = bao_setup($bao_bin);
@@ -157,8 +158,10 @@ sub bao_setup
 			"-dev-listen-address=127.0.0.1:$port",
 			"-dev-cluster-json=$temp/info"
 		],
-		'>', "$temp/bao.log",
-		'2>', "$temp/bao.err");
+		'>',
+		"$temp/bao.log",
+		'2>',
+		"$temp/bao.err");
 
 	wait_for_file("$temp/info", '.');
 

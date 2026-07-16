@@ -10,7 +10,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init(no_data_checksums => 1);
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 $node->safe_psql(
 	'postgres', "
@@ -28,7 +29,8 @@ my $relfile =
 
 $node->stop;
 
-command_ok([ 'open_pg_tde_checksums', '--no-sync', '--enable', $node->data_dir ],
+command_ok(
+	[ 'open_pg_tde_checksums', '--no-sync', '--enable', $node->data_dir ],
 	'can enable checksums for encrypted tables');
 
 $node->start;

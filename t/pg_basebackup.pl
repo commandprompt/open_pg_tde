@@ -27,7 +27,10 @@ $node->command_fails_like(
 	'encryption in tar mode');
 
 $node->command_fails_like(
-	[ 'open_pg_tde_basebackup', '-D', "$tempdir/backup", '-E', '-X', 'fetch' ],
+	[
+		'open_pg_tde_basebackup', '-D', "$tempdir/backup", '-E', '-X',
+		'fetch'
+	],
 	qr/WAL encryption can only be used with WAL streaming/,
 	'encryption with WAL fetch');
 

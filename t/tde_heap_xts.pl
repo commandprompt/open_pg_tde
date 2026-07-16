@@ -15,7 +15,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->append_conf('postgresql.conf', "open_pg_tde.data_cipher = 'aes_xts'");
 $node->start;
 
@@ -88,16 +89,24 @@ $node->restart;
 # Verify that we still can read all tables after a restart.
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc1 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc1 after restart');
+is( $stdout,
+	"1|multitude\n2|multitudinous",
+	'can read test_enc1 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc2 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc2 after restart');
+is( $stdout,
+	"1|multitude\n2|multitudinous",
+	'can read test_enc2 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc3 ORDER BY id;');
-is($stdout, "1|multitude\n2|multitudinous", 'can read test_enc3 after restart');
+is( $stdout,
+	"1|multitude\n2|multitudinous",
+	'can read test_enc3 after restart');
 $stdout =
   $node->safe_psql('postgres', 'SELECT * FROM test_enc5 ORDER BY id;');
-is($stdout, "3|multitude\n4|multitudinous", 'can read test_enc5 after restart');
+is( $stdout,
+	"3|multitude\n4|multitudinous",
+	'can read test_enc5 after restart');
 
 # Verify the data is ciphertext on disk for tde_heap tables and plaintext for heap.
 unlike(slurp_relfile('test_enc1'),

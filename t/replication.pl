@@ -41,7 +41,8 @@ $primary->safe_psql(
 $primary->wait_for_catchup('replica');
 
 $stdout =
-  $replica->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $replica->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'test_enc is encrypted on the replica');
 $stdout = $replica->safe_psql('postgres',
 	"SELECT open_pg_tde_is_encrypted('test_enc_pkey');");

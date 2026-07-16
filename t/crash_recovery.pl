@@ -117,7 +117,8 @@ $node->safe_psql(
 
 # Sanity check to see that we are testing somthing useful
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('seq_unlogged');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('seq_unlogged');");
 is($stdout, 't', 'sequence is encrypted');
 
 $node->kill9;
