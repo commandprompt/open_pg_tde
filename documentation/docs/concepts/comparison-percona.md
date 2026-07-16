@@ -1,7 +1,7 @@
 # Comparison with Percona pg_tde
 
 `open_pg_tde` is an open fork of Percona's `pg_tde`, maintained by
-[Command Prompt, Inc.](https://www.commandprompt.com/) It keeps the core
+[Command Prompt, Inc.](https://commandprompt.com/) It keeps the core
 Transparent Data Encryption design of the original project: a two-tier key
 hierarchy, the `tde_heap` access method, per-table encryption, WAL encryption,
 and pluggable key providers. This page describes how the two differ, so you can
@@ -33,7 +33,7 @@ Server for PostgreSQL, Percona pg_tde is integrated with it.
 | Dimension | open_pg_tde | Percona pg_tde |
 | --------- | ----------- | -------------- |
 | Base server | Upstream PostgreSQL 16, 17, 18, with the gated open_pg_tde core patch | Percona Server for PostgreSQL |
-| Maintainer | Command Prompt, Inc. | Percona |
+| Maintainer | [Command Prompt, Inc.](https://commandprompt.com/) | Percona |
 | Relationship | Open fork of Percona pg_tde | Original project |
 | Access method | `tde_heap` | `tde_heap` |
 | Encrypted at rest | Table data, indexes, TOAST, WAL, temporary files | Table data, indexes, TOAST, WAL |
@@ -69,5 +69,5 @@ systems and a local keyring file. See the
 
 open_pg_tde is derived from Percona pg_tde, which is copyright Percona and
 released under the PostgreSQL License. open_pg_tde retains that copyright and
-license for the derived work. Command Prompt, Inc. maintains open_pg_tde and is
+license for the derived work. [Command Prompt, Inc.](https://commandprompt.com/) maintains open_pg_tde and is
 not affiliated with Percona.
