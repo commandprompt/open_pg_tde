@@ -19,4 +19,8 @@ fi
   ../postgres/src/tools/find_typedef .
   wget -q -O - "https://buildfarm.postgresql.org/cgi-bin/typedefs.pl?branch=REL_17_STABLE"
   wget -q -O - "https://buildfarm.postgresql.org/cgi-bin/typedefs.pl?branch=REL_18_STABLE"
+  # find_typedef does not reliably emit this project's local typedefs (its
+  # output depends on the debug info of the build it scans), which makes the
+  # pgindent check flap. Always include them so the result is deterministic.
+  cat "$SCRIPT_DIR/tde_typedefs.list"
 ) | sort -u > ../src/typedefs.list
