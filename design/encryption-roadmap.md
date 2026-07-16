@@ -160,7 +160,10 @@ There are two integration models, and the choice matters:
 
 Recommended: add the envelope model, since it is what these services are
 designed for and what compliance regimes expect, and expose the secret-store
-model only where a provider offers no key-wrapping primitive.
+model only where a provider offers no key-wrapping primitive. AWS KMS is scoped
+as the first cloud provider in [`aws-kms-provider.md`](aws-kms-provider.md),
+which also refines this: the KMS wrap and unwrap can happen inside the provider's
+get/store, so no vtable change is needed for it.
 
 **8. Automatic principal key rotation (Tier 2).**
 Rotation is manual today. A scheduled or policy-driven rotation (interval or
