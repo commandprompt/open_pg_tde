@@ -11,19 +11,14 @@
 #define TDE_TRANCHE_NAME "open_pg_tde_tranche"
 
 /*
- * Only numeric version (the most left byte) should be changed when updating
- * file format. Otherwise, it will break the migration process.
+ * File format magics. Only the numeric version (the most significant byte)
+ * should change when the format changes; otherwise migration breaks. The
+ * current formats (WAL key file v3, SMGR key map file v6) authenticate
+ * key_base_iv in the AEAD additional authenticated data; it was unauthenticated
+ * in the previous formats (WAL v2, map v5).
  */
-#define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x034B4557	/* version ID value = WEK
-													 * 03; v3 authenticates
-													 * key_base_iv in the AEAD
-													 * AAD (was excluded in v2) */
-#define OPEN_PG_TDE_SMGR_FILE_MAGIC		  0x06454454	/* version ID value =
-														 * TDE 06; v6
-														 * authenticates
-														 * key_base_iv in the
-														 * AEAD AAD (was
-														 * excluded in v5) */
+#define OPEN_PG_TDE_WAL_KEY_FILE_MAGIC 0x034B4557	/* "WEK", version 3 */
+#define OPEN_PG_TDE_SMGR_FILE_MAGIC 0x06454454	/* "TDE", version 6 */
 
 #define FILEMAGIC_VERSION(FM) ((FM & 0xF000000) >> 24)
 #define FILEMAGIC_TYPE(FM) ((FM & 0x0FFFFFF))
