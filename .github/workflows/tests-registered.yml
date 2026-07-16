@@ -3,6 +3,9 @@ name: Tests registered
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     name: Check

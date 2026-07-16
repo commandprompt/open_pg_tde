@@ -9,9 +9,8 @@ on:
       - .github/workflows/docs.yml
   workflow_dispatch:
 
-# mike publishes the built site to the gh-pages branch.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: docs-deploy
@@ -21,6 +20,9 @@ jobs:
   deploy:
     name: Build and deploy
     runs-on: ubuntu-24.04
+    # mike pushes the built site to the gh-pages branch.
+    permissions:
+      contents: write
     steps:
       - name: Clone repository
         uses: actions/checkout@v6

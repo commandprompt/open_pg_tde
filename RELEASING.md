@@ -66,3 +66,27 @@ enabled, and build the extension against that install. See
    ```
 
 Consumers verify a download with `sha256sum -c SHA256SUMS`.
+
+## Signatures
+
+Publishing the release triggers the `Sign release artifacts` workflow
+(`.github/workflows/sign-release.yml`), which signs each tarball and
+`SHA256SUMS` with cosign keyless signing (Sigstore) and uploads a
+`<asset>.cosign.bundle` next to each one. No signing key is stored: the
+runner's GitHub OIDC identity is used, and each bundle carries the signature,
+the signing certificate, and a Rekor transparency-log entry.
+
+If a release was cut before this workflow existed, sign it by hand from the
+Actions tab (run `Sign release artifacts` and pass the tag) or with
+`gh workflow run sign-release.yml -f tag=<version>`.
+
+Consumers verify a signed tarball with:
+
+```sh
+cosign verify-blob \
+  --bundle open_pg_tde-<version>-pg17.tar.gz.cosign.bundle \
+  --certificate-identity-regexp \
+    'https://github.com/commandprompt/open_pg_tde/.github/workflows/sign-release.yml@.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  open_pg_tde-<version>-pg17.tar.gz
+```

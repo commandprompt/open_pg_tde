@@ -4,6 +4,9 @@ on:
     paths-ignore:
       - documentation/**
 
+permissions:
+  contents: read
+
 env:
   pg_version: 18
 

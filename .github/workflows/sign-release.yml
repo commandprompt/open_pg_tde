@@ -1,0 +1,73 @@
+name: Sign release artifacts
+
+# Signs the source tarballs and SHA256SUMS attached to a published release using
+# cosign keyless signing (Sigstore). No signing key is stored: the runner's
+# GitHub OIDC token is used, and a verifiable bundle (signature, certificate,
+# and Rekor transparency-log entry) is uploaded next to each artifact.
+#
+# It runs automatically when a release is published, and can be re-run by hand
+# with workflow_dispatch (for example to sign a release cut before this workflow
+# existed) by passing the release tag.
+#
+# Consumers verify a tarball with:
+#   cosign verify-blob \
+#     --bundle open_pg_tde-<version>-pg17.tar.gz.cosign.bundle \
+#     --certificate-identity-regexp \
+#       'https://github.com/commandprompt/open_pg_tde/.github/workflows/sign-release.yml@.*' \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#     open_pg_tde-<version>-pg17.tar.gz
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to sign (for example 2.5.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sign:
+    name: Sign and upload bundles
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # upload signature bundles as release assets
+      id-token: write   # keyless signing via the GitHub OIDC token
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Download release artifacts
+        run: |
+          mkdir -p dist
+          # Download only the artifacts we sign; skip any bundles already present.
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist \
+            --pattern 'open_pg_tde-*.tar.gz' --pattern 'SHA256SUMS'
+          ls -l dist
+
+      - name: Sign each artifact
+        run: |
+          shopt -s nullglob
+          for f in dist/open_pg_tde-*.tar.gz dist/SHA256SUMS; do
+            echo "signing $f"
+            cosign sign-blob --yes \
+              --bundle "$f.cosign.bundle" \
+              "$f"
+          done
+
+      - name: Upload signature bundles
+        run: |
+          shopt -s nullglob
+          bundles=(dist/*.cosign.bundle)
+          if [ ${#bundles[@]} -eq 0 ]; then
+            echo "no bundles were produced" >&2
+            exit 1
+          fi
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "${bundles[@]}"
