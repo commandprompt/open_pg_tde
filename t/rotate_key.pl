@@ -10,7 +10,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(
@@ -53,7 +54,8 @@ is($stdout, "1|5\n2|6", 'can still read data');
 $node->restart;
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '1|file-vault|rotated-key1', 'key changed');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'
@@ -75,7 +77,8 @@ is($stdout, "1|5\n2|6", 'can still read data');
 $node->restart;
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '2|file-2|rotated-key2', 'key changed');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'
@@ -97,7 +100,8 @@ is($stdout, "1|5\n2|6", 'can still read data');
 $node->restart;
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '-2|file-3|rotated-key', 'key changed');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'
@@ -122,7 +126,8 @@ is($stdout, "1|5\n2|6", 'can still read data');
 $node->restart;
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '-1|file-2|rotated-keyX', 'key changed');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'
@@ -155,7 +160,8 @@ like(
 	'not allowed to configure global keys');
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '-1|file-2|rotated-keyX', 'key did not change');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'
@@ -167,7 +173,8 @@ $node->safe_psql('postgres',
 );
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '2|file-2|rotated-key2', 'key changed');
 $stdout = $node->safe_psql('postgres',
 	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_server_key_info();'

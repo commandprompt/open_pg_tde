@@ -10,7 +10,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(
@@ -37,7 +38,8 @@ $node->safe_psql(
 	SELECT open_pg_tde_set_default_key_using_global_key_provider('default-key', 'file-provider');
 ));
 
-$stdout = $node->safe_psql('postgres', 'SELECT open_pg_tde_verify_default_key();');
+$stdout =
+  $node->safe_psql('postgres', 'SELECT open_pg_tde_verify_default_key();');
 is($stdout, '', 'verification succeeds now that we have a key');
 
 $stdout = $node->safe_psql('postgres',
@@ -66,7 +68,8 @@ $node->safe_psql('other', 'CREATE EXTENSION open_pg_tde;');
 
 # Database: postgres
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '||', 'default key has not been localized yet in postgres');
 $node->safe_psql(
 	'postgres', qq(
@@ -74,14 +77,16 @@ $node->safe_psql(
 	INSERT INTO test_enc (x) VALUES (1), (2);
 ));
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is( $stdout,
 	'-1|file-provider|default-key',
 	'default key is now localized in postgres');
 
 # Database: other
 $stdout = $node->safe_psql('other',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is($stdout, '||', 'default key has not been localized yet in other');
 $node->safe_psql(
 	'other', qq(
@@ -89,7 +94,8 @@ $node->safe_psql(
 	INSERT INTO test_enc (x) VALUES (1), (2);
 ));
 $stdout = $node->safe_psql('other',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is( $stdout,
 	'-1|file-provider|default-key',
 	'default key is now localized in other');
@@ -103,12 +109,14 @@ $node->safe_psql(
 ));
 
 $stdout = $node->safe_psql('postgres',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is( $stdout,
 	'-1|file-provider|new-default-key',
 	'default key is now localized in postgres');
 $stdout = $node->safe_psql('other',
-	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();');
+	'SELECT provider_id, provider_name, key_name FROM open_pg_tde_key_info();'
+);
 is( $stdout,
 	'-1|file-provider|new-default-key',
 	'default key is now localized in other');
@@ -133,7 +141,8 @@ like(
 
 $node->safe_psql('postgres', 'DROP TABLE test_enc;');
 
-$stdout = $node->safe_psql('other', 'SELECT open_pg_tde_delete_default_key();');
+$stdout =
+  $node->safe_psql('other', 'SELECT open_pg_tde_delete_default_key();');
 is($stdout, '', 'can delete default key when nobody uses it');
 
 $stdout = $node->safe_psql('postgres',

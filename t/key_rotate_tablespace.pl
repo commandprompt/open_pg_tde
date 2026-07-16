@@ -10,7 +10,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(

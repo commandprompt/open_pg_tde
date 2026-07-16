@@ -12,7 +12,8 @@ use Test::More;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', q{shared_preload_libraries = 'open_pg_tde'});
+$node->append_conf('postgresql.conf',
+	q{shared_preload_libraries = 'open_pg_tde'});
 $node->start;
 
 my $keyring = $node->basedir . '/cipher_selection.per';
@@ -30,12 +31,16 @@ is($node->safe_psql('postgres', 'SHOW open_pg_tde.data_cipher'),
 	'aes_xts', 'open_pg_tde.data_cipher defaults to aes_xts');
 
 is( $node->safe_psql(
-		'postgres', 'SET open_pg_tde.data_cipher = aes_256_xts; SHOW open_pg_tde.data_cipher'),
+		'postgres',
+		'SET open_pg_tde.data_cipher = aes_256_xts; SHOW open_pg_tde.data_cipher'
+	),
 	'aes_256_xts',
 	'open_pg_tde.data_cipher accepts aes_256_xts');
 
 is( $node->safe_psql(
-		'postgres', 'SET open_pg_tde.data_cipher = aes_xts; SHOW open_pg_tde.data_cipher'),
+		'postgres',
+		'SET open_pg_tde.data_cipher = aes_xts; SHOW open_pg_tde.data_cipher'
+	),
 	'aes_xts',
 	'open_pg_tde.data_cipher accepts aes_xts');
 
@@ -46,7 +51,9 @@ for my $bad (qw(aes_128 aes_256 aes_999))
 	my ($rc, $stdout, $stderr) =
 	  $node->psql('postgres', "SET open_pg_tde.data_cipher = $bad");
 	isnt($rc, 0, "open_pg_tde.data_cipher rejects $bad");
-	like($stderr, qr/invalid value for parameter "open_pg_tde.data_cipher"/,
+	like(
+		$stderr,
+		qr/invalid value for parameter "open_pg_tde.data_cipher"/,
 		"$bad produces the expected error");
 }
 
@@ -60,7 +67,8 @@ is( $node->safe_psql(
 		'postgres',
 		'SET open_pg_tde.cipher = aes_256; SET open_pg_tde.data_cipher = inherit; '
 		  . 'CREATE TABLE t_inherit(id int) USING tde_heap; '
-		  . 'INSERT INTO t_inherit VALUES (1); SELECT count(*) FROM t_inherit;'),
+		  . 'INSERT INTO t_inherit VALUES (1); SELECT count(*) FROM t_inherit;'
+	),
 	'1',
 	'inherit creates a working encrypted table (mapped to XTS)');
 
@@ -90,7 +98,8 @@ is($node->safe_psql('postgres', 'SELECT s FROM t128'),
 for my $case ([ 't256', $canary256 ], [ 't128', $canary128 ])
 {
 	my ($tbl, $canary) = @$case;
-	my $rel = $node->safe_psql('postgres', "SELECT pg_relation_filepath('$tbl')");
+	my $rel =
+	  $node->safe_psql('postgres', "SELECT pg_relation_filepath('$tbl')");
 	my $blob = slurp_file($node->data_dir . '/' . $rel);
 	unlike($blob, qr/\Q$canary\E/, "$tbl is ciphertext on disk");
 }

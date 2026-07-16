@@ -48,7 +48,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $old = PostgreSQL::Test::Cluster->new('old');
 $old->init;
-$old->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$old->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $old->start;
 $old->safe_psql(
 	'postgres', "
@@ -69,7 +70,8 @@ $old->stop;
 
 my $new = PostgreSQL::Test::Cluster->new('new');
 $new->init;
-$new->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$new->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $new->append_conf('postgresql.conf', "open_pg_tde.wal_encrypt = on");
 
 command_ok(

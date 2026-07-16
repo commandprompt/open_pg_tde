@@ -56,12 +56,18 @@ command_fails_like(
 	'open_pg_tde_restore_encrypt gives error if command not found');
 
 command_fails_like(
-	[ 'open_pg_tde_archive_decrypt', 'file', 'pg_wal/file', 'unknown_command_42' ],
+	[
+		'open_pg_tde_archive_decrypt', 'file',
+		'pg_wal/file', 'unknown_command_42'
+	],
 	qr/error: ARCHIVE-COMMAND "unknown_command_42" failed with exit code 127/,
 	'open_pg_tde_archive_decrypt gives error if command not found');
 
 command_fails_like(
-	[ 'open_pg_tde_restore_encrypt', 'file', 'pg_wal/file', 'unknown_command_42' ],
+	[
+		'open_pg_tde_restore_encrypt', 'file',
+		'pg_wal/file', 'unknown_command_42'
+	],
 	qr/error: RESTORE-COMMAND "unknown_command_42" failed with exit code 127/,
 	'open_pg_tde_restore_encrypt gives error if command not found');
 
@@ -76,12 +82,18 @@ command_fails_like(
 	'open_pg_tde_restore_encrypt prints return code of failed command');
 
 command_fails_like(
-	[ 'open_pg_tde_archive_decrypt', 'file', 'pg_wal/file', 'kill $$; sleep' ],
+	[
+		'open_pg_tde_archive_decrypt', 'file', 'pg_wal/file',
+		'kill $$; sleep'
+	],
 	qr/error: ARCHIVE-COMMAND "kill \$\$; sleep" was terminated by signal 15: Terminated/,
 	'open_pg_tde_archive_decrypt prints which signal killed the command');
 
 command_fails_like(
-	[ 'open_pg_tde_restore_encrypt', 'file', 'pg_wal/file', 'kill $$; sleep' ],
+	[
+		'open_pg_tde_restore_encrypt', 'file', 'pg_wal/file',
+		'kill $$; sleep'
+	],
 	qr/error: RESTORE-COMMAND "kill \$\$; sleep" was terminated by signal 15: Terminated/,
 	'open_pg_tde_restore_encrypt prints which signal killed the command');
 

@@ -33,7 +33,8 @@ my @tests = qw(
 
 my $node = PostgreSQL::Test::Cluster->new('regress');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 IPC::Run::run [

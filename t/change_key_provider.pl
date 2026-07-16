@@ -11,7 +11,8 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 $node->start;
 
 $node->safe_psql(
@@ -37,7 +38,8 @@ $node->safe_psql(
 
 $node->safe_psql('postgres', "SELECT open_pg_tde_verify_key();");
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'relation is encrypted');
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc ORDER BY id;');
 is($stdout, "1|5\n2|6", 'relation can be read');
@@ -56,7 +58,8 @@ is( $stdout,
 
 $node->safe_psql('postgres', "SELECT open_pg_tde_verify_key();");
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'relation is still encrypted');
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc ORDER BY id;');
 is($stdout, "1|5\n2|6", 'relation can still be read');
@@ -65,7 +68,8 @@ $node->restart;
 
 $node->safe_psql('postgres', "SELECT open_pg_tde_verify_key();");
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'relation is encrypted after restart');
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc ORDER BY id;');
 is($stdout, "1|5\n2|6", 'relation can be read after restart');
@@ -81,7 +85,8 @@ like(
 	qr/ERROR:  key "test-key" not found in key provider "file-vault"/,
 	'verificaiton fails after we have moved the key');
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'encryption check does not require a key');
 $stderr = ($node->psql('postgres', 'SELECT * FROM test_enc ORDER BY id;'))[2];
 like(
@@ -102,7 +107,8 @@ is( $stdout,
 
 $node->safe_psql('postgres', "SELECT open_pg_tde_verify_key();");
 $stdout =
-  $node->safe_psql('postgres', "SELECT open_pg_tde_is_encrypted('test_enc');");
+  $node->safe_psql('postgres',
+	"SELECT open_pg_tde_is_encrypted('test_enc');");
 is($stdout, 't', 'relation is encrypted after restoring provider');
 $stdout = $node->safe_psql('postgres', 'SELECT * FROM test_enc ORDER BY id;');
 is($stdout, "1|5\n2|6", 'relation can be read after restoring provider');

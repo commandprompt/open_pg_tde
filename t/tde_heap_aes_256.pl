@@ -10,11 +10,13 @@ my $keydir = PostgreSQL::Test::Utils::tempdir;
 
 my $node = PostgreSQL::Test::Cluster->new('main');
 $node->init;
-$node->append_conf('postgresql.conf', "shared_preload_libraries = 'open_pg_tde'");
+$node->append_conf('postgresql.conf',
+	"shared_preload_libraries = 'open_pg_tde'");
 # This test exercises the AES-256 data path, so request it explicitly rather
 # than relying on the data-file default (AES-128-XTS). Data files use the
 # tweakable XTS mode; the non-tweakable CBC ciphers are not selectable.
-$node->append_conf('postgresql.conf', "open_pg_tde.data_cipher = 'aes_256_xts'");
+$node->append_conf('postgresql.conf',
+	"open_pg_tde.data_cipher = 'aes_256_xts'");
 $node->start;
 
 $node->safe_psql(

@@ -200,7 +200,8 @@ command_like(
 	'no output with --quiet option');
 command_fails_like(
 	[
-		'open_pg_tde_waldump', '--quiet', '-k', $node->data_dir . '/open_pg_tde',
+		'open_pg_tde_waldump', '--quiet', '-k',
+		$node->data_dir . '/open_pg_tde',
 		'-p', $node->data_dir, '--start', $start_lsn
 	],
 	qr/error: error in WAL record at/,
@@ -245,11 +246,8 @@ sub test_pg_waldump
 	my (@cmd, $stdout, $stderr, $result, @lines);
 
 	@cmd = (
-		'open_pg_tde_waldump', '-k',
-		$node->data_dir . '/open_pg_tde', '-p',
-		$node->data_dir, '--start',
-		$start_lsn, '--end',
-		$end_lsn);
+		'open_pg_tde_waldump', '-k', $node->data_dir . '/open_pg_tde',
+		'-p', $node->data_dir, '--start', $start_lsn, '--end', $end_lsn);
 	push @cmd, @opts;
 	$result = IPC::Run::run \@cmd, '>', \$stdout, '2>', \$stderr;
 	ok($result, "pg_waldump @opts: runs ok");
