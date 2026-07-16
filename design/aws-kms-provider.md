@@ -144,6 +144,27 @@ The one heavier piece is the credential chain. Options:
 Recommend hand-rolling IMDSv2 + env/profile for v1 and revisiting a credentials
 library when IRSA/STS lands.
 
+### Prototype: SigV4 and the KMS round trip are de-risked
+
+A standalone C prototype (libcurl + OpenSSL only, no AWS SDK) confirms the two
+parts that carried the most risk:
+
+- **SigV4 signing.** The hand-rolled signer reproduces `botocore`'s output
+  byte for byte for a fixed KMS `Encrypt` request: the canonical request, the
+  payload hash, the string to sign, the derived signing key
+  (`kDate`/`kRegion`/`kService`/`kSigning`), and the final signature all match.
+  An independent HMAC-SHA256 chain recomputation agrees. This is the fiddly
+  part called out above, and it is now settled.
+- **KMS `Encrypt`/`Decrypt` round trip.** Against a mock KMS (moto), the
+  prototype wraps a 32-byte key with `Encrypt` and unwraps it with `Decrypt`
+  over HTTPS, and the plaintext matches. This is the envelope operation the
+  provider performs inside `get`/`store`.
+
+The result supports the recommendation to hand-roll the KMS calls (open
+question below): the signing and transport are straightforward with the
+libraries already linked, so the only part still worth weighing a dependency
+for is credential resolution, not the KMS protocol itself.
+
 ## Security properties
 
 - The CMK never leaves KMS; the principal key at rest is only KMS ciphertext.
@@ -197,7 +218,9 @@ the `open_pg_tde` integration.
 - v1 storage: local wrapped-key file (recommended) or Secrets Manager first?
 - Credential chain scope for v1: is IMDSv2 + env/profile enough, or is IRSA
   required on day one for EKS users?
-- Credentials: hand-rolled, or link `aws-c-auth` for credential resolution only?
+- Credentials: hand-rolled, or link `aws-c-auth` for credential resolution
+  only? The prototype above shows the KMS protocol and SigV4 are cheap to
+  hand-roll; this question now applies only to credential resolution.
 - Principal key rotation: `open_pg_tde`'s manual rotation re-wraps internal keys
   under a new principal key, which the KMS provider stores as a fresh wrapped
   blob; CMK rotation inside AWS is transparent to `Decrypt`. Confirm both paths
