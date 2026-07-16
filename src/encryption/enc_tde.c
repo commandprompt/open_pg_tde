@@ -188,7 +188,18 @@ CalcBlockIv(ForkNumber forknum, BlockNumber bn, const unsigned char *base_iv, un
 {
 	memset(iv, 0, TDE_BLOCK_IV_LEN);
 
-	/* The init fork is copied to the main fork so we must use the same IV */
+	/*
+	 * The init fork is copied to the main fork so we must use the same IV.
+	 *
+	 * PostgreSQL resets an unlogged relation after a crash by raw-copying the
+	 * init fork file over the main fork (copy_file() in reinit.c), which the
+	 * storage hooks never see. For that copy of already-encrypted bytes to
+	 * decrypt as the main fork, the init fork must be encrypted with the main
+	 * fork's tweak. This is intentional. The tradeoff is that the two forks
+	 * share the XTS tweak at each block, so their ciphertext reveals which
+	 * blocks are byte-identical; that limitation is documented in the threat
+	 * model (unlogged table forks).
+	 */
 	iv[7] = forknum == INIT_FORKNUM ? MAIN_FORKNUM : forknum;
 
 	iv[12] = bn >> 24;

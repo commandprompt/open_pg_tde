@@ -52,6 +52,15 @@ running server:
   confidentiality, not authentication. `open_pg_tde` does not currently detect
   deliberate modification of ciphertext on disk. Authenticated page encryption
   is a separate, larger initiative; see the design note on authenticated pages.
+- **Unlogged table forks.** An unlogged table keeps an init fork that
+  PostgreSQL copies over the main fork to reset the table after a crash. That
+  reset is a raw file copy of encrypted bytes performed by the server outside
+  the storage hooks, so the init fork and the main fork must share the same XTS
+  tweak at each block position for the copy to decrypt afterward. As a result,
+  an attacker with the data files can tell which main-fork blocks are
+  byte-identical to the init-fork template. This is limited to unlogged tables,
+  reveals only block equality and not the contents of either fork, and does not
+  affect regular (logged) tables.
 - **Column-level protection from the server.** All encryption is at the storage
   layer, so the server necessarily decrypts data to operate on it.
   `open_pg_tde` does not provide client-side or column-level encryption that
@@ -84,4 +93,5 @@ running server:
 | Privileged user on a running server | No |
 | Catalog metadata and statistics | No |
 | Tamper detection (integrity) | No |
+| Block equality between an unlogged table's init and main forks | No |
 | Encryption key exposure via the catalog | Not applicable (keys are not in the catalog) |
