@@ -2912,7 +2912,7 @@
         </script>
         </head><body><h1 id="open_pg_tde-documentation">open_pg_tde documentation<a class="headerlink" href="#index-open_pg_tde-documentation" title="Permanent link">¶</a></h1>
 <p><code>open_pg_tde</code> is an open source PostgreSQL extension that provides Transparent Data Encryption (TDE) to protect data at rest. It ensures that the data stored on disk is encrypted, and that no one can read it without the proper encryption keys, even if they gain access to the physical storage media.</p>
-<p><code>open_pg_tde</code> is an open fork of Percona’s <code>pg_tde</code>, maintained by Command Prompt, Inc. It runs on upstream PostgreSQL 16 and later: you apply the <code>open_pg_tde</code> core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See <a href="#install-from-source">Install from source</a>.</p>
+<p><code>open_pg_tde</code> is an open fork of Percona’s <code>pg_tde</code>, maintained by <a href="https://commandprompt.com/">Command Prompt, Inc.</a> It runs on upstream PostgreSQL 16 and later: you apply the <code>open_pg_tde</code> core patch to a PostgreSQL source tree, build it with the hooks enabled, and build the extension against that install. See <a href="#install-from-source">Install from source</a>.</p>
 <div data-grid="data-grid">
 <div data-banner="data-banner">
 <h3 class="title" id="index-installation-guide"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 2.03c4.73.47 8.5 4.22 8.95 8.97A9.976 9.976 0 0 1 13 21.93v-2c3.64-.43 6.5-3.32 6.96-6.96A7.994 7.994 0 0 0 13 4.05V2.03m-2 .03v2c-1.43.2-2.78.78-3.9 1.68L5.67 4.26A9.83 9.83 0 0 1 11 2.06M4.26 5.67 5.69 7.1A8 8 0 0 0 4.05 11h-2c.2-1.96.95-3.81 2.21-5.33M2.06 13h2c.18 1.42.75 2.77 1.63 3.9l-1.42 1.43A10.04 10.04 0 0 1 2.06 13m5.04 5.37c1.13.88 2.48 1.45 3.9 1.63v2c-1.96-.21-3.82-1-5.33-2.26zM12 16.5 7.5 12H11V8h2v4h3.5z"></path></svg></span> Installation guide<a class="headerlink" href="#index-installation-guide" title="Permanent link">¶</a></h3>
@@ -2958,7 +2958,7 @@ bug, include the PostgreSQL major version and steps to reproduce. See the
 for how to report them privately.</p>
 <h2 id="get-help-about-the-project">About the project<a class="headerlink" href="#get-help-about-the-project" title="Permanent link">¶</a></h2>
 <p><code>open_pg_tde</code> is an open fork of <code>pg_tde</code>, maintained by
-<a href="https://www.commandprompt.com">Command Prompt, Inc.</a></p></body></html></section><section class="print-page" id="features" heading-number="3"><html><head>
+<a href="https://commandprompt.com/">Command Prompt, Inc.</a></p></body></html></section><section class="print-page" id="features" heading-number="3"><html><head>
         <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
             remove_material_navigation();remove_mkdocs_theme_navigation();generate_toc();
@@ -3563,7 +3563,7 @@ within the SP 800-38E limit on data unit size.</p>
         </script>
         </head><body><h1 id="comparison-with-percona-pg_tde">Comparison with Percona pg_tde<a class="headerlink" href="#concepts-comparison-percona-comparison-with-percona-pg_tde" title="Permanent link">¶</a></h1>
 <p><code>open_pg_tde</code> is an open fork of Percona’s <code>pg_tde</code>, maintained by
-<a href="https://www.commandprompt.com/">Command Prompt, Inc.</a> It keeps the core
+<a href="https://commandprompt.com/">Command Prompt, Inc.</a> It keeps the core
 Transparent Data Encryption design of the original project: a two-tier key
 hierarchy, the <code>tde_heap</code> access method, per-table encryption, WAL encryption,
 and pluggable key providers. This page describes how the two differ, so you can
@@ -3607,7 +3607,7 @@ Server for PostgreSQL, Percona pg_tde is integrated with it.</p>
 </tr>
 <tr>
 <td>Maintainer</td>
-<td>Command Prompt, Inc.</td>
+<td><a href="https://commandprompt.com/">Command Prompt, Inc.</a></td>
 <td>Percona</td>
 </tr>
 <tr>
@@ -3657,7 +3657,7 @@ systems and a local keyring file. See the
 <h2 id="concepts-comparison-percona-attribution">Attribution<a class="headerlink" href="#concepts-comparison-percona-attribution" title="Permanent link">¶</a></h2>
 <p>open_pg_tde is derived from Percona pg_tde, which is copyright Percona and
 released under the PostgreSQL License. open_pg_tde retains that copyright and
-license for the derived work. Command Prompt, Inc. maintains open_pg_tde and is
+license for the derived work. <a href="https://commandprompt.com/">Command Prompt, Inc.</a> maintains open_pg_tde and is
 not affiliated with Percona.</p></body></html></section></section>
                     <section class='print-page md-section' id='section-5' heading-number='5'>
                         <h1>Get started<a class='headerlink' href='#section-5' title='Permanent link'></a>
@@ -5873,7 +5873,7 @@ open_pg_tde_restore_encrypt<span class="w"> </span>SOURCE-NAME<span class="w"> <
         })
         </script>
         </head><body><h1 id="contributing-guide">Contributing guide<a class="headerlink" href="#contribute-contributing-guide" title="Permanent link">¶</a></h1>
-<p>Welcome to <code>open_pg_tde</code>, the Transparent Data Encryption extension for PostgreSQL, maintained by Command Prompt, Inc.</p>
+<p>Welcome to <code>open_pg_tde</code>, the Transparent Data Encryption extension for PostgreSQL, maintained by <a href="https://commandprompt.com/">Command Prompt, Inc.</a></p>
 <p>You can contribute in one of the following ways:</p>
 <ol>
 <li><a href="https://github.com/commandprompt/open_pg_tde/discussions">Start a discussion or ask a question</a></li>
@@ -6195,7 +6195,7 @@ mkdocs<span class="w"> </span>serve<span class="w">      </span><span class="c1"
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      <a href="https://www.commandprompt.com/">Command Prompt, Inc.</a> © 2026
+      <a href="https://commandprompt.com/">Command Prompt, Inc.</a> © 2026
 
     </div>
   
