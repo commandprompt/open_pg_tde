@@ -47,7 +47,7 @@ typedef enum
 {
 	MAP_ENTRY_TYPE_EMPTY = 0,
 	MAP_ENTRY_TYPE_KEY = 1,
-}			TDEMapEntryType;
+} TDEMapEntryType;
 
 typedef struct TDEFileHeader
 {
@@ -1021,10 +1021,10 @@ typedef struct TDEMapEntryV4
 	unsigned char aead_tag[MAP_ENTRY_AEAD_TAG_SIZE];
 	uint8		key_base_iv[INTERNAL_KEY_IV_LEN];
 	uint8		encrypted_key_data[32];
-}			TDEMapEntryV4;
+} TDEMapEntryV4;
 
 static bool
-read_one_map_entry_v4(int fd, TDEMapEntryV4 * entry, off_t *offset)
+read_one_map_entry_v4(int fd, TDEMapEntryV4 *entry, off_t *offset)
 {
 	int			bytes_read = pg_pread(fd, entry, sizeof(TDEMapEntryV4), *offset);
 
@@ -1038,7 +1038,7 @@ read_one_map_entry_v4(int fd, TDEMapEntryV4 * entry, off_t *offset)
 }
 
 static void
-ikey_from_map_entry_v4(TDEMapEntryV4 * entry, const TDEPrincipalKey *principal_key, InternalKey *out)
+ikey_from_map_entry_v4(TDEMapEntryV4 *entry, const TDEPrincipalKey *principal_key, InternalKey *out)
 {
 	out->key_len = open_pg_tde_cipher_key_length(entry->cipher);
 	out->cipher = entry->cipher;
